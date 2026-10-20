@@ -176,7 +176,8 @@ test("home uses the Gene-In masthead and route list instead of generic marketing
   assert.match(operational, /gi-masthead/);
   assert.match(operational, /hero-bg\.png/);
   assert.match(operational, /gi-routes/);
-  assert.match(operational, /Recuperação e priorização de fragmentos virais/);
+  assert.match(operational, /Recuperação de sequências candidatas para revisão/);
+  assert.match(operational, /caso-modelo de validação/);
   assert.doesNotMatch(operational, /Da amostra ao resultado/);
   assert.doesNotMatch(operational, /Próxima ação/);
   assert.match(html, /gi-appbar__brand[\s\S]*gene-in-logo\.png/);

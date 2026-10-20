@@ -1,6 +1,6 @@
 # Gene-In 2.0.0 — comece aqui
 
-Distribuição final de software para pesquisa e triagem humana, preparada em 20/10/2026. Confira o [alcance das verificações e os recibos do pacote](docs/lancamento-20out.md). A licença rege a distribuição desta versão.
+Distribuição final de software para pesquisa e triagem humana, preparada em 20/10/2026. O programa é geral: hospedeiro e banco de referência são escolhas de quem analisa. Suíno e picornavírus são o caso-modelo de validação. Confira o [alcance das verificações e os recibos do pacote](docs/lancamento-20out.md). A licença rege a distribuição desta versão.
 
 1. Leia o [guia inicial](README.md) para conhecer as utilidades e os resultados.
 2. Instale em Linux x86_64 ou Windows x86_64 com WSL2/Ubuntu. No Windows, extraia o pacote inteiro em uma pasta permanente e execute `INSTALAR_GENEIN.bat`, depois `ABRIR_GENEIN.bat`. No Linux, use `bash bundle/install_wsl.sh` e `bash run_linux.sh`.

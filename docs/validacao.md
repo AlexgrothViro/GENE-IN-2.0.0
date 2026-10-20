@@ -1,6 +1,6 @@
 # Estado da validação científica
 
-A entrega atual é uma ferramenta funcional de recuperação e apresentação de candidatos para triagem humana. O funcionamento com sequências de 20–100 pb foi verificado em cenários sintéticos controlados, incluindo adaptadores explicitamente informados e controle de hospedeiro.
+A entrega atual é uma ferramenta funcional de recuperação e apresentação de candidatos para triagem humana. Hospedeiro e banco são escolhas da análise. O caso-modelo de validação usa suíno e picornavírus; esse par não define o alcance do programa. O funcionamento com sequências de 20–100 pb foi verificado em cenários sintéticos controlados, incluindo adaptadores explicitamente informados e controle de hospedeiro.
 
 Esses cenários usam referências exatas, uma semente, ausência de erros de sequenciamento e filtro de hospedeiro desligado. Não estimam sensibilidade ou precisão em material biológico degradado. Alinhamentos e bases alinhadas não demonstram origem viral. Candidatos espúrios continuam possíveis e devem permanecer identificáveis para revisão.
 

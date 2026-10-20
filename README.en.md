@@ -2,7 +2,7 @@
 
 [Português](README.md) · [Documentation](docs/README.md) · [Installation](docs/installation-reproducibility.md) · [Citation](docs/citacao.md)
 
-Gene-In recovers and organizes candidate sequences from fragmented sequencing data for human review. It combines quality control, optional host filtering, assembly, similarity search, provenance and export. Candidate sequences of **20–100 bases and longer** are retained. A sequence alignment does not establish viral origin, species, infection or diagnosis.
+Gene-In recovers and organizes candidate sequences from fragmented sequencing data for human review. The program is general: the host and the reference database are choices of the person running the analysis. Swine and picornavirus are only the model case used in validation, not a limit of the program. It combines quality control, optional host filtering, assembly, similarity search, provenance and export. Candidate sequences of **20–100 bases and longer** are retained. A sequence alignment does not establish origin, species, infection or diagnosis.
 
 **2.0.0 — final software distribution for research and human review, prepared on 2026-10-20.** It consolidates the code verified in rc1 and the usage documentation. See the [release note](docs/lancamento-20out.md) for verification scope and the receipts identifying the final package. The Evidence contract remains `2.0.0-alpha.2`, with recovery policy `fragment_recovery_20_100_v1` and scientific revision `scientific_review_20261005_v1`.
 
