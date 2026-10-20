@@ -44,7 +44,7 @@ A tabela abaixo documenta resultados da preparação da rc1. Eles sustentam a ba
 |---|---|
 | Documentação inicial e limpeza | 121 links/âncoras locais válidos na organização inicial; 141 na conferência documental após a limpeza, sem links quebrados; `git diff --check` aprovado |
 | Citação estruturada da rc1 | `CITATION.cff` aprovado como YAML e contra o schema oficial CFF 1.2.0; recibo anterior `CITACAO_VERIFICADA.json` |
-| Engenharia da base | Na rc1, 518 testes e 270 subtestes em `scripts/tests`, 130 testes em `tests/` e 17 testes JavaScript; recibos distinguem `fonte-final` e `limpeza-distribuicao`. A suíte medida nesta árvore 2.0.1 está em [desenvolvimento e testes](guia-de-desenvolvimento.md): 531 testes e 273 subtestes, 133 testes em `tests/` e 17 testes JavaScript |
+| Engenharia da base | Na rc1, 518 testes e 270 subtestes em `scripts/tests`, 130 testes em `tests/` e 17 testes JavaScript; recibos distinguem `fonte-final` e `limpeza-distribuicao`. A suíte medida nesta árvore 2.0.1 está em [desenvolvimento e testes](../docs/guia-de-desenvolvimento.md): 538 testes e 273 subtestes, 137 testes em `tests/` e 17 testes JavaScript |
 | Shell e ajuda | ShellCheck de todos os scripts shell com saída 0; `make help` aprovado |
 | Painel da fonte | Oito rotas com HTTP 200 e captura visual conferida; recibo `painel-fonte/PAINEL_HTTP.json`; serviço de verificação encerrado |
 | Trilhas `all-safe` da fonte | Oito etapas `PASS`, todas com saída 0, incluindo a suíte operacional integral; recibo `fonte-final/ALL_SAFE_FONTE_FINAL.json` |

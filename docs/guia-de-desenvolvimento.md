@@ -12,7 +12,7 @@ make test
 
 `make test` executa a suíte de engenharia: pytest em `scripts/tests` e em `tests/`, regressões shell, sintaxe Bash, compilação Python e testes JavaScript quando Node está disponível. No pacote instalado, o mesmo alvo é `bash bundle/run.sh test`. Essa execução continua no ZIP, que não traz a pasta `.git`: o teste que compara o checkout com `git rev-parse` é ignorado e o restante segue. Instale Node 18 ou superior do sistema para os testes da interface; o ambiente científico não inclui Node. Sem Node, essa etapa é registrada como não executada e as demais continuam. A integração contínua executa a instalação antes dos testes e inclui Node.
 
-Nesta distribuição 2.0.1 a suíte de engenharia reúne 531 testes e 273 subtestes em `scripts/tests`, 133 testes em `tests/` e 17 testes JavaScript. Testes e subtestes são contados à parte e não devem ser somados.
+Nesta distribuição 2.0.1 a suíte de engenharia reúne 538 testes e 273 subtestes em `scripts/tests`, 137 testes em `tests/` e 17 testes JavaScript. Testes e subtestes são contados à parte e não devem ser somados. Onze testes de `scripts/tests` dependem de BLAST+, Bowtie2, samtools ou fastp e são ignorados quando essas ferramentas não estão instaladas. No pacote sem `.git`, o teste que lê o commit do checkout também é ignorado.
 
 Os testes da CLI deliberadamente removem `PYTHONPATH` e lançam o comando fora da fonte. Rodar pytest numa cópia sem instalar o pacote pode produzir `No module named genein`. O lançador da suíte confere se o pacote instalado corresponde à árvore atual e instala essa árvore em modo editável se necessário. Execute-o num ambiente destinado a esse checkout.
 
