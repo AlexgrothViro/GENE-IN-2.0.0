@@ -67,6 +67,20 @@ class ReleasePackagingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'commit tracked'):
             build_release(self.root, Path(self.tmp.name) / 'dirty')
 
+    def test_development_notes_stay_out_of_the_archive(self):
+        notes = self.root / 'docs' / 'desenvolvimento'
+        notes.mkdir(parents=True)
+        (notes / 'PROBLEMAS_GENEIN.md').write_text('registro interno\n', encoding='utf-8')
+        (self.root / 'docs' / 'guia-de-desenvolvimento.md').write_text('guia\n', encoding='utf-8')
+        self.git('add', 'docs')
+        self.git('-c', 'user.name=Release Test', '-c', 'user.email=release@example.invalid', 'commit', '-qm', 'notes')
+        out = Path(self.tmp.name) / 'without-notes'
+        record = build_release(self.root, out)
+        with zipfile.ZipFile(out / record['source_archive_name']) as archive:
+            names = archive.namelist()
+        self.assertTrue(any(name.endswith('guia-de-desenvolvimento.md') for name in names))
+        self.assertFalse(any('desenvolvimento/' in name for name in names))
+
     def test_unsafe_name_rejected_before_output(self):
         out = Path(self.tmp.name) / 'unsafe'
         for name in ('../outside', '/absolute', 'has spaces'):

@@ -75,9 +75,9 @@ Preserve a versão da fonte, o commit, os locks, os hashes das entradas e dos ba
 
 Não há um requisito universal de RAM, tempo ou disco validado para toda biblioteca. Comece com uma amostra pequena e controles conhecidos. Escolha threads e memória conforme o montador e a capacidade disponível; os parâmetros não são ajustados automaticamente para garantir o término.
 
-No reteste b3, uma amostra de 300.000 pares produziu cerca de 30 milhões de HSPs. O diagnóstico usa **45 GB livres no mesmo sistema de arquivos** como aviso para dados desse porte. As etapas pesadas também conferem suas estimativas de espaço antes de iniciar e durante a escrita. Esse valor vem de [medições e estimativas de engenharia](correcoes-reteste-b3.md); não é garantia de capacidade para qualquer amostra.
+No reteste b3, uma amostra de 300.000 pares produziu cerca de 30 milhões de HSPs. O diagnóstico usa **45 GB livres no mesmo sistema de arquivos** como aviso para dados desse porte. As etapas pesadas também conferem suas estimativas de espaço antes de iniciar e durante a escrita. Esse valor vem de medições de engenharia guardadas em `docs/desenvolvimento/` no repositório Git; não é garantia de capacidade para qualquer amostra.
 
-O metaSPAdes preserva o parâmetro `-m 64`; quando ele excede a memória disponível, o programa avisa. A redução automática não foi implementada. O BLAST convencional continua sem divisão em blocos; o bloco de 256 queries pertence à busca curta. O Velvet pode produzir montagens diferentes com as mesmas entradas e configuração. Consulte os [limites preservados](reteste-b3-limites.md).
+O metaSPAdes preserva o parâmetro `-m 64`; quando ele excede a memória disponível, o programa avisa. A redução automática não foi implementada. O BLAST convencional continua sem divisão em blocos; o bloco de 256 queries pertence à busca curta. O Velvet pode produzir montagens diferentes com as mesmas entradas e configuração. Os limites preservados desse reteste estão em `docs/desenvolvimento/` no repositório Git.
 
 Falhas de memória, espaço ou ferramentas precisam ser resolvidas antes de repetir a análise em uma pasta nova. SIGTERM permite tratamento e limpeza; SIGKILL e desligamento abrupto não podem ser tratados pelo próprio processo.
 
@@ -94,7 +94,7 @@ export GENEIN_BUNDLE_DIR="${GENEIN_BUNDLE_DIR:-$HOME/.gene-in-bundle}"
   --artifact-root "$HOME/genein-verificacao-2.0.0"
 ```
 
-O teste cria seus próprios dados e conserva evidências, incluindo falhas. O sucesso esperado é `PASS functional fragment recovery`. Ele usa sequências sintéticas com origem conhecida; não estima sensibilidade, precisão ou utilidade em amostras reais. Veja [validação científica](validacao.md) e [desenvolvimento](desenvolvimento.md) para outras verificações.
+O teste cria seus próprios dados e conserva evidências, incluindo falhas. O sucesso esperado é `PASS functional fragment recovery`. Ele usa sequências sintéticas com origem conhecida; não estima sensibilidade, precisão ou utilidade em amostras reais. Veja [validação científica](validacao.md) e [desenvolvimento](guia-de-desenvolvimento.md) para outras verificações.
 
 ## Instalação global opcional
 
@@ -102,4 +102,4 @@ O teste cria seus próprios dados e conserva evidências, incluindo falhas. O su
 
 ## Registros de instalação
 
-Os testes de instalação anteriores estão nos registros de [06/10](verificacao-06out.md), [b1](verificacao-beta-08out.md) e [b3](correcoes-reteste-b3.md). Eles pertencem às versões e ambientes ali identificados. A [nota da versão 2.0.0](lancamento-20out.md) informa a verificação desta consolidação. Instalação editável num ambiente já disponível não demonstra preparação do WSL do zero, máquina nova sem cache ou reprodução independente.
+Os testes de instalação anteriores estão nos registros de 06/10, b1 e b3, em `docs/desenvolvimento/` no repositório Git. Eles pertencem às versões e ambientes ali identificados. A [nota da versão 2.0.0](lancamento-20out.md) informa a verificação desta consolidação. Instalação editável num ambiente já disponível não demonstra preparação do WSL do zero, máquina nova sem cache ou reprodução independente.

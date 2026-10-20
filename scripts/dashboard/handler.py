@@ -339,7 +339,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
         if parsed.path == "/help":
-            documents = {"guia": "docs/beta-pesquisadores.md", "bancos": "docs/uso-e-bancos.md", "hospedeiro": "docs/HOSPEDEIRO_BETA.md", "licenca": "LICENSE", "terceiros": "THIRD_PARTY_NOTICES.md"}
+            documents = {"guia": "docs/uso-e-bancos.md", "bancos": "docs/uso-e-bancos.md", "hospedeiro": "docs/HOSPEDEIRO_BETA.md", "licenca": "LICENSE", "terceiros": "THIRD_PARTY_NOTICES.md"}
             key = query_one(query, "doc") or "guia"
             if key not in documents:
                 return self.send_error(HTTPStatus.NOT_FOUND, "Documento não disponível")

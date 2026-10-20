@@ -79,8 +79,8 @@ O rótulo exibido no relatório e no painel é `CANDIDATOS_PARA_REVISAO` quando 
 
 ## Alcance, licença e registros
 
-Verificações funcionais sintéticas demonstram caminhos do programa; não estimam sensibilidade clínica, precisão em amostras reais, superioridade ou recuperação de todo fragmento. A campanha histórica de 27 bibliotecas pertence a outra configuração e conserva **G0.8 reprovado**. Veja [validação científica](docs/validacao.md) e [correções do contrato](docs/correcoes-cientificas-05out.md).
+Verificações funcionais sintéticas demonstram caminhos do programa; não estimam sensibilidade clínica, precisão em amostras reais nem recuperação de todo fragmento. A campanha histórica de 27 bibliotecas pertence a outra configuração e conserva **G0.8 reprovado**. Veja [validação científica](docs/validacao.md).
 
 A [Gene-In Limited Public Use License v1.0](LICENSE) permite avaliação acadêmica, ensino e pesquisa não comercial. Redistribuição, modificação e os demais usos restritos dependem de autorização prévia por escrito do titular. Componentes de terceiros mantêm suas [licenças próprias](THIRD_PARTY_NOTICES.md). Consulte [como citar](docs/citacao.md) e registre versão, bancos e parâmetros.
 
-O [índice da documentação](docs/README.md) reúne instalação, utilidades, solução de problemas, desenvolvimento e registros anteriores. O [CHANGELOG](CHANGELOG.md) preserva as entregas; [PROBLEMAS_GENEIN.md](PROBLEMAS_GENEIN.md) acompanha os achados. Dados, bancos, ambientes e resultados ficam separados do código versionado.
+O [índice da documentação](docs/README.md) reúne instalação, utilidades, solução de problemas e desenvolvimento. O [CHANGELOG](CHANGELOG.md) preserva as entregas. Dados, bancos, ambientes e resultados ficam separados do código versionado.

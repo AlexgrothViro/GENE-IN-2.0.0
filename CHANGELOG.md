@@ -25,11 +25,11 @@
 
 - BLAST curto em blocos com equivalência byte a byte; validação antecipada de controles e banco composto.
 - Falhas de memória/sinais, limpeza de temporários, arquivos FASTQ simples, progresso de upload e revalidação de artefatos.
-- Parâmetros científicos preservados. Ver [relatório b3](docs/correcoes-reteste-b3.md) e [limites](docs/reteste-b3-limites.md).
+- Parâmetros científicos preservados. Relatório e limites da b3: `docs/desenvolvimento/` no repositório Git, fora do pacote distribuído.
 
 ## 2026-10-08 — 2.0.0b2, usabilidade
 
-- Correções individuais de instalação, memória e interface registradas em [correções da b2](docs/correcoes-usabilidade-b2.md).
+- Correções individuais de instalação, memória e interface registradas em `docs/desenvolvimento/` no repositório Git, fora do pacote distribuído.
 
 ## 2026-10-08 — 2.0.0b1, beta de pesquisa
 
@@ -39,7 +39,7 @@
 - Instalador rejeita plataformas incompatíveis antes de baixar ferramentas e prepara permissões dos scripts extraídos de ZIP.
 - Apresentação editorial revisada e comando público `make test-tracks` para as trilhas de testes.
 - Contratos e parâmetros científicos preservados. A beta identifica a distribuição; a validação científica adicional permanece pendente.
-- Evidências e limites da verificação: [verificacao-beta-08out.md](docs/verificacao-beta-08out.md).
+- Evidências e limites da verificação: `docs/desenvolvimento/` no repositório Git, fora do pacote distribuído.
 
 ## 2026-10-06 — entrega funcional organizada
 
@@ -53,10 +53,10 @@
 
 ## 2026-10-05 — correções científicas implementadas
 
-Disponibilidade de candidatos separada de qualificação; união de bases alinhadas por referência/segmento; competição por query/referência/perfil; atribuição taxonômica com ambiguidade e alcance explícitos. Veja [correções](docs/correcoes-cientificas-05out.md).
+Disponibilidade de candidatos separada de qualificação; união de bases alinhadas por referência/segmento; competição por query/referência/perfil; atribuição taxonômica com ambiguidade e alcance explícitos. O registro está em `docs/desenvolvimento/` no repositório Git, fora do pacote distribuído.
 
 ## 2026-10-02 a 2026-10-03 — recuperação integrada de 20–100 pb
 
-Queries unificadas de contigs, fragmentos montados e reads; preservação de curtos na presença de longos; busca e proveniência; exportação de sequências; integração de MULTI/adaptadores na interface; verificações funcionais com ferramentas reais. Veja [registro histórico](VERIFICACAO_ENTREGA.md).
+Queries unificadas de contigs, fragmentos montados e reads; preservação de curtos na presença de longos; busca e proveniência; exportação de sequências; integração de MULTI/adaptadores na interface; verificações funcionais com ferramentas reais. O registro histórico está em `docs/desenvolvimento/` no repositório Git, fora do pacote distribuído.
 
 O desenvolvimento anterior permanece no histórico Git e na branch de preservação da versão anterior. Resultados de campanhas anteriores não foram recalculados para esta publicação.

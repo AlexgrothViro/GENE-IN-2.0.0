@@ -410,6 +410,21 @@ def validate_commit_metadata(
     return errors
 
 
+def _validate_candidate_summary(path: Path, rows: list[dict]) -> None:
+    try:
+        from .export_candidate_sequences import _best_hit_rows
+    except ImportError:
+        from export_candidate_sequences import _best_hit_rows
+    expected = _best_hit_rows(rows)
+    actual = list(iter_tsv(path))
+    if [row.get("qseqid") for row in actual] != [row["qseqid"] for row in expected]:
+        raise ValueError("candidate summary must contain one best hit per candidate")
+    for got, want in zip(actual, expected):
+        for field, value in want.items():
+            if str(got.get(field, "")) != str(value):
+                raise ValueError(f"candidate summary mismatch for {want['qseqid']}: {field}")
+
+
 def validate_candidate_exports(directory: Path) -> list[str]:
     """New recovery artifacts must agree before transactional publication."""
     names = ("candidate_queries.json", "candidate_sequences.tsv", "candidate_sequences.fa")
@@ -449,6 +464,9 @@ def validate_candidate_exports(directory: Path) -> list[str]:
                           "weighted_pident", "best_bitscore", "best_evalue", "assembly_method"):
                 if row[field] != fragment[field]:
                     raise ValueError(f"candidate alignment mismatch for {query}: {field}")
+        summary_path = directory / "candidate_summary.tsv"
+        if summary_path.is_file():
+            _validate_candidate_summary(summary_path, list(iter_tsv(directory / names[1])))
         return []
     except (OSError, ValueError, KeyError, TypeError, csv.Error) as exc:
         return [f"invalid candidate recovery exports: {exc}"]

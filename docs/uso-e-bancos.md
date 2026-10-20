@@ -160,7 +160,8 @@ Na execução individual pela CLI, o recibo fica em `<output-root>/execution.jso
 | Arquivo/campo | Leitura correta |
 |---|---|
 | `candidate_sequences.fa` | Sequências com alinhamento, disponíveis para revisão; não necessariamente de origem viral confirmada |
-| `candidate_sequences.tsv` | Tamanho, bases alinhadas, origem e vínculos por alinhamento |
+| `candidate_sequences.tsv` | Tabela completa: uma linha por alinhamento (query, referência e tarefa) |
+| `candidate_summary.tsv` | Uma linha por candidato. O melhor hit usa o maior bitscore, depois o menor e-value e, em seguida, a maior identidade. `hit_row_count` diz quantas linhas desse candidato existem na tabela completa |
 | `candidate_queries.json` | Queries consultadas e hashes; pode incluir sequências sem candidato alinhado |
 | `evidence_report.md` / `sample_evidence.json` | Evidência, estados, avisos e medidas da amostra |
 | `run_state.json` / `artifact_manifest.json` | Estado final e integridade dos artefatos Evidence |
@@ -182,4 +183,4 @@ Na execução individual pela CLI, o recibo fica em `<output-root>/execution.jso
 
 `WEAK_RECOVERABLE` aparece como `REVIEW` na exportação clássica. Contagens de sequências repetidas não demonstram moléculas independentes. `total_nonredundant_reference_bp` usa a união de posições por referência/segmento entre loci, orientações e perfis; mede bases alinhadas, sem confirmar origem. Consulte `reference_coverage.by_reference` e não some referências distintas como cobertura de um único genoma.
 
-Preserve entradas e hashes, configuração resolvida, manifestos dos bancos, logs, relatórios e exportações. Ausência de candidatos não comprova ausência de vírus. Veja o [contrato científico](correcoes-cientificas-05out.md), os [limites de validação](validacao.md) e [como citar a execução](citacao.md).
+Preserve entradas e hashes, configuração resolvida, manifestos dos bancos, logs, relatórios e exportações. Ausência de candidatos não comprova ausência de vírus. Veja os [limites de validação](validacao.md) e [como citar a execução](citacao.md).

@@ -33,14 +33,50 @@ def export(queries: Path, manifest_path: Path, fragments: Path, output: Path):
     fields = ["qseqid", "sequence_length_bp", "sequence_sha256", "query_origins",
               "sseqid", "category", "taxon", "task", "aligned_query_bp", "query_coverage",
               "weighted_pident", "best_bitscore", "best_evalue", "assembly_method"]
-    rows = ({"qseqid": row["qseqid"], "sequence_length_bp": len(sequences[row["qseqid"]]),
+    rows = [{"qseqid": row["qseqid"], "sequence_length_bp": len(sequences[row["qseqid"]]),
              "sequence_sha256": metadata[row["qseqid"]]["sequence_sha256"],
              "query_origins": ";".join(sorted(metadata[row["qseqid"]]["source_counts"])),
              "aligned_query_bp": row["query_covered_bp"],
              **{key: row.get(key, "") for key in fields if key in row and key != "qseqid"}}
-            for row in iter_tsv(fragments))
+            for row in iter_tsv(fragments)]
     write_tsv_atomic(output / "candidate_sequences.tsv", rows, fields)
+    write_tsv_atomic(output / "candidate_summary.tsv", _best_hit_rows(rows), fields + ["hit_row_count"])
     write_json_atomic(output / "candidate_queries.json", manifest)
+
+
+def _rank_number(row: dict, key: str, default: float) -> float:
+    try:
+        return float(row.get(key) or "")
+    except (TypeError, ValueError):
+        return default
+
+
+def _best_rank(row: dict) -> tuple:
+    """Same order already used for hits: higher bitscore, then lower e-value, then higher identity."""
+    return (
+        -_rank_number(row, "best_bitscore", float("-inf")),
+        _rank_number(row, "best_evalue", float("inf")),
+        -_rank_number(row, "weighted_pident", float("-inf")),
+        str(row.get("sseqid", "")),
+        str(row.get("task", "")),
+    )
+
+
+def _best_hit_rows(rows: list[dict]) -> list[dict]:
+    grouped: dict[str, list[dict]] = {}
+    order: list[str] = []
+    for row in rows:
+        query = row["qseqid"]
+        if query not in grouped:
+            order.append(query)
+            grouped[query] = []
+        grouped[query].append(row)
+    summary = []
+    for query in order:
+        group = grouped[query]
+        best = min(group, key=_best_rank)
+        summary.append({**best, "hit_row_count": str(len(group))})
+    return summary
 
 
 def main():

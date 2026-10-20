@@ -26,7 +26,7 @@ Disponibilidade de candidatos, qualificação, competição e atribuição taxon
 - [README](../README.md): propósito, começo rápido, CLI e resultados.
 - [Instalação e reprodução](installation-reproducibility.md): plataformas, locks, servidor local e recursos.
 - [Uso e bancos](uso-e-bancos.md): entradas, MULTI, controles, lotes, hospedeiro e interpretação.
-- [Guia para pesquisadores](beta-pesquisadores.md): primeira avaliação local e relato de problemas.
+- [Uso e bancos](uso-e-bancos.md): primeira análise local.
 - [Citação e atribuição](citacao.md): referência da versão 2.0.0 e proveniência da execução.
 - [Índice completo](README.md): arquitetura, testes, solução de problemas e histórico.
 
@@ -88,4 +88,4 @@ O empacotador foi verificado por testes na preparação da rc1. A criação, a c
 - Em registros legados, o nome `SUCCESS.json` pode acompanhar `status=failed`; confira campos, estado técnico e logs.
 - macOS/ARM não são atendidos pelo ambiente fixado. Instalação e reprodução em ambientes não demonstrados exigem recibos próprios.
 
-Consulte os [problemas acompanhados](../PROBLEMAS_GENEIN.md), os [limites da b3](reteste-b3-limites.md) e as [correções científicas](correcoes-cientificas-05out.md). A licença é a [Gene-In Limited Public Use License v1.0](../LICENSE); redistribuição e modificação dependem da autorização prevista no texto, e os componentes de terceiros mantêm seus [termos próprios](../THIRD_PARTY_NOTICES.md).
+Os registros internos de reteste ficam em `docs/desenvolvimento/` no repositório Git e não acompanham o pacote distribuído. A licença é a [Gene-In Limited Public Use License v1.0](../LICENSE); redistribuição e modificação dependem da autorização prevista no texto, e os componentes de terceiros mantêm seus [termos próprios](../THIRD_PARTY_NOTICES.md).
