@@ -9,6 +9,9 @@ WORK_PREFIX := $(if $(strip $(GENEIN_WORK_ROOT)),$(GENEIN_WORK_ROOT)/,)
 
 ENV_DB := $(if $(filter environment environment\ override,$(origin DB)),$(DB),)
 ENV_DB_QUERY := $(if $(filter environment environment\ override,$(origin DB_QUERY)),$(DB_QUERY),)
+ENV_REF_FASTA := $(if $(filter environment environment\ override,$(origin REF_FASTA)),$(REF_FASTA),)
+ENV_BLAST_DB := $(if $(filter environment environment\ override,$(origin BLAST_DB)),$(BLAST_DB),)
+ENV_BOWTIE2_INDEX := $(if $(filter environment environment\ override,$(origin BOWTIE2_INDEX)),$(BOWTIE2_INDEX),)
 
 # Parâmetros padrão (podem ser sobrescritos: SAMPLE= KMER=)
 SAMPLE ?=
@@ -84,10 +87,22 @@ BLAST_EVALUE    := $(subst ",,$(BLAST_EVALUE))
 SKIP_QC         := $(subst ",,$(SKIP_QC))
 TRACK           := $(subst ",,$(TRACK))
 
-# Recalculate paths to ensure consistency and quote-free values
+# Recalculate paths to ensure consistency and quote-free values.
+# Command-line values are kept by GNU make. Values coming from the
+# environment are captured above and restored here, because a plain
+# assignment would otherwise drop them.
 REF_FASTA     := $(REF_DIR)/$(DB).fa
 BLAST_DB      := blastdb/$(DB)
 BOWTIE2_INDEX := bowtie2/$(DB)
+ifneq ($(strip $(ENV_REF_FASTA)),)
+REF_FASTA := $(ENV_REF_FASTA)
+endif
+ifneq ($(strip $(ENV_BLAST_DB)),)
+BLAST_DB := $(ENV_BLAST_DB)
+endif
+ifneq ($(strip $(ENV_BOWTIE2_INDEX)),)
+BOWTIE2_INDEX := $(ENV_BOWTIE2_INDEX)
+endif
 
 .PHONY: cfg-all cfg-db cfg-assembly cfg-blast
 
@@ -206,12 +221,12 @@ pipeline:
 	scripts/pipeline/run.sh "$${PIPELINE_ARGS[@]}"
 
 db:
-	DB="$(DB)" REF_FASTA="$(REF_FASTA)" \
+	DB="$(DB)" DB_QUERY="$(DB_QUERY)" REF_FASTA="$(REF_FASTA)" \
 	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
 	$(SCRIPTS_DIR)/ops/db_manager.sh setup
 
 db-blast:
-	DB="$(DB)" REF_FASTA="$(REF_FASTA)" \
+	DB="$(DB)" DB_QUERY="$(DB_QUERY)" REF_FASTA="$(REF_FASTA)" \
 	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
 	$(SCRIPTS_DIR)/ops/db_manager.sh setup-blast
 
@@ -347,7 +362,9 @@ db-list:
 	DB="$(DB)" scripts/ops/db_manager.sh list
 
 db-setup:
-	DB="$(DB)" scripts/ops/db_manager.sh setup
+	DB="$(DB)" DB_QUERY="$(DB_QUERY)" REF_FASTA="$(REF_FASTA)" \
+	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
+	scripts/ops/db_manager.sh setup
 
 run:
 	@if [[ -z "$(SAMPLE)" || -z "$(R1)" || -z "$(R2)" ]]; then \

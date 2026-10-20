@@ -42,7 +42,14 @@ bash bundle/run.sh genein run \
   --analysis-profile assembly-consensus --evidence-v2 --threads 2
 ```
 
-O diretório de saída deve ser **novo e fora da fonte**. Para SPAdes individual, use `--analysis-profile default --assembler spades`. Não combine `--assembler` com `assembly-consensus`. Entradas single-end, contigs, lotes, controles, filtro de hospedeiro e competição estão em [uso e bancos](docs/uso-e-bancos.md).
+O diretório de saída deve ser **novo e fora da fonte**. Para preparar o banco a partir de um FASTA local, escolha o nome e o arquivo (os índices podem ficar fora da fonte):
+
+```bash
+bash bundle/run.sh db DB=meu_banco REF_FASTA=/dados/referencia.fa \
+  BLAST_DB=/dados/blastdb/meu_banco BOWTIE2_INDEX=/dados/bowtie2/meu_banco
+```
+
+Para SPAdes individual, use `--analysis-profile default --assembler spades`. Não combine `--assembler` com `assembly-consensus`. Entradas single-end, contigs, lotes, controles, filtro de hospedeiro e competição estão em [uso e bancos](docs/uso-e-bancos.md).
 
 ```bash
 bash bundle/run.sh genein --version

@@ -28,7 +28,28 @@ bash bundle/run.sh db-list
 bash bundle/run.sh db DB=ptv
 ```
 
-O prefixo lógico resultante é `blastdb/ptv`, na pasta da fonte. Para usá-lo na CLI, informe seu caminho absoluto. A CLI não baixa banco automaticamente e exige o manifesto correspondente `<prefixo>.db-manifest.json`. Preserve a estrutura completa do banco e as gerações internas ao copiar; um arquivo `.nin` sozinho é insuficiente. Não crie um manifesto vazio para contornar a validação.
+Para montar um banco a partir de um FASTA seu, escolha o nome e o arquivo. O nome não precisa ser um perfil NCBI. O FASTA não é copiado para dentro de um perfil:
+
+```bash
+bash bundle/run.sh db \
+  DB=meu_banco \
+  REF_FASTA=/dados/referencia.fa \
+  BLAST_DB=/dados/blastdb/meu_banco \
+  BOWTIE2_INDEX=/dados/bowtie2/meu_banco
+```
+
+`REF_FASTA` é o arquivo de referência. `DB` é o nome do banco. `BLAST_DB` e `BOWTIE2_INDEX` podem apontar para pastas fora da fonte; se forem omitidos, os índices ficam em `blastdb/<DB>` e `bowtie2/<DB>`. O mesmo vale na chamada direta, sem o wrapper:
+
+```bash
+DB=meu_banco REF_FASTA=/dados/referencia.fa \
+  BLAST_DB=/dados/blastdb/meu_banco \
+  BOWTIE2_INDEX=/dados/bowtie2/meu_banco \
+  bash scripts/ops/db_manager.sh setup
+```
+
+Na linha do `make`, `DB_QUERY` também é repassado ao gerenciador. Uma consulta NCBI continua possível com `DB=custom DB_QUERY=...` quando não houver FASTA local. Se o arquivo em `REF_FASTA` não existir, o comando para e informa o caminho; ele não pede um perfil NCBI no lugar do arquivo.
+
+O prefixo lógico do exemplo histórico é `blastdb/ptv`, na pasta da fonte. Para usá-lo na CLI, informe seu caminho absoluto. A CLI não baixa banco automaticamente e exige o manifesto correspondente `<prefixo>.db-manifest.json`. Preserve a estrutura completa do banco e as gerações internas ao copiar; um arquivo `.nin` sozinho é insuficiente. Não crie um manifesto vazio para contornar a validação.
 
 Mantenha as versões do banco usadas em análises anteriores. Uma consulta NCBI repetida em outra data pode produzir um conjunto diferente. Conserve também o FASTA original, a consulta, a data, os hashes e os termos de uso das referências.
 

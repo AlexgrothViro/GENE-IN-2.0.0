@@ -37,7 +37,14 @@ bash bundle/run.sh genein run \
   --analysis-profile assembly-consensus --evidence-v2 --threads 2
 ```
 
-The output directory must be new and outside the source tree. For individual SPAdes assembly, use `--analysis-profile default --assembler spades`. Do not combine `--assembler` with `assembly-consensus`. For all options:
+The output directory must be new and outside the source tree. To build a database from your own reference FASTA, pass the database name and the file. Index prefixes may live outside the source tree:
+
+```bash
+bash bundle/run.sh db DB=my_database REF_FASTA=/data/reference.fa \
+  BLAST_DB=/data/blastdb/my_database BOWTIE2_INDEX=/data/bowtie2/my_database
+```
+
+For individual SPAdes assembly, use `--analysis-profile default --assembler spades`. Do not combine `--assembler` with `assembly-consensus`. For all options:
 
 ```bash
 bash bundle/run.sh genein --version
