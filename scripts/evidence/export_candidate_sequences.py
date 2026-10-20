@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import math
 import re
@@ -106,13 +107,31 @@ def _remember(catalog: dict[str, tuple[str, str]], identifier: str, description:
 
 
 def titles_from_fasta(path: Path) -> dict[str, tuple[str, str]]:
+    """Stream FASTA titles. A bad encoding or gzip never aborts the export."""
+    try:
+        return _titles_from_fasta_stream(path)
+    except Exception as exc:
+        print(
+            f"[AVISO] Não foi possível ler títulos de {path}: {exc}. "
+            "Descrições de referência ficam vazias.",
+            file=sys.stderr,
+        )
+        return {}
+
+
+def _titles_from_fasta_stream(path: Path) -> dict[str, tuple[str, str]]:
     catalog: dict[str, tuple[str, str]] = {}
-    for raw in path.read_text(encoding="utf-8", errors="strict").splitlines():
-        if not raw.startswith(">"):
-            continue
-        header = raw[1:].strip()
-        identifier, _, title = header.partition(" ")
-        _remember(catalog, identifier, title or header)
+    if path.name.endswith(".gz"):
+        handle = gzip.open(path, "rt", encoding="utf-8", errors="replace")
+    else:
+        handle = path.open("r", encoding="utf-8", errors="replace")
+    with handle:
+        for raw in handle:
+            if not raw.startswith(">"):
+                continue
+            header = raw[1:].strip()
+            identifier, _, title = header.partition(" ")
+            _remember(catalog, identifier, title or header)
     return catalog
 
 

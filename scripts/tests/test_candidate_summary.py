@@ -1,4 +1,5 @@
 """candidate_summary.tsv keeps one best hit and leaves the full table unchanged."""
+import gzip
 import json
 import shutil
 import subprocess
@@ -10,7 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "evidence"))
 from common import sha256_text
-from export_candidate_sequences import export, titles_from_blast_db
+from export_candidate_sequences import export, titles_from_blast_db, titles_from_fasta
 from validate_run_artifacts import validate_candidate_exports
 
 _BLAST_TOOLS = ("makeblastdb", "blastdbcmd", "blastn")
@@ -177,3 +178,46 @@ def test_summary_fills_taxon_from_a_real_blast_database(tmp_path):
         assert "Porcine teschovirus 1 strain X" in row[-3]
         full = (out / "candidate_sequences.tsv").read_text(encoding="utf-8").splitlines()[1].split("\t")
         assert full[6] == ""
+
+
+def test_titles_from_fasta_survives_latin1_and_gzip(tmp_path, capsys):
+    latin = tmp_path / "latin1.fa"
+    latin.write_bytes(b">PTV1 v\xedrus, complete genome\nATGC\n")
+    catalog = titles_from_fasta(latin)
+    assert "PTV1" in catalog
+    description, taxon = catalog["PTV1"]
+    assert "complete genome" in description or "v" in description
+    assert taxon
+
+    compressed = tmp_path / "refs.fa.gz"
+    compressed.write_bytes(gzip.compress(
+        b">NC_1 Other virus isolate Y, partial genome\nAAAA\n"
+    ))
+    gzip_catalog = titles_from_fasta(compressed)
+    assert "NC_1" in gzip_catalog
+    assert "Other virus" in gzip_catalog["NC_1"][0]
+
+    broken = tmp_path / "broken.fa.gz"
+    broken.write_bytes(b"not a gzip stream")
+    assert titles_from_fasta(broken) == {}
+    warning = capsys.readouterr().err
+    assert "[AVISO]" in warning
+    assert "Descrições de referência ficam vazias" in warning
+
+    queries = tmp_path / "queries.fa"
+    queries.write_text(">q1\nAAAA\n", encoding="utf-8")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"schema_version": "1.0", "queries": {
+        "q1": {"length_bp": 4, "sequence_sha256": sha256_text("AAAA"), "source_counts": {"read": 1}},
+    }}), encoding="utf-8")
+    fragments = tmp_path / "fragment_evidence.tsv"
+    header = "\t".join([
+        "qseqid", "sseqid", "category", "taxon", "task", "query_covered_bp", "query_coverage",
+        "weighted_pident", "best_bitscore", "best_evalue", "assembly_method",
+    ])
+    fragments.write_text(header + "\nq1\tPTV1\tUNLABELED\t\tblastn\t4\t1\t100\t80\t1e-8\tspades\n", encoding="utf-8")
+    out = tmp_path / "out"
+    export(queries, manifest, fragments, out, reference_fasta=latin)
+    row = (out / "candidate_summary.tsv").read_text(encoding="utf-8").splitlines()[1].split("\t")
+    assert row[0] == "q1"
+    assert row[-3]
