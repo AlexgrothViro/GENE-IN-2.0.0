@@ -182,7 +182,8 @@ test("home uses the Gene-In masthead and route list instead of generic marketing
   assert.doesNotMatch(operational, /Da amostra ao resultado/);
   assert.doesNotMatch(operational, /Próxima ação/);
   assert.match(html, /gi-appbar__brand[\s\S]*gene-in-logo\.png/);
-  assert.doesNotMatch(html, /Análises virais rastreáveis/);
+  assert.match(html, /<title>Gene-In · Candidatos para revisão<\/title>/);
+  assert.doesNotMatch(html, /Análises virais/);
   assert.doesNotMatch(html, /width="40" height="40"/);
 });
 

@@ -347,7 +347,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             links = " | ".join(f'<a href="/help?doc={name}">{name}</a>' for name in documents)
             page = f'<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Ajuda Gene-In</title><body><h1>Ajuda Gene-In</h1><nav><a href="/">Voltar ao painel</a> | {links}</nav><pre style="white-space:pre-wrap;font:16px/1.6 sans-serif;max-width:1000px">{content}</pre></body></html>'
             return text_response(self, HTTPStatus.OK, page, "text/html; charset=utf-8")
-        if parsed.path == "/":
+        if parsed.path in {"/", "/index.html"}:
             return serve_file(self, DASHBOARD_DIR / "index.html", "text/html; charset=utf-8")
         if parsed.path == "/api/dbs":
             return json_response(self, HTTPStatus.OK, {"dbs": list_db_profiles()})

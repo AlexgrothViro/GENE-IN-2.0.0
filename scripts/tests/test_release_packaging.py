@@ -1,4 +1,5 @@
 """Distribution checks: source allowlist, permissions, hashes and provenance."""
+import calendar
 import hashlib
 import json
 import os
@@ -6,6 +7,7 @@ from pathlib import Path
 import subprocess
 import tarfile
 import tempfile
+import time
 import unittest
 import zipfile
 
@@ -80,6 +82,29 @@ class ReleasePackagingTests(unittest.TestCase):
             names = archive.namelist()
         self.assertTrue(any(name.endswith('guia-de-desenvolvimento.md') for name in names))
         self.assertFalse(any('desenvolvimento/' in name for name in names))
+
+    def test_zip_timestamps_use_the_commit_utc(self):
+        previous = os.environ.get("TZ")
+        os.environ["TZ"] = "America/Sao_Paulo"
+        time.tzset()
+        try:
+            out = Path(self.tmp.name) / "stamped"
+            record = build_release(self.root, out)
+            epoch = int(self.git("show", "-s", "--format=%ct", "HEAD").decode().strip())
+            expected = time.gmtime(epoch)[:6]
+            local = time.localtime(epoch)[:6]
+            self.assertNotEqual(expected, local)
+            with zipfile.ZipFile(out / record["source_archive_name"]) as archive:
+                for info in archive.infolist():
+                    self.assertEqual(info.date_time, expected)
+                    self.assertEqual(calendar.timegm(info.date_time), epoch)
+                    self.assertLessEqual(calendar.timegm(info.date_time), int(time.time()))
+        finally:
+            if previous is None:
+                os.environ.pop("TZ", None)
+            else:
+                os.environ["TZ"] = previous
+            time.tzset()
 
     def test_unsafe_name_rejected_before_output(self):
         out = Path(self.tmp.name) / 'unsafe'
