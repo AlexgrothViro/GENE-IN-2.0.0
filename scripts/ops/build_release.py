@@ -9,6 +9,7 @@ import io
 import json
 from pathlib import Path
 import re
+import struct
 import subprocess
 import tarfile
 import time
@@ -18,6 +19,12 @@ import zipfile
 
 MANIFEST = 'SOURCE_MANIFEST.sha256'
 SAFE_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+-]*\Z')
+
+
+def unix_time_extra(epoch: int) -> bytes:
+    """Info-ZIP UT extra field so unzip keeps the commit time, not the DOS clock."""
+    payload = bytes([1]) + struct.pack('<I', epoch & 0xFFFFFFFF)
+    return struct.pack('<HH', 0x5455, len(payload)) + payload
 
 
 def git(root: Path, *args: str) -> bytes:
@@ -77,6 +84,7 @@ def build_release(root: Path, output: Path, name: str | None = None) -> dict:
             item = zipfile.ZipInfo(name + '/' + rel, date_time=stamp)
             item.create_system = 3
             item.external_attr = (0o100000 | mode) << 16
+            item.extra = unix_time_extra(epoch)
             archive.writestr(item, data, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
     with tar_path.open('wb') as raw:
         with gzip.GzipFile(fileobj=raw, mode='wb', filename='', mtime=epoch) as compressed:

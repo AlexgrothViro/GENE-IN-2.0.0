@@ -104,6 +104,16 @@ class ReleasePackagingTests(unittest.TestCase):
                     self.assertLessEqual(stamped, epoch)
                     self.assertGreaterEqual(stamped, epoch - 1)
                     self.assertLessEqual(stamped, int(time.time()))
+                    self.assertTrue(info.extra.startswith(b"UT\x05\x00\x01"))
+            extracted = Path(self.tmp.name) / "extracted"
+            subprocess.run(
+                ["unzip", "-q", str(out / record["source_archive_name"]), "-d", str(extracted)],
+                check=True,
+            )
+            files = [path for path in extracted.rglob("*") if path.is_file()]
+            self.assertTrue(files)
+            for path in files:
+                self.assertEqual(int(path.stat().st_mtime), epoch)
         finally:
             if previous is None:
                 os.environ.pop("TZ", None)
