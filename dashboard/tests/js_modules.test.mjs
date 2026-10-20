@@ -58,8 +58,9 @@ function fakeDocument() {
 }
 
 test("recovery labels never turn a candidate into confirmed viral detection", () => {
-  assert.equal(evidenceLabel("DETECTED"), "Candidatos recuperados");
-  assert.equal(evidenceLabel("NO_SIGNAL"), "Nenhum candidato recuperado");
+  assert.equal(evidenceLabel("DETECTED"), "Candidatos para revisão");
+  assert.equal(evidenceLabel("EVIDENCE_RECOVERED"), "Candidatos para revisão");
+  assert.equal(evidenceLabel("NO_SIGNAL"), "Sem candidatos para revisão");
   assert.equal(evidenceLabel("NOT_EVALUABLE"), "Não avaliável");
 });
 
@@ -71,7 +72,8 @@ test("rendered dimensions explain recovery in both user flows", () => {
   const text = (node) => [node.textContent || "", ...(node.children || []).map(text)].join(" ");
   try {
     const dimensions = text(analysisDimensions({ evidence_level: "DETECTED" }));
-    assert.match(dimensions, /Candidatos recuperados/);
+    assert.match(dimensions, /Candidatos para revisão/);
+    assert.doesNotMatch(dimensions, /CANDIDATOS_PARA_REVISAO/);
     assert.doesNotMatch(dimensions, /DETECTED/);
     assert.match(text(outcomePanel("EVIDENCE_RECOVERED")), /não confirma origem viral nem espécie/);
   } finally { globalThis.document = previous; globalThis.Node = previousNode; }
@@ -176,11 +178,13 @@ test("home uses the Gene-In masthead and route list instead of generic marketing
   assert.match(operational, /gi-masthead/);
   assert.match(operational, /hero-bg\.png/);
   assert.match(operational, /gi-routes/);
-  assert.match(operational, /Recuperação e priorização de fragmentos virais/);
+  assert.match(operational, /Recuperação de sequências candidatas para revisão/);
+  assert.match(operational, /caso-modelo de validação/);
   assert.doesNotMatch(operational, /Da amostra ao resultado/);
   assert.doesNotMatch(operational, /Próxima ação/);
   assert.match(html, /gi-appbar__brand[\s\S]*gene-in-logo\.png/);
-  assert.doesNotMatch(html, /Análises virais rastreáveis/);
+  assert.match(html, /<title>Gene-In · Candidatos para revisão<\/title>/);
+  assert.doesNotMatch(html, /Análises virais/);
   assert.doesNotMatch(html, /width="40" height="40"/);
 });
 

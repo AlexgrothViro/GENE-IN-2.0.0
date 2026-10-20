@@ -57,6 +57,7 @@ run_router() {
   local assembler="$1" result="$2"
   set +e
   PATH="$TMP_DIR/bin:$PATH" PIPELINE_CONFIG_LOADED=1 SAMPLE_NAME=B3ROUTER SAMPLE_ID=B3ROUTER \
+    GENEIN_WORK_ROOT="$TMP_DIR" \
     SAMPLE_R1="$TMP_DIR/R1.fastq.gz" SAMPLE_R2="$TMP_DIR/R2.fastq.gz" \
     ASSEMBLY_DIR="$TMP_DIR/$result" ASSEMBLER="$assembler" THREADS=1 \
     FAKE_SPADES_RESULT="${FAKE_SPADES_RESULT:-success}" FAKE_VELVET_RESULT="${FAKE_VELVET_RESULT:-success}" \
@@ -99,6 +100,7 @@ grep -q 'ASSEMBLY_FALLBACK=1' "$TMP_DIR/fallback/B3ROUTER_assembly/assembly_meta
 
 FAKE_SPADES_ARGS_FILE="$TMP_DIR/spades-demo.args" \
   PATH="$TMP_DIR/bin:$PATH" PIPELINE_CONFIG_LOADED=1 \
+  GENEIN_WORK_ROOT="$TMP_DIR" \
   R1="$TMP_DIR/R1.fastq.gz" R2="$TMP_DIR/R2.fastq.gz" \
   ASSEMBLY_DIR="$TMP_DIR/demo" \
   bash scripts/pipeline/assemblers/spades.sh DEMO 1 >/dev/null 2>&1

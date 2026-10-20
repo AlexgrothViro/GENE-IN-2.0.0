@@ -1,4 +1,5 @@
 """Distribution checks: source allowlist, permissions, hashes and provenance."""
+import calendar
 import hashlib
 import json
 import os
@@ -6,6 +7,7 @@ from pathlib import Path
 import subprocess
 import tarfile
 import tempfile
+import time
 import unittest
 import zipfile
 
@@ -45,6 +47,10 @@ class ReleasePackagingTests(unittest.TestCase):
         with zipfile.ZipFile(out / record['source_archive_name']) as archive:
             names = archive.namelist()
             self.assertIn('Gene-In-2.0.0rc1/fixture.fa', names)
+            self.assertEqual(
+                archive.read('Gene-In-2.0.0rc1/SOURCE_COMMIT').decode().strip(),
+                record['source_commit'],
+            )
             self.assertFalse(any(s in n for n in names for s in ('config.env', 'untracked', '__pycache__', '.git/')))
             self.assertEqual(archive.getinfo('Gene-In-2.0.0rc1/nested/run.sh').external_attr >> 16 & 0o777, 0o755)
             manifest = archive.read('Gene-In-2.0.0rc1/SOURCE_MANIFEST.sha256').decode()
@@ -62,6 +68,62 @@ class ReleasePackagingTests(unittest.TestCase):
         (self.root / 'nested/run.sh').write_text('uncommitted change\n')
         with self.assertRaisesRegex(ValueError, 'commit tracked'):
             build_release(self.root, Path(self.tmp.name) / 'dirty')
+
+    def test_development_notes_stay_out_of_the_archive(self):
+        notes = self.root / 'docs' / 'desenvolvimento'
+        notes.mkdir(parents=True)
+        (notes / 'PROBLEMAS_GENEIN.md').write_text('registro interno\n', encoding='utf-8')
+        aside = self.root / 'descarte'
+        aside.mkdir()
+        (aside / 'lancamento-20out.md').write_text('nota interna\n', encoding='utf-8')
+        (self.root / 'docs' / 'guia-de-desenvolvimento.md').write_text('guia\n', encoding='utf-8')
+        self.git('add', 'docs', 'descarte')
+        self.git('-c', 'user.name=Release Test', '-c', 'user.email=release@example.invalid', 'commit', '-qm', 'notes')
+        out = Path(self.tmp.name) / 'without-notes'
+        record = build_release(self.root, out)
+        with zipfile.ZipFile(out / record['source_archive_name']) as archive:
+            names = archive.namelist()
+        self.assertTrue(any(name.endswith('guia-de-desenvolvimento.md') for name in names))
+        self.assertFalse(any('desenvolvimento/' in name for name in names))
+        self.assertFalse(any('descarte/' in name for name in names))
+
+    def test_zip_timestamps_use_the_commit_utc(self):
+        previous = os.environ.get("TZ")
+        os.environ["TZ"] = "America/Sao_Paulo"
+        time.tzset()
+        try:
+            out = Path(self.tmp.name) / "stamped"
+            record = build_release(self.root, out)
+            epoch = int(self.git("show", "-s", "--format=%ct", "HEAD").decode().strip())
+            expected = time.gmtime(epoch)[:6]
+            local = time.localtime(epoch)[:6]
+            self.assertNotEqual(expected, local)
+            with zipfile.ZipFile(out / record["source_archive_name"]) as archive:
+                for info in archive.infolist():
+                    # ZIP stores the clock in DOS format, which keeps even seconds only.
+                    self.assertEqual(info.date_time[:5], expected[:5])
+                    self.assertLessEqual(abs(info.date_time[5] - expected[5]), 1)
+                    self.assertNotEqual(info.date_time[3], local[3])
+                    stamped = calendar.timegm(info.date_time)
+                    self.assertLessEqual(stamped, epoch)
+                    self.assertGreaterEqual(stamped, epoch - 1)
+                    self.assertLessEqual(stamped, int(time.time()))
+                    self.assertTrue(info.extra.startswith(b"UT\x05\x00\x01"))
+            extracted = Path(self.tmp.name) / "extracted"
+            subprocess.run(
+                ["unzip", "-q", str(out / record["source_archive_name"]), "-d", str(extracted)],
+                check=True,
+            )
+            files = [path for path in extracted.rglob("*") if path.is_file()]
+            self.assertTrue(files)
+            for path in files:
+                self.assertEqual(int(path.stat().st_mtime), epoch)
+        finally:
+            if previous is None:
+                os.environ.pop("TZ", None)
+            else:
+                os.environ["TZ"] = previous
+            time.tzset()
 
     def test_unsafe_name_rejected_before_output(self):
         out = Path(self.tmp.name) / 'unsafe'

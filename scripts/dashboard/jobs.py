@@ -45,8 +45,9 @@ from dashboard.config import (
     LOG_DIR, RUNS_DIR, REPO_ROOT, iso_now, _DB_ALIAS, host_env_from_params,
     runtime_environment,
     load_config_env, validate_config_updates, save_config_env,
-    get_repo_root, get_runs_dir,
+    get_repo_root, get_runs_dir, user_config_env_path,
 )
+from genein.paths import resolve_blast_db
 
 EVIDENCE_SERVICE = EvidenceDashboardService(REPO_ROOT, background_inspection=True)
 EVIDENCE_ANALYTICS = EvidenceAnalyticsService(EVIDENCE_SERVICE)
@@ -466,9 +467,11 @@ def find_log_path(metadata):
     run_id = metadata.get("run_id") or metadata.get("id")
     candidates = []
     if run_id:
+        candidates.append(LOG_DIR / f"ux_{run_id}.log")
         candidates.append(get_repo_root() / "logs" / f"ux_{run_id}.log")
     sample = metadata.get("sample")
     if sample:
+        candidates.append(LOG_DIR / f"{sample}_pipeline.log")
         candidates.append(get_repo_root() / "logs" / f"{sample}_pipeline.log")
     for candidate in candidates:
         if candidate.exists():
@@ -833,9 +836,19 @@ def build_command(action, params):
             env["EVIDENCE_BATCH_ID"] = validate_sample_id(params["batch_id"])
         if params.get("expected_target"):
             env["EVIDENCE_EXPECTED_TARGET"] = str(params["expected_target"])
+        if "GENEIN_CONFIG_FILE" not in os.environ:
+            env["GENEIN_CONFIG_FILE"] = str(user_config_env_path())
+        # The per-run directory below is only the output root. The database is
+        # resolved before that swap. DB came from the panel, so BLAST_DB in
+        # picornavirus.env (the example ships blastdb/custom) is ignored, the
+        # same way Make drops a file path when DB comes from outside the file.
+        if "BLAST_DB" not in env and not os.environ.get("BLAST_DB"):
+            chosen = resolve_blast_db(env["DB"], os.environ, Path.home(), REPO_ROOT)
+            blast_path = Path(chosen)
+            if not blast_path.is_absolute():
+                blast_path = REPO_ROOT / blast_path
+            env["BLAST_DB"] = str(blast_path)
         env["GENEIN_WORK_ROOT"] = str(REPO_ROOT / "results" / "dashboard-work" / run_id)
-        if "BLAST_DB" not in env:
-            env["BLAST_DB"] = str(REPO_ROOT / "blastdb" / env["DB"])
         raw_dir = REPO_ROOT / "data/raw"
         suffix = ".fastq.gz"
         for candidate in (".fastq.gz", ".fastq", ".fq.gz", ".fq"):
@@ -1074,6 +1087,7 @@ def run_job(job_id, action, params):
         return
 
     try:
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
         with open(log_file, "w", encoding="utf-8") as lf:
             for line in popener.stdout:
                 line_clean = line.rstrip("\r\n")
@@ -1366,8 +1380,72 @@ def list_run_history():
             "comparison": True,
         })
 
+    runs.extend(_external_output_runs(seen_ids))
     runs.sort(key=lambda item: item.get("end_epoch", 0), reverse=True)
     return runs
+
+
+def _receipt_sample(receipt):
+    """CLI receipts name the sample. Older files only carry it in the command."""
+    sample = receipt.get("sample")
+    if isinstance(sample, str) and sample.strip():
+        return sample.strip()
+    command = receipt.get("command")
+    if isinstance(command, list):
+        for index, token in enumerate(command):
+            if token == "--sample" and index + 1 < len(command):
+                nxt = command[index + 1]
+                if isinstance(nxt, str) and nxt.strip() and not nxt.startswith("-"):
+                    return nxt.strip()
+    return ""
+
+
+def _external_output_runs(seen_ids):
+    """List CLI receipts under GENEIN_OUTPUT_ROOT. Unset leaves history unchanged."""
+    raw = os.environ.get("GENEIN_OUTPUT_ROOT", "").strip()
+    if not raw:
+        return []
+    root = Path(raw).expanduser()
+    if not root.is_dir():
+        return []
+    folders = []
+    if (root / "execution.json").is_file():
+        folders.append(root)
+    else:
+        try:
+            children = sorted(path for path in root.iterdir() if path.is_dir())
+        except OSError:
+            children = []
+        folders.extend(child for child in children if (child / "execution.json").is_file())
+    status_map = {"completed": "done", "running": "running", "cancelled": "cancelled", "failed": "failed"}
+    found = []
+    for folder in folders:
+        try:
+            receipt = json.loads((folder / "execution.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, UnicodeError):
+            continue
+        if not isinstance(receipt, dict):
+            continue
+        run_id = str(receipt.get("run_id") or folder.name)
+        if not run_id or run_id in seen_ids:
+            continue
+        seen_ids.add(run_id)
+        finished = receipt.get("finished_at")
+        found.append({
+            "id": run_id,
+            "run_id": run_id,
+            "run_dir": "",
+            "output_root": str(folder),
+            "action": "genein_run",
+            "sample": _receipt_sample(receipt),
+            "start": receipt.get("started_at"),
+            "end": finished,
+            "end_epoch": _history_epoch(finished),
+            "status": status_map.get(receipt.get("status"), receipt.get("status") or "unavailable"),
+            "label": str(folder),
+            "external_output": True,
+        })
+    return found
 
 
 def resolve_history_file(run_dir, file_type):

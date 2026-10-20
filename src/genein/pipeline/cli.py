@@ -15,6 +15,8 @@ import subprocess
 import sys
 import uuid
 
+from genein.identity import source_commit, software_version
+from genein.paths import user_config_env_path
 from .sample import BatchCancelled, ProcessRunner
 
 
@@ -232,6 +234,9 @@ def prepare(args, root: Path) -> tuple[Path, list[str], dict[str, str], str]:
     # explicit shell input flags below still take precedence over config files.
     for name in ("SAMPLE_R1", "SAMPLE_R2", "SAMPLE_SINGLE", "CONTIGS", "EVIDENCE_RESERVATION_TOKEN"):
         env.pop(name, None)
+    # Remember the user config before this run replaces GENEIN_WORK_ROOT with the output.
+    if not env.get("GENEIN_CONFIG_FILE"):
+        env["GENEIN_CONFIG_FILE"] = str(user_config_env_path(env))
     env.update({"GENEIN_WORK_ROOT": str(output), "BLAST_DB": db,
                 "EVIDENCE_RUN_ID": run_id, "PYTHONDONTWRITEBYTECODE": "1"})
     # Shell adapters call python3; use the interpreter running this CLI.
@@ -285,6 +290,14 @@ def prepare(args, root: Path) -> tuple[Path, list[str], dict[str, str], str]:
     return output, command, env, run_id
 
 
+def _command_sample(command: list) -> str:
+    """Sample already validated in the launcher command. Batch runs have none."""
+    for index, token in enumerate(command):
+        if token == "--sample" and index + 1 < len(command):
+            return str(command[index + 1])
+    return ""
+
+
 def run(args) -> int:
     try:
         root = source_root()
@@ -293,8 +306,15 @@ def run(args) -> int:
     except (OSError, ValueError) as exc:
         print(f"[FATAL] {exc}", file=sys.stderr)
         return 2
+    # GENEIN_REPO_ROOT can point at a stub used by tests. The version and the
+    # commit belong to the tree that contains this software, which carries
+    # RELEASE.json in a normal checkout or package.
+    identity_root = root if (root / "RELEASE.json").is_file() else Path(__file__).resolve().parents[3]
     receipt = {"schema_version": "1.0", "kind": "genein_launcher_receipt",
-               "run_id": run_id, "source_root": str(root), "output_root": str(output),
+               "software_version": software_version(identity_root),
+               "source_commit": source_commit(identity_root),
+               "run_id": run_id, "sample": _command_sample(command),
+               "source_root": str(root), "output_root": str(output),
                "command": command, "started_at": datetime.now(timezone.utc).isoformat(),
                "status": "running", "scientific_validation": "not_assessed"}
     receipt_path = output / "execution.json"

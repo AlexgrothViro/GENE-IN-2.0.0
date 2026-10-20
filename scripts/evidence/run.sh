@@ -181,8 +181,11 @@ fi
 # experimental, mesmo caminho técnico) e o perfil científico uma só vez,
 # no lugar de mais de quinze spawns de activation_policy.py/config_value.py
 # repetindo a mesma leitura campo a campo.
-mkdir -p "${GENEIN_WORK_ROOT:-$REPO_ROOT}/tmp"
-RESOLVED_EVIDENCE_CONFIG_JSON="${GENEIN_WORK_ROOT:-$REPO_ROOT}/tmp/${RUN_ID}.resolved_evidence_config.json"
+# shellcheck disable=SC1091
+source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
+EVIDENCE_SCRATCH="$(genein_scratch_dir)"
+mkdir -p "${EVIDENCE_SCRATCH}"
+RESOLVED_EVIDENCE_CONFIG_JSON="${EVIDENCE_SCRATCH}/${RUN_ID}.resolved_evidence_config.json"
 python3 "$SCRIPT_DIR/../pipeline/resolve_config.py" evidence \
   "${RESOLVE_CONFIG_POLICY_ARGS[@]}" --profiles "$PROFILES" \
   --role "$ROLE" --qc-status "$QC_STATUS" --host-filter-status "$HOST_FILTER_STATUS" \
@@ -527,8 +530,16 @@ python3 "$EVIDENCE_DIR/classify_sample.py" "${CLASSIFY_ARGS[@]}"
 state_stage evidence_classification "done"
 state_stage report_export running
 if [[ -n "$QUERY_MANIFEST" ]]; then
+  EXPORT_REFERENCE=()
+  if [[ -n "${REF_FASTA:-}" && -s "${REF_FASTA}" ]]; then
+    EXPORT_REFERENCE+=(--reference-fasta "$REF_FASTA")
+  fi
+  if [[ -n "${BLAST_DB:-}" ]]; then
+    EXPORT_REFERENCE+=(--blast-db "$BLAST_DB")
+  fi
   python3 "$EVIDENCE_DIR/export_candidate_sequences.py" --queries "$QUERIES" \
-    --manifest "$QUERY_MANIFEST" --fragments "$OUTDIR/fragment_evidence.tsv" --out-dir "$OUTDIR"
+    --manifest "$QUERY_MANIFEST" --fragments "$OUTDIR/fragment_evidence.tsv" --out-dir "$OUTDIR" \
+    "${EXPORT_REFERENCE[@]}"
 fi
 # Astra: um único caminho técnico de conclusão para experimentos e para o
 # público — export/validate/finalize sempre executam; a identidade

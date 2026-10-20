@@ -16,8 +16,18 @@ export function jobLabel(value) {
   return { running: "Em execução", done: "Concluída", partial: "Concluída com ressalvas técnicas", failed: "Falha", blocked: "Bloqueada", cancelled: "Cancelada", unavailable: "Aguardando", not_started: "Não iniciada", not_evaluable: "Não avaliável" }[normalizeStatus(value)] || value;
 }
 
+// Códigos contratuais DETECTED / EVIDENCE_RECOVERED permanecem no JSON.
+// A interface mostra o rótulo neutro.
+const PUBLIC_REVIEW_LABELS = {
+  DETECTED: "Candidatos para revisão",
+  EVIDENCE_RECOVERED: "Candidatos para revisão",
+  NO_SIGNAL: "Sem candidatos para revisão",
+  NO_EVIDENCE_RECOVERED: "Sem candidatos para revisão",
+  NOT_EVALUABLE: "Não avaliável",
+};
+
 export function evidenceLabel(value) {
-  return { DETECTED: "Candidatos recuperados", NO_SIGNAL: "Nenhum candidato recuperado", NOT_EVALUABLE: "Não avaliável" }[value] || value || "Não informado";
+  return PUBLIC_REVIEW_LABELS[value] || value || "Não informado";
 }
 
 export function runIdentity(run = {}) {

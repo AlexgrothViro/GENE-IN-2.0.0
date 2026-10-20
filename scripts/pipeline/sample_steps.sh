@@ -6,8 +6,9 @@ if [[ -z "$SAMPLE_NAME" ]]; then
   exit 2
 fi
 SAMPLE_NAME="$(python3 "${SCRIPTS_ROOT}/lib/input_validation.py" sample "$SAMPLE_NAME")"
-mkdir -p "${WORK_ROOT}/tmp"
-exec 8>"${WORK_ROOT}/tmp/${SAMPLE_NAME}.pipeline.lock"
+PIPELINE_SCRATCH="$(genein_scratch_dir)"
+mkdir -p "${PIPELINE_SCRATCH}"
+exec 8>"${PIPELINE_SCRATCH}/${SAMPLE_NAME}.pipeline.lock"
 if ! flock -n 8; then
   echo "[FATAL] ja existe um pipeline em execucao para a amostra '${SAMPLE_NAME}'" >&2
   exit 1
@@ -25,7 +26,7 @@ fi
 # mesmas prioridades e com as mesmas validações que antes viviam espalhadas
 # em ~100 linhas de bash. O shell só grava os overrides explícitos de CLI e
 # lê de volta o JSON congelado.
-RESOLVED_CONFIG_JSON="${WORK_ROOT}/tmp/${SAMPLE_NAME}.resolved_config.json"
+RESOLVED_CONFIG_JSON="${PIPELINE_SCRATCH}/${SAMPLE_NAME}.resolved_config.json"
 RESOLVE_CONFIG_CLI_ARGS=(
   --cli "SAMPLE_R1=${SAMPLE_R1_OVERRIDE}"
   --cli "SAMPLE_R2=${SAMPLE_R2_OVERRIDE}"

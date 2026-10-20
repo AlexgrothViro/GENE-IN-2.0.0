@@ -10,7 +10,6 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-TEST_TMP_ROOT = ROOT / "tmp" / "tests"
 
 
 def find_bash() -> str | None:
@@ -36,8 +35,11 @@ def bash_path(path: Path) -> str:
 
 
 def workspace_tempdir() -> tempfile.TemporaryDirectory:
-    TEST_TMP_ROOT.mkdir(parents=True, exist_ok=True)
-    return tempfile.TemporaryDirectory(dir=TEST_TMP_ROOT)
+    """Inside the source so paths stay relative, and removed when the test ends.
+
+    The directory is not ``tmp/``. A finished suite must not leave that folder.
+    """
+    return tempfile.TemporaryDirectory(prefix=".genein-test-", dir=ROOT)
 
 
 def repo_relative_path(path: Path) -> str:

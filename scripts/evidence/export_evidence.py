@@ -11,14 +11,14 @@ try:
         load_public_activation_policy,
     )
     from .common import write_text_atomic
-    from .evidence_contract import evidence_label, promote_for_public_output
+    from .evidence_contract import evidence_label, promote_for_public_output, public_review_label
 except ImportError:
     from activation_policy import (
         load_experimental_activation_policy,
         load_public_activation_policy,
     )
     from common import write_text_atomic
-    from evidence_contract import evidence_label, promote_for_public_output
+    from evidence_contract import evidence_label, promote_for_public_output, public_review_label
 
 
 def _load_policy(args: argparse.Namespace) -> dict | None:
@@ -94,9 +94,9 @@ def render(
 |---|---|
 | Run ID | `{data['run_id']}` |
 | Execução | `{data['execution_status']}` |
-| Resultado da análise | `{data['analysis_outcome']}` |
+| Resultado da análise | `{public_review_label(data['analysis_outcome'])}` |
 | Recuperação | {evidence_label(data)} |
-| Código de recuperação | `{data['evidence_level']}` (não representa confirmação viral) |
+| Rótulo para revisão | `{public_review_label(data['evidence_level'])}` (não representa confirmação viral) |
 | Especificidade no painel | `{specificity}` |
 | Cobertura | `{coverage}` |
 | Controles | `{controls}` |

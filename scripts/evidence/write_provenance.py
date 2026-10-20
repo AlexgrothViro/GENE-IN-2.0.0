@@ -5,6 +5,7 @@ import argparse
 import platform
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 try:
@@ -47,6 +48,17 @@ def tool_record(command: str) -> dict[str, str]:
     }
 
 
+def distribution_identity() -> dict[str, str]:
+    """Software version and commit, kept apart from the Evidence contract."""
+    root = Path(__file__).resolve().parents[2]
+    src = str(root / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    from genein.identity import software_version, source_commit
+
+    return {"software_version": software_version(root), "source_commit": source_commit(root)}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Write reproducible evidence-v2 provenance")
     parser.add_argument("--out", required=True)
@@ -79,6 +91,7 @@ def main() -> None:
         }
     write_json_atomic(output_path, {
         "schema_version": "2.0", "pipeline_version": "2.0.0-alpha.2",
+        **distribution_identity(),
         "platform": platform.platform(), "config_path": str(Path(args.config).resolve()),
         "config_sha256": sha256_file(args.config), "parameters": values, "artifacts": artifacts,
         "tools": {name: tool_record(name) for name in (

@@ -7,13 +7,15 @@
 | Dimensão | Identificador |
 |---|---|
 | Versão de software | `2.0.0` |
-| Contrato Evidence / `VERSION` | `2.0.0-alpha.2` |
+| Versão de software | `2.0.0` (`pyproject.toml`, `RELEASE.json`) |
+| Contrato Evidence / arquivo `VERSION` | `2.0.0-alpha.2` (identificador congelado do contrato, não a versão do programa) |
+| Commit do pacote sem `.git` | primeira linha de `SOURCE_COMMIT`, também em `genein --version` |
 | Recuperação | `fragment_recovery_20_100_v1` |
 | Revisão científica | `scientific_review_20261005_v1` |
 | Plataforma do ambiente fixado | Linux x86_64; Windows x86_64 via WSL2 |
 | Finalidade | Recuperação e apresentação de sequências candidatas para pesquisa e triagem humana |
 
-A versão 2.0.0 parte da rc1 preservada no commit `fb2f57a`. A consolidação anterior incorporou a base b3 `d963dfc` e as correções executáveis registradas em `ec84845`, seguidas da organização da distribuição. Os recibos da entrega final identificam o commit completo efetivamente empacotado; esses identificadores históricos não substituem o identificador do pacote 2.0.0.
+A versão 2.0.0 parte da rc1. O commit dessa candidata ficou na cópia local do autor e não está neste repositório público. A consolidação anterior incorporou a base b3 `d963dfc` e as correções executáveis registradas em `ec84845`, seguidas da organização da distribuição. Os recibos da entrega final identificam o commit completo efetivamente empacotado; esses identificadores históricos não substituem o identificador do pacote 2.0.0.
 
 **Gene-In Builder permanece um desenvolvimento separado**, conforme instrução do autor. Ele não faz parte da instalação, dos perfis, dos exemplos ou da verificação desta distribuição. O fluxo de montagem mantém Velvet, SPAdes, metaSPAdes e MULTI.
 
@@ -24,7 +26,7 @@ Disponibilidade de candidatos, qualificação, competição e atribuição taxon
 - [README](../README.md): propósito, começo rápido, CLI e resultados.
 - [Instalação e reprodução](installation-reproducibility.md): plataformas, locks, servidor local e recursos.
 - [Uso e bancos](uso-e-bancos.md): entradas, MULTI, controles, lotes, hospedeiro e interpretação.
-- [Guia para pesquisadores](beta-pesquisadores.md): primeira avaliação local e relato de problemas.
+- [Uso e bancos](uso-e-bancos.md): primeira análise local.
 - [Citação e atribuição](citacao.md): referência da versão 2.0.0 e proveniência da execução.
 - [Índice completo](README.md): arquitetura, testes, solução de problemas e histórico.
 
@@ -42,13 +44,13 @@ A tabela abaixo documenta resultados da preparação da rc1. Eles sustentam a ba
 |---|---|
 | Documentação inicial e limpeza | 121 links/âncoras locais válidos na organização inicial; 141 na conferência documental após a limpeza, sem links quebrados; `git diff --check` aprovado |
 | Citação estruturada da rc1 | `CITATION.cff` aprovado como YAML e contra o schema oficial CFF 1.2.0; recibo anterior `CITACAO_VERIFICADA.json` |
-| Engenharia da base | 518 testes e 270 subtestes em `scripts/tests`, 130 testes em `tests/` e 17 testes JavaScript; recibos distinguem `fonte-final` e `limpeza-distribuicao` |
+| Engenharia da base | Na rc1, 518 testes e 270 subtestes em `scripts/tests`, 130 testes em `tests/` e 17 testes JavaScript; recibos distinguem `fonte-final` e `limpeza-distribuicao`. A suíte medida nesta árvore 2.0.1 está em [desenvolvimento e testes](../docs/guia-de-desenvolvimento.md): 558 testes e 273 subtestes, 137 testes em `tests/` e 17 testes JavaScript |
 | Shell e ajuda | ShellCheck de todos os scripts shell com saída 0; `make help` aprovado |
 | Painel da fonte | Oito rotas com HTTP 200 e captura visual conferida; recibo `painel-fonte/PAINEL_HTTP.json`; serviço de verificação encerrado |
 | Trilhas `all-safe` da fonte | Oito etapas `PASS`, todas com saída 0, incluindo a suíte operacional integral; recibo `fonte-final/ALL_SAFE_FONTE_FINAL.json` |
 | Recuperação sintética com ferramentas reais | Quatro cenários aprovados: 20 pb, mistura 20/34/54/74/100 pb, 20 pb com adaptador e controle de hospedeiro de 20 pb; logs e `summary.json` em `fonte-final/fragmentos` |
 
-Testes e subtestes são apresentados separadamente e não devem ser somados como execuções independentes. A limpeza da rc1 acrescentou uma verificação de preservação dos parâmetros experimentais, passando de 517 para 518 testes nessa suíte. Os registros b1/b2/b3 continuam pertencendo às próprias versões e ambientes.
+Testes e subtestes são apresentados separadamente e não devem ser somados como execuções independentes. A limpeza da rc1 acrescentou uma verificação de preservação dos parâmetros experimentais, passando de 517 para 518 testes nessa suíte histórica. A contagem da 2.0.1 não substitui esse recibo da rc1. Os registros b1/b2/b3 continuam pertencendo às próprias versões e ambientes.
 
 A primeira tentativa operacional falhou na construção de um banco sintético porque a ferramenta externa recebeu um caminho com espaços. Ela foi preservada e não representa aprovação operacional. A tentativa revelou também um erro no relatório das trilhas: falha realmente executada podia aparecer como teste não executado. O tratamento foi corrigido para manter `FAIL`; o código 77 continua indicando teste não executado. A repetição aprovada usou um diretório Linux sem espaços e tem seus próprios recibos.
 
@@ -86,4 +88,4 @@ O empacotador foi verificado por testes na preparação da rc1. A criação, a c
 - Em registros legados, o nome `SUCCESS.json` pode acompanhar `status=failed`; confira campos, estado técnico e logs.
 - macOS/ARM não são atendidos pelo ambiente fixado. Instalação e reprodução em ambientes não demonstrados exigem recibos próprios.
 
-Consulte os [problemas acompanhados](../PROBLEMAS_GENEIN.md), os [limites da b3](reteste-b3-limites.md) e as [correções científicas](correcoes-cientificas-05out.md). A licença é a [Gene-In Limited Public Use License v1.0](../LICENSE); redistribuição e modificação dependem da autorização prevista no texto, e os componentes de terceiros mantêm seus [termos próprios](../THIRD_PARTY_NOTICES.md).
+Os registros internos de reteste ficam em `docs/desenvolvimento/` no repositório Git e não acompanham o pacote distribuído. A licença é a [Gene-In Limited Public Use License v1.0](../LICENSE); redistribuição e modificação dependem da autorização prevista no texto, e os componentes de terceiros mantêm seus [termos próprios](../THIRD_PARTY_NOTICES.md).

@@ -118,7 +118,9 @@ class ZeroContigsEvidenceChainTests(unittest.TestCase):
 
         report = self.tmp / "evidence_report.md"
         self._run("export_evidence.py", ["--json", str(sample_evidence), "--out", str(report)])
-        self.assertIn("NO_EVIDENCE_RECOVERED", report.read_text(encoding="utf-8"))
+        report_text = report.read_text(encoding="utf-8")
+        self.assertIn("SEM_CANDIDATOS_PARA_REVISAO", report_text)
+        self.assertNotIn("| Resultado da análise | `NO_EVIDENCE_RECOVERED`", report_text)
 
 
 if __name__ == "__main__":

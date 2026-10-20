@@ -48,8 +48,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
+
+_SRC = Path(__file__).resolve().parents[2] / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+from genein.paths import resolve_blast_db  # noqa: E402
 
 # activation_policy.py lives in ../evidence and analysis_profiles.py lives
 # next to this file; make both importable regardless of whether this module
@@ -247,6 +253,8 @@ def resolve_pipeline_config(
     cli: dict[str, str],
     sample_name: str,
     analysis_profiles_config: str | None = None,
+    environ: dict[str, str] | None = None,
+    home: Path | None = None,
 ) -> dict:
     """Resolve every pipeline/run.sh configuration variable in one place.
 
@@ -288,13 +296,20 @@ def resolve_pipeline_config(
     else:
         db = sourced.get("DB", "") or "custom"
         db_query = sourced.get("DB_QUERY", "")
+    # Callers that omit environ (the unit tests) stay on the source default.
+    # A real run passes os.environ so a database prepared outside the source
+    # is the same one Make and the panel select.
+    lookup_env = {} if environ is None else environ
+    lookup_home = home if home is not None else (Path("/nonexistent") if environ is None else Path.home())
     incoming_blast_db = incoming.get("BLAST_DB", "")
     if incoming_blast_db:
         blast_db = incoming_blast_db
     elif db_identity_overridden:
-        blast_db = f"blastdb/{db}"
+        blast_db = resolve_blast_db(db, lookup_env, lookup_home, repo_root)
     else:
-        blast_db = sourced.get("BLAST_DB", "") or f"blastdb/{db}"
+        blast_db = sourced.get("BLAST_DB", "") or resolve_blast_db(
+            db, lookup_env, lookup_home, repo_root,
+        )
     blast_db = resolve_path(blast_db, repo_root)
 
     analysis_profile = env_first("ANALYSIS_PROFILE")
@@ -531,6 +546,8 @@ def _cmd_pipeline(args: argparse.Namespace) -> None:
         cli=cli,
         sample_name=args.sample_name,
         analysis_profiles_config=args.analysis_profiles_config,
+        environ=dict(os.environ),
+        home=Path.home(),
     )
     _write_json(args.out, resolved)
 

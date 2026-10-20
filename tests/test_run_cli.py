@@ -151,7 +151,10 @@ def test_successful_run_writes_receipt_and_propagates_env(cli_repo, tmp_path, mo
     receipt = json.loads((output_root / "execution.json").read_text(encoding="utf-8"))
     assert receipt["status"] == "completed"
     assert receipt["exit_code"] == 0
+    assert receipt["software_version"] == "2.0.1"
+    assert receipt["source_commit"]
     assert receipt["output_root"] == str(output_root)
+    assert receipt["sample"] == "sample-1"
     assert receipt["source_root"] == str(cli_repo)
     assert not (cli_repo / "results").exists()
     assert not (cli_repo / "data").exists()
@@ -162,6 +165,20 @@ def test_successful_run_writes_receipt_and_propagates_env(cli_repo, tmp_path, mo
     assert record["env"]["EVIDENCE_ROLE"] == "positive"
     assert record["env"]["EVIDENCE_EXPECTED_TARGET"] == "target-x"
     assert record["env"]["EVIDENCE_RUN_ID"]
+
+
+def test_prepare_keeps_the_user_config_when_the_output_replaces_the_work_root(cli_repo, tmp_path, monkeypatch):
+    work = tmp_path / "user-work"
+    work.mkdir()
+    monkeypatch.setenv("GENEIN_WORK_ROOT", str(work))
+    monkeypatch.delenv("GENEIN_CONFIG_FILE", raising=False)
+    output = tmp_path / "external output"
+    args = build_args(single=fastq(tmp_path, "se.fq"), output_root=output,
+                      blast_db=blast_db(tmp_path), sample="sample-1")
+    _output, _command, env, _run_id = pipeline_cli.prepare(args, cli_repo)
+    assert env["GENEIN_WORK_ROOT"] == str(output.resolve())
+    assert env["GENEIN_CONFIG_FILE"] == str(work / "config" / "picornavirus.env")
+    assert not env["GENEIN_CONFIG_FILE"].startswith(str(cli_repo))
 
 
 def test_host_expected_public_option_is_forwarded_to_filter_environment(cli_repo, tmp_path):

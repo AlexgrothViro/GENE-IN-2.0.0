@@ -21,15 +21,24 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "evidence"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "pipeline"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "experimental" / "contig_comparison"))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from genein.paths import (
+    ConfigPermissionError, config_writable_by_others, resolve_blast_db,
+    resolve_config_file, user_config_env_path, user_log_dir,
+)
 from input_validation import validate_sample_id
 from analysis_profiles import load_profiles, resolve_profile
 
 DASHBOARD_DIR = REPO_ROOT / "dashboard"
-LOG_DIR = REPO_ROOT / "logs"
+# Resolved at import from the environment already set for this process.
+# Tests patch the name. Do not create the directory here.
+LOG_DIR = user_log_dir()
 RUNS_DIR = REPO_ROOT / "results" / "runs"
 TARGETS_FILE = REPO_ROOT / "config" / "targets.json"
-CONFIG_ENV_PRIMARY = REPO_ROOT / "config" / "picornavirus.env"
+REPO_CONFIG_ENV = REPO_ROOT / "config" / "picornavirus.env"
+# Write target. Tests and the facade patch this name; do not point it at the source tree.
+CONFIG_ENV_PRIMARY = user_config_env_path()
 CONFIG_ENV_EXAMPLE = REPO_ROOT / "config" / "picornavirus.env.example"
 CONFIG_ENV_LEGACY = REPO_ROOT / "config.env"
 ENVIRONMENT_YML = REPO_ROOT / "environment.yml"
@@ -208,24 +217,68 @@ def list_db_profiles():
         if not isinstance(data, list):
             return []
         for item in data:
-            prefix = REPO_ROOT / "blastdb" / item["id"]
+            prefix = Path(resolve_blast_db(item["id"], os.environ, Path.home(), REPO_ROOT))
+            if not prefix.is_absolute():
+                prefix = REPO_ROOT / prefix
             manifest = Path(str(prefix) + ".db-manifest.json")
             item["prepared"] = manifest.is_file() and manifest.stat().st_size > 0
             item["prefix"] = str(prefix)
-            reference = REPO_ROOT / "data/ref" / f'{item["id"]}.fa'
+            reference = prefix.parent.parent / "data" / "ref" / f'{item["id"]}.fa'
+            if not reference.is_file():
+                reference = REPO_ROOT / "data/ref" / f'{item["id"]}.fa'
             item["reference_size_bytes"] = reference.stat().st_size if reference.is_file() else None
         return data
+    except ConfigPermissionError:
+        raise
     except Exception:
         return []
 
 
 def get_config_env_path():
-    """Return the path to the config env file to use (prefer picornavirus.env over config.env)"""
-    if CONFIG_ENV_PRIMARY.exists():
+    """Same read order as Make and the shell.
+
+    A patched ``CONFIG_ENV_PRIMARY`` that already exists stays the file the
+    panel reads, so a save followed by a load uses that path. ``GENEIN_CONFIG_FILE``
+    remains exclusive. A missing write path continues the search at the home
+    file, then the source.
+    """
+    explicit = str(os.environ.get("GENEIN_CONFIG_FILE") or "").strip()
+    if explicit:
+        return Path(explicit).expanduser()
+    if CONFIG_ENV_PRIMARY.is_file():
+        work = str(os.environ.get("GENEIN_WORK_ROOT") or "").strip()
+        expected = Path(work).expanduser() / "config" / "picornavirus.env" if work else None
+        try:
+            same = expected is not None and CONFIG_ENV_PRIMARY.resolve() == expected.resolve()
+        except OSError:
+            same = False
+        if same and config_writable_by_others(CONFIG_ENV_PRIMARY):
+            raise ConfigPermissionError(
+                "picornavirus.env no diretório de trabalho é gravável por outros: "
+                f"{CONFIG_ENV_PRIMARY}"
+            )
         return CONFIG_ENV_PRIMARY
-    elif CONFIG_ENV_LEGACY.exists():
-        return CONFIG_ENV_LEGACY
-    return CONFIG_ENV_PRIMARY
+    return resolve_config_file(os.environ, Path.home(), REPO_ROOT)
+
+
+def ensure_user_config_env():
+    """Copy the example into the user path. Never create config/picornavirus.env in the source."""
+    if CONFIG_ENV_PRIMARY.exists() or REPO_CONFIG_ENV.exists() or CONFIG_ENV_LEGACY.exists():
+        return False
+    if not CONFIG_ENV_EXAMPLE.is_file():
+        return False
+    CONFIG_ENV_PRIMARY.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(CONFIG_ENV_EXAMPLE, CONFIG_ENV_PRIMARY)
+    os.chmod(CONFIG_ENV_PRIMARY, 0o600)
+    return True
+
+
+def _readonly_config_seed():
+    """Lines already stored in the source, copied only as the starting text of a new user file."""
+    for source in (REPO_CONFIG_ENV, CONFIG_ENV_LEGACY):
+        if source.is_file():
+            return source.read_text(encoding="utf-8")
+    return ""
 
 
 def parse_env_file(filepath):
@@ -349,8 +402,11 @@ def save_config_env(updates):
     existing_lines = []
     existing_keys = set()
 
-    if env_path.exists():
+    if env_path.is_file():
         content = env_path.read_text(encoding="utf-8")
+    else:
+        content = _readonly_config_seed()
+    if content:
         for line in content.splitlines():
             stripped = line.strip()
             if stripped and not stripped.startswith("#"):
@@ -372,8 +428,26 @@ def save_config_env(updates):
         if key in updates and key not in existing_keys:
             existing_lines.append(f"{key}={quote_config_value(key, updates[key])}")
 
-    env_path.write_text("\n".join(existing_lines) + "\n", encoding="utf-8")
+    _write_private_text(env_path, "\n".join(existing_lines) + "\n")
     return load_config_env()
+
+
+def _write_private_text(path: Path, text: str) -> None:
+    """Create or replace the file as mode 0600, independent of umask.
+
+    ``open`` applies umask to the requested mode, and truncating an existing
+    file keeps its old mode. ``fchmod`` is what makes a previous 0664 private.
+    """
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.fchmod(fd, 0o600)
+        handle = os.fdopen(fd, "w", encoding="utf-8")
+        fd = -1
+        with handle:
+            handle.write(text)
+    finally:
+        if fd >= 0:
+            os.close(fd)
 
 
 def validate_host_index(prefix):

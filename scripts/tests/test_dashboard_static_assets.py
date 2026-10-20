@@ -36,6 +36,7 @@ class DashboardStaticAssetTests(unittest.TestCase):
     def test_design_assets_have_correct_content_and_mime(self):
         assets = {
             "/": ("index.html", "text/html; charset=utf-8"),
+            "/index.html": ("index.html", "text/html; charset=utf-8"),
             "/tokens.css": ("tokens.css", "text/css; charset=utf-8"),
             "/gene-in.css": ("gene-in.css", "text/css; charset=utf-8"),
             "/styles.css": ("styles.css", "text/css; charset=utf-8"),

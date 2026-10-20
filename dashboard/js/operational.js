@@ -52,8 +52,8 @@ export function renderHome() {
   const root = h("div", { class: "stack" });
   root.append(h("section", { class: "gi-masthead" }, [
     h("div", { class: "gi-masthead__text" }, [
-      h("h1", { text: "Recuperação e priorização de fragmentos virais" }),
-      h("p", { text: "Pipeline acadêmico para triagem de fragmentos virais em dados metagenômicos. Execução local." }),
+      h("h1", { text: "Recuperação de sequências candidatas para revisão" }),
+      h("p", { text: "Hospedeiro e banco são escolhas da análise. Suíno e picornavírus são o caso-modelo de validação. Execução local." }),
       h("div", { class: "gi-btnrow" }, [linkButton("Iniciar nova análise", "#/new"), linkButton("Acompanhar execução", "#/track", "quiet")]),
       h("a", { href: "/help", text: "Ajuda, instalação, bancos e licenças" }),
     ]),

@@ -42,27 +42,29 @@ export const DIMENSION_LABELS = {
   reported_conclusion: "Conclusão reportável (reported_conclusion)",
 };
 
-function outcomePlate(outcome, detail) {
+function outcomePlate(outcome, detail, label) {
   return h("div", { class: "gi-outcome", dataset: { outcome }, role: "status" }, [
     h("div", { class: "gi-outcome__reads", "aria-hidden": "true" }, [h("i"), h("i"), h("i"), h("i"), h("i"), h("i")]),
     h("div", {}, [
-      h("strong", { class: "gi-outcome__code", text: outcome }),
+      h("strong", { class: "gi-outcome__code", text: label || outcome }),
       h("p", { class: "gi-outcome__text", text: detail }),
     ]),
   ]);
 }
 
 export function outcomePanel(outcome) {
-  if (outcome === "NO_EVIDENCE_RECOVERED") {
+  if (outcome === "NO_EVIDENCE_RECOVERED" || outcome === "SEM_CANDIDATOS_PARA_REVISAO" || outcome === "NO_SIGNAL") {
     return outcomePlate(
       "NO_EVIDENCE_RECOVERED",
       "A análise foi tecnicamente válida e não recuperou candidato classificável nas condições configuradas.",
+      "Sem candidatos para revisão",
     );
   }
-  if (outcome === "EVIDENCE_RECOVERED") {
+  if (outcome === "EVIDENCE_RECOVERED" || outcome === "CANDIDATOS_PARA_REVISAO" || outcome === "DETECTED") {
     return outcomePlate(
       "EVIDENCE_RECOVERED",
-      "Há candidatos recuperados para triagem humana. A recuperação não confirma origem viral nem espécie.",
+      "Há candidatos para revisão humana. A recuperação não confirma origem viral nem espécie.",
+      "Candidatos para revisão",
     );
   }
   if (outcome === "NOT_EVALUABLE") {

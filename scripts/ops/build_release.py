@@ -9,6 +9,7 @@ import io
 import json
 from pathlib import Path
 import re
+import struct
 import subprocess
 import tarfile
 import time
@@ -18,6 +19,12 @@ import zipfile
 
 MANIFEST = 'SOURCE_MANIFEST.sha256'
 SAFE_NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+-]*\Z')
+
+
+def unix_time_extra(epoch: int) -> bytes:
+    """Info-ZIP UT extra field so unzip keeps the commit time, not the DOS clock."""
+    payload = bytes([1]) + struct.pack('<I', epoch & 0xFFFFFFFF)
+    return struct.pack('<HH', 0x5455, len(payload)) + payload
 
 
 def git(root: Path, *args: str) -> bytes:
@@ -49,13 +56,18 @@ def build_release(root: Path, output: Path, name: str | None = None) -> dict:
         path = root / rel
         if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root):
             raise ValueError(f'not a regular source file: {rel}')
-        if rel == MANIFEST:
-            raise ValueError(f'{MANIFEST} is reserved for the generated manifest')
+        if rel == MANIFEST or rel.startswith('docs/desenvolvimento/') or rel.startswith('descarte/'):
+            # A tracked snapshot of an earlier package is not the manifest of
+            # this archive. The archive writes a fresh manifest below.
+            # descarte/ keeps internal notes in Git without shipping them.
+            continue
         data = path.read_bytes()
         # Zip extraction on Windows can lose execute bits. Preserve all nested
         # shell entry points in both archives, including scripts added later.
         permission = 0o755 if mode == '100755' or rel.endswith('.sh') else 0o644
         entries.append((rel, data, permission))
+    entries = [entry for entry in entries if entry[0] != 'SOURCE_COMMIT']
+    entries.append(('SOURCE_COMMIT', (sha + '\n').encode(), 0o644))
     entries.sort(key=lambda e: e[0])
     manifest = ''.join(f'{hashlib.sha256(data).hexdigest()}  {rel}\n' for rel, data, _ in entries).encode()
     entries.append((MANIFEST, manifest, 0o644))
@@ -73,6 +85,7 @@ def build_release(root: Path, output: Path, name: str | None = None) -> dict:
             item = zipfile.ZipInfo(name + '/' + rel, date_time=stamp)
             item.create_system = 3
             item.external_attr = (0o100000 | mode) << 16
+            item.extra = unix_time_extra(epoch)
             archive.writestr(item, data, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
     with tar_path.open('wb') as raw:
         with gzip.GzipFile(fileobj=raw, mode='wb', filename='', mtime=epoch) as compressed:
@@ -96,7 +109,9 @@ def build_release(root: Path, output: Path, name: str | None = None) -> dict:
                 raise ValueError(f'tar digest mismatch: {member.name}')
     # Refuse a package if source content changed while it was being archived.
     for rel, data, _ in entries:
-        if rel != MANIFEST and (root / rel).read_bytes() != data:
+        if rel in {MANIFEST, 'SOURCE_COMMIT'}:
+            continue
+        if (root / rel).read_bytes() != data:
             raise ValueError(f'source changed during packaging: {rel}')
     if git(root, 'rev-parse', 'HEAD').decode().strip() != sha or git(root, 'status', '--porcelain', '--untracked-files=no').strip():
         raise ValueError('source checkout changed during packaging')

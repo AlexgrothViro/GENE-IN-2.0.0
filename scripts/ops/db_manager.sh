@@ -14,39 +14,72 @@ case "${DB:-}" in
   fmdv|foot_and_mouth)         DB="fmdv" ;;
 esac
 
-# 1. GUARDA AS VARIÁVEIS DO DASHBOARD (Prioridade Máxima)
+# 1. GUARDA AS VARIÁVEIS DO CHAMADOR (Prioridade Máxima)
+# Um FASTA local em REF_FASTA, com o nome em DB, não pode ser apagado
+# quando o banco também é informado. O config.env não substitui esses valores.
 INCOMING_DB="${DB:-}"
 INCOMING_DB_QUERY="${DB_QUERY:-}"
-CONFIG_FILE="${REPO_ROOT}/config/picornavirus.env"
+INCOMING_REF_FASTA="${REF_FASTA:-}"
+INCOMING_BLAST_DB="${BLAST_DB:-}"
+INCOMING_BOWTIE2_INDEX="${BOWTIE2_INDEX:-}"
+# shellcheck disable=SC1091
+source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
+CONFIG_FILE="$(genein_resolve_config_file)"
 LEGACY_CONFIG="${REPO_ROOT}/config.env"
 if [[ -f "${CONFIG_FILE}" ]]; then
   # shellcheck disable=SC1090
   source "${CONFIG_FILE}"
-elif [[ -f "${LEGACY_CONFIG}" ]]; then
-  # shellcheck disable=SC1090
-  source "${LEGACY_CONFIG}"
 fi
 
 # 2. RESTAURA AS VARIÁVEIS (Sobrescrevendo o config.env)
-if [[ -n "$INCOMING_DB_QUERY" && ( -z "$INCOMING_DB" || "$INCOMING_DB" == "custom" ) ]]; then
-  # PRIORIDADE MÁXIMA: Query customizada
-  DB_QUERY="$INCOMING_DB_QUERY"
-  DB="custom"
-  unset REF_FASTA BLAST_DB BOWTIE2_INDEX
-
-  # O cache e a reconstrução serão controlados pelo validador de cache na etapa setup
-elif [[ -n "$INCOMING_DB" ]]; then
-  # PRIORIDADE SECUNDÁRIA: Lista suspensa
+# Perfil nomeado (DB=ptv e demais, inclusive um nome local) ignora DB_QUERY.
+# Só custom — ou uma consulta sem nome de banco — usa a consulta do chamador.
+if [[ -n "$INCOMING_DB" && "$INCOMING_DB" != "custom" ]]; then
   DB="$INCOMING_DB"
-  unset REF_FASTA BLAST_DB BOWTIE2_INDEX DB_QUERY
+  unset DB_QUERY
+elif [[ -n "$INCOMING_DB_QUERY" ]]; then
+  DB_QUERY="$INCOMING_DB_QUERY"
+fi
+# custom sem consulta do chamador conserva o DB_QUERY lido do arquivo.
+if [[ -n "$INCOMING_REF_FASTA" ]]; then
+  REF_FASTA="$INCOMING_REF_FASTA"
+elif [[ -n "$INCOMING_DB" || -n "$INCOMING_DB_QUERY" ]]; then
+  unset REF_FASTA
+fi
+if [[ -n "$INCOMING_BLAST_DB" ]]; then
+  BLAST_DB="$INCOMING_BLAST_DB"
+elif [[ -n "$INCOMING_DB" || -n "$INCOMING_DB_QUERY" ]]; then
+  unset BLAST_DB
+fi
+if [[ -n "$INCOMING_BOWTIE2_INDEX" ]]; then
+  BOWTIE2_INDEX="$INCOMING_BOWTIE2_INDEX"
+elif [[ -n "$INCOMING_DB" || -n "$INCOMING_DB_QUERY" ]]; then
+  unset BOWTIE2_INDEX
+fi
+# Consulta NCBI sem FASTA local conserva o nome histórico "custom".
+if [[ -n "$INCOMING_DB_QUERY" && -z "$INCOMING_REF_FASTA" && ( -z "$INCOMING_DB" || "$INCOMING_DB" == "custom" ) ]]; then
+  DB="custom"
 fi
 
 # shellcheck disable=SC1091
 source "${SCRIPTS_ROOT}/lib/common.sh"
 
-mkdir -p "${REPO_ROOT}/tmp"
+# O lock acompanha o trabalho quando a pessoa pede um diretório fora da fonte.
+# Sem esse diretório, o lock fica em ~/.gene-in/tmp e não cria tmp/ na fonte.
+LOCK_DIR="$(genein_scratch_dir)"
+if [[ -n "${GENEIN_WORK_ROOT:-}" ]]; then
+  case "${GENEIN_WORK_ROOT}" in
+    /*) ;;
+    *) log_error "GENEIN_WORK_ROOT precisa ser um diretório absoluto: ${GENEIN_WORK_ROOT}" ;;
+  esac
+  if [[ ! -d "${GENEIN_WORK_ROOT}" ]]; then
+    log_error "GENEIN_WORK_ROOT não existe: ${GENEIN_WORK_ROOT}"
+  fi
+  LOCK_DIR="${GENEIN_WORK_ROOT}/tmp"
+fi
+mkdir -p "${LOCK_DIR}"
 if [[ "${DB_MANAGER_LOCK_HELD:-0}" != "1" ]]; then
-  exec 9>"${REPO_ROOT}/tmp/db-manager.lock"
+  exec 9>"${LOCK_DIR}/db-manager.lock"
   flock -x 9
 fi
 trap 'rm -f "${REF_TMP:-}" "${NORMALIZED_FASTA:-}"' EXIT
@@ -97,7 +130,8 @@ Comandos:
 
 Variáveis (env):
   DB             (padrão: ptv)
-  DB_QUERY       (se definido, sobrescreve a query padrão do perfil)
+  DB_QUERY       (só o banco custom usa esta consulta e a grava no manifesto;
+                  um perfil nomeado ignora o valor e mantém a query do perfil)
   NCBI_DB        (padrão: nucleotide)
 
   REF_FASTA      (padrão: data/ref/<DB>.fa)
@@ -109,14 +143,23 @@ Exemplos — alvos pré-configurados:
   DB=evg scripts/ops/db_manager.sh setup
   DB=picornaviridae_refseq scripts/ops/db_manager.sh setup
 
-Exemplos — banco customizado (qualquer vírus via query NCBI):
+Exemplos — banco a partir de um FASTA local (nome escolhido pelo usuário):
+  DB=meu_banco REF_FASTA=/dados/referencia.fa scripts/ops/db_manager.sh setup
+  DB=meu_banco REF_FASTA=/dados/referencia.fa \
+    BLAST_DB=/dados/blastdb/meu_banco BOWTIE2_INDEX=/dados/bowtie2/meu_banco \
+    scripts/ops/db_manager.sh setup
+
+  O FASTA permanece no caminho informado. BLAST_DB e BOWTIE2_INDEX podem ficar
+  fora da pasta da fonte. Sem esses dois, os índices usam blastdb/<DB> e bowtie2/<DB>.
+
+Exemplos — banco customizado (qualquer consulta NCBI):
   DB=custom DB_QUERY='"Orbivirus"[Organism]' scripts/ops/db_manager.sh setup
   DB=custom DB_QUERY='"Rotavirus A"[Organism]' scripts/ops/db_manager.sh setup
   DB=custom DB_QUERY='"Canine coronavirus"[Organism]' scripts/ops/db_manager.sh setup
   DB=custom DB_QUERY='"Picobirnavirus"[Organism]' scripts/ops/db_manager.sh setup
   DB=custom DB_QUERY='"Porcine kobuvirus"[All Fields]' scripts/ops/db_manager.sh setup
 
-  Saídas do banco customizado:
+  Saídas do banco NCBI chamado custom:
     data/ref/custom.fa
     blastdb/custom.*
     bowtie2/custom.*
@@ -195,6 +238,10 @@ NCBI_DB="${NCBI_DB:-nucleotide}"
 # Alias resolution moved to top of the script
 
 DEFAULT_QUERY="${DB_QUERIES[$DB]:-}"
+if [[ "$DB" != "custom" && -n "${INCOMING_DB_QUERY}" ]]; then
+  log_warning "DB=${DB} não é custom; a consulta externa foi ignorada. Só o banco custom usa DB_QUERY e grava essa consulta no manifesto."
+  unset DB_QUERY
+fi
 DB_QUERY="${DB_QUERY:-$DEFAULT_QUERY}"
 REFRESH_CUSTOM=0
 
@@ -212,13 +259,38 @@ bowtie2_index_complete() {
   return 1
 }
 
-if [[ -z "${DB_QUERY}" ]]; then
-  log_error "DB_QUERY vazio e DB '${DB}' não tem perfil conhecido. Use DB_QUERY=... ou DB=ptv/evg/psv/svv/fmdv/picornaviridae_refseq/picornaviridae_complete/picornaviridae_all."
+if [[ ! "$DB" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]*$ ]]; then
+  log_error "Nome de banco inválido em DB='${DB}'. Use letras, números, ponto, _, + ou - (exemplo: DB=meu_banco)."
+fi
+
+# Sem caminho explícito, GENEIN_WORK_ROOT guarda FASTA padrão, BLAST e Bowtie2
+# fora da fonte. Um REF_FASTA, BLAST_DB ou BOWTIE2_INDEX do chamador prevalece.
+if [[ -n "${GENEIN_WORK_ROOT:-}" ]]; then
+  if [[ -z "${INCOMING_REF_FASTA}" ]]; then
+    REF_FASTA="${GENEIN_WORK_ROOT}/data/ref/${DB}.fa"
+  fi
+  if [[ -z "${INCOMING_BLAST_DB}" ]]; then
+    BLAST_DB="${GENEIN_WORK_ROOT}/blastdb/${DB}"
+  fi
+  if [[ -z "${INCOMING_BOWTIE2_INDEX}" ]]; then
+    BOWTIE2_INDEX="${GENEIN_WORK_ROOT}/bowtie2/${DB}"
+  fi
+  log_info "Diretório de trabalho: ${GENEIN_WORK_ROOT} (DB=${DB})"
 fi
 
 REF_FASTA="$(resolve_path "${REF_FASTA:-data/ref/${DB}.fa}")"
 BLAST_DB="$(resolve_path "${BLAST_DB:-blastdb/${DB}}")"
 BOWTIE2_INDEX="$(resolve_path "${BOWTIE2_INDEX:-bowtie2/${DB}}")"
+LOCAL_REFERENCE=0
+if [[ -n "$INCOMING_REF_FASTA" ]]; then
+  if [[ ! -s "$REF_FASTA" ]]; then
+    log_error "FASTA local ausente ou vazio: ${REF_FASTA}. Passe um arquivo existente em REF_FASTA e o nome do banco em DB. Exemplo: DB=meu_banco REF_FASTA=/dados/referencia.fa"
+  fi
+  LOCAL_REFERENCE=1
+  log_info "FASTA local: ${REF_FASTA} (DB=${DB})"
+elif [[ -z "${DB_QUERY}" && ! -s "$REF_FASTA" ]]; then
+  log_error "DB '${DB}' não tem perfil NCBI, DB_QUERY está vazio e não há FASTA em ${REF_FASTA}. Para um arquivo seu: DB=meu_banco REF_FASTA=/dados/referencia.fa. Para download NCBI: DB_QUERY='\"Organismo\"[Organism]' ou um perfil (DB=ptv, evg, psv, svv, fmdv, picornaviridae_refseq, picornaviridae_complete, picornaviridae_all)."
+fi
 INDEX_MANIFEST="${BLAST_DB}.index-manifest.json"
 BLAST_GENERATION_MANIFEST="${BLAST_DB}.db-manifest.json"
 INDEX_CACHE_HELPER="${SCRIPTS_ROOT}/evidence/index_cache.py"
@@ -229,7 +301,7 @@ blast_database_complete() {
   validate_blast_database "$BLAST_DB"
 }
 
-if [[ "$DB" == "custom" ]]; then
+if [[ "$LOCAL_REFERENCE" -eq 0 && "$DB" == "custom" ]]; then
   METADATA_DIR="${REPO_ROOT}/db/custom"
   METADATA_FILE="${METADATA_DIR}/metadata.json"
 
@@ -272,15 +344,15 @@ fi
 
 mkdir -p "$(dirname "$REF_FASTA")" "$(dirname "$BLAST_DB")" "$(dirname "$BOWTIE2_INDEX")"
 
-if [[ ! -s "$REF_FASTA" || "$REFRESH_CUSTOM" -eq 1 ]]; then
+if [[ "$LOCAL_REFERENCE" -eq 0 && ( ! -s "$REF_FASTA" || "$REFRESH_CUSTOM" -eq 1 ) ]]; then
   if ! command -v esearch >/dev/null 2>&1 || ! command -v efetch >/dev/null 2>&1; then
-    log_error $'EDirect não encontrado (esearch/efetch).\n`esearch` e `efetch` fazem parte do pacote EDirect.\nNo Ubuntu/WSL, instale com:\n  sudo apt update && sudo apt install -y ncbi-entrez-direct\nAlternativa: forneça um FASTA local em REF_FASTA (ex.: REF_FASTA=data/ref/'"${DB}"'.fa) e rode novamente.'
+    log_error "EDirect não encontrado (esearch/efetch). No ambiente Gene-In ele acompanha o prefixo (bash bundle/run.sh db ...). Para usar um arquivo seu, sem download: DB=meu_banco REF_FASTA=/dados/referencia.fa bash scripts/ops/db_manager.sh setup"
   fi
   log_info "Baixando FASTA (NCBI_DB=${NCBI_DB}; DB_QUERY=${DB_QUERY})..."
   REF_TMP="${REF_FASTA}.download.$$"
   rm -f "$REF_TMP"
   if ! fetch_ncbi_fasta "$REF_TMP" "$NCBI_DB" "$DB_QUERY"; then
-    log_error "Download NCBI falhou apos ${EDIRECT_RETRIES:-3} tentativa(s). O FASTA anterior foi preservado; revise a conectividade TLS, a query e tente novamente. Alternativa: forneca um FASTA local em REF_FASTA."
+    log_error "Download NCBI falhou apos ${EDIRECT_RETRIES:-3} tentativa(s). O FASTA anterior foi preservado; revise a conectividade TLS, a query e tente novamente. Alternativa sem download: DB=meu_banco REF_FASTA=/dados/referencia.fa"
   fi
   python3 "${SCRIPTS_ROOT}/lib/input_validation.py" fasta "$REF_TMP"
   mv -f "$REF_TMP" "$REF_FASTA"
@@ -406,7 +478,7 @@ else
   log_info "Índice Bowtie2 atualizado: $BOWTIE2_INDEX"
 fi
 
-if [[ "$DB" == "custom" ]]; then
+if [[ "$LOCAL_REFERENCE" -eq 0 && "$DB" == "custom" ]]; then
   METADATA_DIR="${REPO_ROOT}/db/custom"
   METADATA_FILE="${METADATA_DIR}/metadata.json"
   mkdir -p "$METADATA_DIR"

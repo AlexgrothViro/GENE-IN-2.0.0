@@ -16,6 +16,8 @@ INCOMING_ASSEMBLER="${ASSEMBLER:-}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(cd "$SCRIPTS_ROOT/.." && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
 
 # Quando o Gene-In foi instalado via bundle/micromamba, as ferramentas de
 # bioinformatica vivem em um ambiente isolado e nao necessariamente no PATH global.
@@ -70,16 +72,14 @@ if [[ -n "$GENEIN_ENV_BIN" ]]; then
   export GENEIN_ENV_DIR
 fi
 
-CONFIG_FILE="${REPO_ROOT}/config/picornavirus.env"
+# shellcheck disable=SC1091
+source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
+CONFIG_FILE="$(genein_resolve_config_file)"
 LEGACY_CONFIG="${REPO_ROOT}/config.env"
 if [[ -f "${CONFIG_FILE}" ]]; then
   # User config/generated metadata is resolved at runtime.
   # shellcheck disable=SC1090
   source "${CONFIG_FILE}"
-elif [[ -f "${LEGACY_CONFIG}" ]]; then
-  # User config/generated metadata is resolved at runtime.
-  # shellcheck disable=SC1090
-  source "${LEGACY_CONFIG}"
 fi
 
 # Restaura as variáveis vindas do ambiente (sobrescrevendo o config.env)
@@ -366,10 +366,11 @@ for cmd in "${EXTRA_UTILS[@]}"; do
     ver=$(get_version "$cmd")
     printf "  [OK] %-12s encontrado em %s%s\n" "$cmd" "$path" "$ver"
   else
-    if [[ "$cmd" == "rsync" && -n "${GENEIN_WORK_ROOT:-}" ]]; then
-      continue
+    if [[ "$cmd" == "rsync" ]]; then
+      echo "  [AVISO] rsync ausente. Ele só entra na cópia para /opt feita por install_linux.sh e no fallback de genoma de hospedeiro quando datasets não está disponível. A análise, o upload do painel e bundle/install_wsl.sh não usam rsync."
+    else
+      echo "  [AVISO] Utilitário $cmd ausente. (Pode causar limitações em uploads/downloads)"
     fi
-    echo "  [AVISO] Utilitário $cmd ausente. (Pode causar limitações em uploads/downloads)"
   fi
 done
 
@@ -530,7 +531,7 @@ if [[ $MISSING -ne 0 ]]; then
 fi
 
 # Registro de versões de software
-VERSIONS_DIR="logs"
+VERSIONS_DIR="$(genein_user_log_dir)"
 VERSIONS_FILE="${VERSIONS_DIR}/software_versions.txt"
 mkdir -p "$VERSIONS_DIR"
 {

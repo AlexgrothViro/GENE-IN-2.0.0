@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from genein.pipeline.batch import main
+from genein.pipeline.batch import main, metrics_root
 from genein.pipeline.sample import BatchCancelled, ProcessRunner
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,12 +45,27 @@ def batch_repo(tmp_path, monkeypatch):
     monkeypatch.setenv("GENEIN_TEST_REPO", str(repo))
     monkeypatch.setenv("PATH", str(Path(sys.executable).parent) + os.pathsep + os.environ["PATH"])
     monkeypatch.delenv("EVIDENCE_RESERVATION_TOKEN", raising=False)
+    # The user guide exports GENEIN_WORK_ROOT for reference data. That directory
+    # is not where this fixture writes QC reports.
+    foreign = tmp_path / "exported-work-root"
+    foreign.mkdir()
+    monkeypatch.setenv("GENEIN_WORK_ROOT", str(foreign))
     return repo
 
 
 def arguments(repo):
     return ["--batch-manifest", str(repo / "manifest.tsv"), "--run-id", "batch-run",
             "--threads", "3", "--evidence-root", str(repo / "evidence")]
+
+
+def test_metrics_root_uses_work_root_only_when_the_qc_report_is_there(tmp_path):
+    repo = tmp_path / "repo"
+    work = tmp_path / "output"
+    (work / "results" / "qc").mkdir(parents=True)
+    (work / "results" / "qc" / "sample-a_fastp.json").write_text("{}\n", encoding="utf-8")
+    assert metrics_root(repo, str(work), "sample-a") == work
+    assert metrics_root(repo, str(tmp_path / "missing"), "sample-a") == repo
+    assert metrics_root(repo, None, "sample-a") == repo
 
 
 def test_two_samples_controls_and_commits_are_transactional(batch_repo, monkeypatch):

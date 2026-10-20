@@ -1,6 +1,6 @@
 # Índice do hospedeiro
 
-O pacote não inclui genomas nem índices do hospedeiro. Obtenha o FASTA de uma fonte documentada, adequada ao organismo da amostra, e registre a versão e a origem. No ambiente instalado, prepare um índice com:
+O pacote não inclui genomas nem índices do hospedeiro. O hospedeiro é uma escolha da análise: obtenha o FASTA de uma fonte documentada, adequada ao organismo da amostra, e registre a versão e a origem. Sus scrofa aparece no assistente como atalho do caso-modelo de validação, não como único hospedeiro. No ambiente instalado, prepare um índice com:
 
 ```bash
 bowtie2-build /caminho/genoma.fasta /caminho/indice_hospedeiro

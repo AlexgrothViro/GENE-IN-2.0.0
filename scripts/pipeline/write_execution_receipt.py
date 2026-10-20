@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -63,8 +64,16 @@ def build_receipt(
         raise ValueError("status=completed exige technical_state=COMPLETED")
     if status == "failed" and technical_state != "FAILED":
         raise ValueError("status=failed exige technical_state=FAILED")
+    root = Path(__file__).resolve().parents[2]
+    src = str(root / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    from genein.identity import software_version, source_commit
+
     return {
         "schema_version": SCHEMA_VERSION,
+        "software_version": software_version(root),
+        "source_commit": source_commit(root),
         "sample": sample,
         "status": status,
         "exit_code": exit_code,

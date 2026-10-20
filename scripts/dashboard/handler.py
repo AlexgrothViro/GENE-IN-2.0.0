@@ -65,18 +65,24 @@ from dashboard.jobs import (
     read_evidence_job_state,
 )
 
-LOG_DIR.mkdir(parents=True, exist_ok=True)
 logger = logging.getLogger("genein_dashboard")
 logger.setLevel(logging.INFO)
-if not logger.handlers:
-    rfh = RotatingFileHandler(
-        LOG_DIR / "ux_dashboard.log",
+
+
+def ensure_dashboard_logging():
+    """Open the panel log in the work directory. Importing this module does not create it."""
+    from dashboard.config import LOG_DIR as configured_log_dir
+    configured_log_dir.mkdir(parents=True, exist_ok=True)
+    if logger.handlers:
+        return
+    file_handler = RotatingFileHandler(
+        configured_log_dir / "ux_dashboard.log",
         maxBytes=5 * 1024 * 1024,
         backupCount=3,
         encoding="utf-8",
     )
-    rfh.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s %(message)s"))
-    logger.addHandler(rfh)
+    file_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s %(message)s"))
+    logger.addHandler(file_handler)
 
 CACHE_BYPASS_CONTENT_TYPES = {"text/html", "application/javascript", "text/css"}
 MAX_UPLOAD_BYTES = 500 * 1024 * 1024
@@ -339,7 +345,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
         if parsed.path == "/help":
-            documents = {"guia": "docs/beta-pesquisadores.md", "bancos": "docs/uso-e-bancos.md", "hospedeiro": "docs/HOSPEDEIRO_BETA.md", "licenca": "LICENSE", "terceiros": "THIRD_PARTY_NOTICES.md"}
+            documents = {"guia": "docs/uso-e-bancos.md", "bancos": "docs/uso-e-bancos.md", "hospedeiro": "docs/HOSPEDEIRO_BETA.md", "licenca": "LICENSE", "terceiros": "THIRD_PARTY_NOTICES.md"}
             key = query_one(query, "doc") or "guia"
             if key not in documents:
                 return self.send_error(HTTPStatus.NOT_FOUND, "Documento não disponível")
@@ -347,7 +353,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             links = " | ".join(f'<a href="/help?doc={name}">{name}</a>' for name in documents)
             page = f'<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Ajuda Gene-In</title><body><h1>Ajuda Gene-In</h1><nav><a href="/">Voltar ao painel</a> | {links}</nav><pre style="white-space:pre-wrap;font:16px/1.6 sans-serif;max-width:1000px">{content}</pre></body></html>'
             return text_response(self, HTTPStatus.OK, page, "text/html; charset=utf-8")
-        if parsed.path == "/":
+        if parsed.path in {"/", "/index.html"}:
             return serve_file(self, DASHBOARD_DIR / "index.html", "text/html; charset=utf-8")
         if parsed.path == "/api/dbs":
             return json_response(self, HTTPStatus.OK, {"dbs": list_db_profiles()})
