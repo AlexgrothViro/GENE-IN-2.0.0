@@ -62,7 +62,7 @@ BLAST_DB_BEFORE_CONFIG := $(BLAST_DB)
 # $GENEIN_WORK_ROOT/config, then ~/.gene-in/config, then the source file.
 RESOLVED_CONFIG := $(shell REPO_ROOT='$(CURDIR)' GENEIN_WORK_ROOT='$(GENEIN_WORK_ROOT)' GENEIN_CONFIG_FILE='$(GENEIN_CONFIG_FILE)' bash -c 'source scripts/lib/genein_config_path.sh && genein_resolve_config_file' || echo __GENEIN_CONFIG_REFUSED__)
 ifeq ($(RESOLVED_CONFIG),__GENEIN_CONFIG_REFUSED__)
-$(error picornavirus.env no diretório de trabalho é gravável por grupo ou outros)
+$(error picornavirus.env no diretório de trabalho é gravável por outros)
 endif
 ifneq ($(wildcard $(RESOLVED_CONFIG)),)
 -include $(RESOLVED_CONFIG)

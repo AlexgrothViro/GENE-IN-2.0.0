@@ -73,7 +73,7 @@ def test_home_config_wins_over_the_source_when_the_work_file_is_missing(tmp_path
     assert resolve_config_file(env, home, repo) == home_file
 
 
-def test_explicit_config_file_is_exclusive_and_group_writable_work_file_is_refused(tmp_path):
+def test_explicit_config_file_is_exclusive_and_other_writable_work_file_is_refused(tmp_path):
     repo = tmp_path / "repo"
     (repo / "config").mkdir(parents=True)
     (repo / "config/picornavirus.env").write_text("DB=ptv\n", encoding="utf-8")
@@ -93,17 +93,57 @@ def test_explicit_config_file_is_exclusive_and_group_writable_work_file_is_refus
     assert chosen.returncode == 0, chosen.stderr
     assert chosen.stdout.strip() == str(explicit)
     env.pop("GENEIN_CONFIG_FILE")
+    group_write = _resolve_shell(env)
+    assert group_write.returncode == 0, group_write.stderr
+    assert group_write.stdout.strip() == str(cfg)
+    cfg.chmod(0o606)
     refused = _resolve_shell(env)
     assert refused.returncode == 2
-    assert "grupo" in refused.stderr
+    assert "outros" in refused.stderr
     assert refused.stdout.strip() == ""
     from genein.paths import ConfigPermissionError, resolve_config_file
     try:
         resolve_config_file(env, tmp_path / "home", repo)
     except ConfigPermissionError as exc:
-        assert "grupo" in str(exc)
+        assert "outros" in str(exc)
     else:
-        raise AssertionError("config gravável por grupo deveria ser recusada")
+        raise AssertionError("config gravável por outros deveria ser recusada")
+
+
+def test_umask_002_saves_mode_0600_and_the_resolver_accepts_it(tmp_path, monkeypatch):
+    import stat
+    import dashboard.config as config
+    work = tmp_path / "work"
+    work.mkdir()
+    target = work / "config" / "picornavirus.env"
+    monkeypatch.setattr(config, "CONFIG_ENV_PRIMARY", target)
+    monkeypatch.setattr(config, "REPO_CONFIG_ENV", tmp_path / "absent-repo.env")
+    monkeypatch.setattr(config, "CONFIG_ENV_LEGACY", tmp_path / "absent-legacy.env")
+    monkeypatch.setenv("GENEIN_WORK_ROOT", str(work))
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("GENEIN_CONFIG_FILE", raising=False)
+    previous = os.umask(0o002)
+    try:
+        saved = config.save_config_env({"THREADS": "5"})
+        assert stat.S_IMODE(target.stat().st_mode) == 0o600
+        assert saved["THREADS"] == "5"
+        target.chmod(0o664)
+        config.save_config_env({"THREADS": "6"})
+        assert stat.S_IMODE(target.stat().st_mode) == 0o600
+        from genein.paths import resolve_config_file
+        assert resolve_config_file(os.environ, tmp_path / "home", ROOT) == target
+        env = os.environ.copy()
+        env.update(REPO_ROOT=str(ROOT), GENEIN_WORK_ROOT=str(work), HOME=str(tmp_path / "home"))
+        env.pop("GENEIN_CONFIG_FILE", None)
+        shell = _resolve_shell(env)
+        assert shell.returncode == 0, shell.stderr
+        assert shell.stdout.strip() == str(target)
+        copied = tmp_path / "copied" / "picornavirus.env"
+        monkeypatch.setattr(config, "CONFIG_ENV_PRIMARY", copied)
+        assert config.ensure_user_config_env() is True
+        assert stat.S_IMODE(copied.stat().st_mode) == 0o600
+    finally:
+        os.umask(previous)
 
 
 def test_panel_writes_the_example_outside_the_source(tmp_path, monkeypatch):

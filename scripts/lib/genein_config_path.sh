@@ -44,16 +44,13 @@ genein_user_log_dir() {
   printf '%s\n' "${TMPDIR:-/tmp}/gene-in-logs"
 }
 
-# Group or other write (permission digit 2, 3, 6 or 7). Source files are not checked.
-genein_config_writable_by_group_or_others() {
+# Write by others (last permission digit 2, 3, 6 or 7). Group write, such as
+# the 0664 that umask 002 produces, is not refused. Source files are not checked.
+genein_config_writable_by_others() {
   local path="$1"
-  local mode group other
+  local mode other
   mode="$(stat -c %a "${path}" 2>/dev/null || stat -f %OLp "${path}")"
-  group="${mode: -2:1}"
   other="${mode: -1}"
-  case "${group}" in
-    2|3|6|7) return 0 ;;
-  esac
   case "${other}" in
     2|3|6|7) return 0 ;;
   esac
@@ -63,8 +60,8 @@ genein_config_writable_by_group_or_others() {
 # Read path. GENEIN_CONFIG_FILE is exclusive even when the file is missing.
 # Then an existing $GENEIN_WORK_ROOT/config/picornavirus.env, then
 # ~/.gene-in/config/picornavirus.env, then the source file, then config.env.
-# A work-root file writable by group or others is refused (exit 2); the
-# search does not fall through to another file.
+# A work-root file writable by others is refused (exit 2); the search does
+# not fall through to another file. Group write is accepted.
 genein_resolve_config_file() {
   local work_file home_file repo_file legacy
   if [[ -n "${GENEIN_CONFIG_FILE:-}" ]]; then
@@ -74,8 +71,8 @@ genein_resolve_config_file() {
   if [[ -n "${GENEIN_WORK_ROOT:-}" && "${GENEIN_WORK_ROOT}" == /* && -d "${GENEIN_WORK_ROOT}" ]]; then
     work_file="${GENEIN_WORK_ROOT}/config/picornavirus.env"
     if [[ -f "${work_file}" ]]; then
-      if genein_config_writable_by_group_or_others "${work_file}"; then
-        printf 'picornavirus.env no diretório de trabalho é gravável por grupo ou outros: %s\n' "${work_file}" >&2
+      if genein_config_writable_by_others "${work_file}"; then
+        printf 'picornavirus.env no diretório de trabalho é gravável por outros: %s\n' "${work_file}" >&2
         return 2
       fi
       printf '%s\n' "${work_file}"

@@ -68,10 +68,14 @@ def _existing_work_root(values: dict[str, str]) -> Path | None:
     return None
 
 
-def config_writable_by_group_or_others(path: Path) -> bool:
-    """True when the mode allows group or other write (2, 3, 6 or 7)."""
+def config_writable_by_others(path: Path) -> bool:
+    """True when the mode allows write by others (permission digit 2, 3, 6 or 7).
+
+    Group write is accepted. umask 002 creates 0664, and refusing that locks
+    a file the panel itself just saved.
+    """
     mode = stat.S_IMODE(path.stat().st_mode)
-    return bool(mode & 0o022)
+    return bool(mode & 0o002)
 
 
 def resolve_config_file(
@@ -87,8 +91,8 @@ def resolve_config_file(
     the source ``config/picornavirus.env``, then ``config.env``. The last
     resort is the write path from :func:`user_config_env_path`.
 
-    A work-root file that is writable by group or others is refused. The
-    search does not continue to a less specific file.
+    A work-root file that is writable by others is refused. The search does
+    not continue to a less specific file. Group write is not refused.
     """
     values = _values(env)
     explicit = str(values.get("GENEIN_CONFIG_FILE") or "").strip()
@@ -98,9 +102,9 @@ def resolve_config_file(
     if work is not None:
         work_file = work / "config" / "picornavirus.env"
         if work_file.is_file():
-            if config_writable_by_group_or_others(work_file):
+            if config_writable_by_others(work_file):
                 raise ConfigPermissionError(
-                    "picornavirus.env no diretório de trabalho é gravável por grupo ou outros: "
+                    "picornavirus.env no diretório de trabalho é gravável por outros: "
                     f"{work_file}"
                 )
             return work_file

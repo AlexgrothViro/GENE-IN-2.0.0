@@ -24,7 +24,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from genein.paths import (
-    ConfigPermissionError, config_writable_by_group_or_others, resolve_blast_db,
+    ConfigPermissionError, config_writable_by_others, resolve_blast_db,
     resolve_config_file, user_config_env_path, user_log_dir,
 )
 from input_validation import validate_sample_id
@@ -252,9 +252,9 @@ def get_config_env_path():
             same = expected is not None and CONFIG_ENV_PRIMARY.resolve() == expected.resolve()
         except OSError:
             same = False
-        if same and config_writable_by_group_or_others(CONFIG_ENV_PRIMARY):
+        if same and config_writable_by_others(CONFIG_ENV_PRIMARY):
             raise ConfigPermissionError(
-                "picornavirus.env no diretório de trabalho é gravável por grupo ou outros: "
+                "picornavirus.env no diretório de trabalho é gravável por outros: "
                 f"{CONFIG_ENV_PRIMARY}"
             )
         return CONFIG_ENV_PRIMARY
@@ -269,6 +269,7 @@ def ensure_user_config_env():
         return False
     CONFIG_ENV_PRIMARY.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(CONFIG_ENV_EXAMPLE, CONFIG_ENV_PRIMARY)
+    os.chmod(CONFIG_ENV_PRIMARY, 0o600)
     return True
 
 
@@ -427,8 +428,26 @@ def save_config_env(updates):
         if key in updates and key not in existing_keys:
             existing_lines.append(f"{key}={quote_config_value(key, updates[key])}")
 
-    env_path.write_text("\n".join(existing_lines) + "\n", encoding="utf-8")
+    _write_private_text(env_path, "\n".join(existing_lines) + "\n")
     return load_config_env()
+
+
+def _write_private_text(path: Path, text: str) -> None:
+    """Create or replace the file as mode 0600, independent of umask.
+
+    ``open`` applies umask to the requested mode, and truncating an existing
+    file keeps its old mode. ``fchmod`` is what makes a previous 0664 private.
+    """
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.fchmod(fd, 0o600)
+        handle = os.fdopen(fd, "w", encoding="utf-8")
+        fd = -1
+        with handle:
+            handle.write(text)
+    finally:
+        if fd >= 0:
+            os.close(fd)
 
 
 def validate_host_index(prefix):
