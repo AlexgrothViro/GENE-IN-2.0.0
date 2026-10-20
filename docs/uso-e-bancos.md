@@ -173,8 +173,9 @@ Na execução individual pela CLI, o recibo fica em `<output-root>/execution.jso
 | Comprimento do read | Sequência lida no FASTQ; QC pode retirar adaptadores e bases |
 | Comprimento do candidato/contig | Sequência inteira emitida e exportada |
 | Comprimento do HSP | Trecho alinhado a uma referência; pode ser menor que o candidato |
-| `AVAILABLE` / Candidatos recuperados | Existem candidatos para revisão |
-| `DETECTED` | Código contratual de presença computacional de candidatos |
+| `CANDIDATOS_PARA_REVISAO` | Rótulo exibido quando há sequências candidatas. No JSON, os códigos contratuais equivalentes continuam `EVIDENCE_RECOVERED` e `DETECTED` |
+| `SEM_CANDIDATOS_PARA_REVISAO` | Rótulo exibido quando a execução terminou sem candidato. No JSON, os códigos equivalentes continuam `NO_EVIDENCE_RECOVERED` e `NO_SIGNAL` |
+| `DETECTED` / `EVIDENCE_RECOVERED` | Códigos contratuais antigos, ainda gravados nos JSON. A leitura pública correspondente é `CANDIDATOS_PARA_REVISAO` |
 | `NOT_EVALUATED` | Qualificação científica não realizada; disponibilidade não preenche contagens de qualificação |
 | `PANEL_TAXON_PREFERRED` | Preferência entre hits rotulados reportados no painel |
 | `AMBIGUOUS` | Empate ou separação insuficiente |

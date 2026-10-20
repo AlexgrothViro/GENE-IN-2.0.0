@@ -45,6 +45,21 @@ def evidence_label(value: dict) -> str:
     }.get(value.get("analysis_outcome"), "Não avaliável")
 
 
+# Rótulos exibidos ao usuário. Os códigos contratuais DETECTED e
+# EVIDENCE_RECOVERED permanecem no JSON para compatibilidade.
+PUBLIC_REVIEW_LABELS = {
+    "EVIDENCE_RECOVERED": "CANDIDATOS_PARA_REVISAO",
+    "DETECTED": "CANDIDATOS_PARA_REVISAO",
+    "NO_EVIDENCE_RECOVERED": "SEM_CANDIDATOS_PARA_REVISAO",
+    "NO_SIGNAL": "SEM_CANDIDATOS_PARA_REVISAO",
+}
+
+
+def public_review_label(code: object) -> str:
+    """Map a contract code to the neutral label shown in reports and the panel."""
+    return PUBLIC_REVIEW_LABELS.get(str(code), str(code))
+
+
 def _nonnegative_metric(value: object, context: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{context} must be numeric")

@@ -74,7 +74,7 @@ Confira também a configuração resolvida, os logs e o manifesto do banco. No p
 
 **Comprimento do read, comprimento da sequência emitida e comprimento do HSP são medidas distintas.** Repetições da mesma sequência não demonstram moléculas independentes. Cobertura é a união de posições alinhadas por referência/segmento, sem somar referências distintas como um único genoma.
 
-`Candidatos recuperados` indica disponibilidade para revisão (`AVAILABLE`). O código contratual `DETECTED` conserva esse significado computacional; a qualificação científica permanece `NOT_EVALUATED`. A preferência taxonômica se restringe aos hits rotulados reportados no painel. Empates, competição ausente e suporte não demonstrado precisam permanecer explícitos.
+O rótulo exibido no relatório e no painel é `CANDIDATOS_PARA_REVISAO` quando há sequências candidatas, e `SEM_CANDIDATOS_PARA_REVISAO` quando não há. Os arquivos JSON conservam os códigos contratuais `EVIDENCE_RECOVERED` e `DETECTED` (ou `NO_EVIDENCE_RECOVERED` e `NO_SIGNAL`). Essa compatibilidade está na tabela de [resultados](docs/uso-e-bancos.md#resultados-e-interpretação). A qualificação científica permanece `NOT_EVALUATED`. A preferência taxonômica se restringe aos hits rotulados reportados no painel. Empates, competição ausente e suporte não demonstrado precisam permanecer explícitos.
 
 ## Alcance, licença e registros
 

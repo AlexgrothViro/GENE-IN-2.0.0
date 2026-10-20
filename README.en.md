@@ -59,7 +59,7 @@ Results include `candidate_sequences.fa`, `candidate_sequences.tsv`, `candidate_
 
 Read length, emitted sequence length and HSP length are separate measurements. Repeated sequence observations do not establish independent molecules. Reference coverage is the union of aligned positions per reference/segment; do not add different references as coverage of one genome.
 
-Candidate availability (`AVAILABLE`, displayed as **Candidatos recuperados**) is distinct from scientific qualification, which remains `NOT_EVALUATED`. The contract code `DETECTED` indicates computational candidates. Taxonomic preference is limited to labeled hits reported in the panel; ambiguity, missing competition and unmeasured support must remain visible.
+The label shown in the report and the panel is `CANDIDATOS_PARA_REVISAO` when candidate sequences are present, and `SEM_CANDIDATOS_PARA_REVISAO` when they are not. JSON files keep the contract codes `EVIDENCE_RECOVERED` and `DETECTED` (or `NO_EVIDENCE_RECOVERED` and `NO_SIGNAL`). Scientific qualification remains `NOT_EVALUATED`. Taxonomic preference is limited to labeled hits reported in the panel; ambiguity, missing competition and unmeasured support must remain visible.
 
 Functional synthetic checks do not establish biological accuracy, clinical sensitivity, superiority or recovery of every fragment. The historical 27-library campaign belongs to an earlier configuration and retains its failed G0.8 gate. See [validation scope](docs/validacao.md).
 
