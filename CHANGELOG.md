@@ -43,7 +43,7 @@
 
 ## 2026-10-06 — entrega funcional organizada
 
-- Integra a recuperação `fragment_recovery_20_100_v1` e as correções `scientific_review_20261005_v1` no repositório `gene-in-estabilizado`.
+- Integra a recuperação `fragment_recovery_20_100_v1` e as correções `scientific_review_20261005_v1`. O nome de repositório daquela etapa era `gene-in-estabilizado`; esta fonte está em `AlexgrothViro/GENE-IN-2.0.0`.
 - Organiza documentação de instalação, bancos, arquitetura, desenvolvimento, resultados e limites científicos, com índice e README em português/inglês.
 - Corrige a preparação da suíte para verificar a instalação da árvore atual e evitar downloads de build desnecessários.
 - Acrescenta instalação explícita e testes de interface à integração contínua.

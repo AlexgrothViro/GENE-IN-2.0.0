@@ -6,7 +6,7 @@ O Gene-In recupera e organiza sequências candidatas de dados de sequenciamento 
 
 **2.0.0 — distribuição final de software para pesquisa e triagem humana, preparada em 20/10/2026.** A versão consolida a base verificada na rc1 e a documentação de uso. Confira o alcance das verificações e os recibos que identificam o pacote na [nota da versão 2.0.0](docs/lancamento-20out.md). O contrato Evidence continua `2.0.0-alpha.2`, com recuperação `fragment_recovery_20_100_v1` e revisão `scientific_review_20261005_v1`.
 
-Este é o [repositório principal](https://github.com/AlexgrothViro/gene-in-estabilizado). Consulte [Releases](https://github.com/AlexgrothViro/gene-in-estabilizado/releases) para entregas publicadas e o [índice de repositórios e histórico](docs/repositorios-e-historico.md) para trabalhos anteriores. A publicação remota não faz parte desta entrega local.
+Este é o [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Entregas publicadas ficam em [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). O [índice de repositórios e histórico](docs/repositorios-e-historico.md) guarda os nomes anteriores.
 
 ## Começo rápido
 
@@ -65,7 +65,8 @@ O Evidence integra contigs, fragmentos montados e reads curtos após QC/filtro; 
 | Artefato | Utilidade |
 |---|---|
 | `candidate_sequences.fa` | Sequências candidatas alinhadas, para revisão e análises posteriores |
-| `candidate_sequences.tsv` | Comprimento, bases alinhadas, origem e vínculo às evidências |
+| `candidate_sequences.tsv` | Tabela completa: uma linha por alinhamento (query, referência e tarefa) |
+| `candidate_summary.tsv` | Uma linha por candidato, com o melhor hit e a contagem de linhas na tabela completa |
 | `candidate_queries.json` | Proveniência e hashes das queries, incluindo as sem candidato alinhado |
 | Relatórios Evidence | Estado da execução, suporte, competição, referências e avisos |
 | `execution.json` | Recibo técnico da execução iniciada pela CLI |

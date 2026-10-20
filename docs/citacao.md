@@ -6,7 +6,7 @@ O titular e desenvolvedor identificado na [licença](../LICENSE) é **Alexsander
 
 Para esta distribuição, use:
 
-> Groth, Alexsander. *Gene-In: recuperação e triagem de sequências candidatas*. Versão 2.0.0. 2026. Repositório: https://github.com/AlexgrothViro/gene-in-estabilizado.
+> Groth, Alexsander. *Gene-In: recuperação e triagem de sequências candidatas*. Versão 2.0.0. 2026. Repositório: https://github.com/AlexgrothViro/GENE-IN-2.0.0.
 
 Acrescente o commit exato e a data de acesso usados na análise. Em um checkout Git, o commit é `git rev-parse HEAD`. Em um pacote sem a pasta `.git`, o mesmo valor está na primeira linha de `SOURCE_COMMIT` e em `genein --version`. O arquivo [CITATION.cff](../CITATION.cff) contém os metadados estruturados.
 

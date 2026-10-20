@@ -1,15 +1,15 @@
 # Gene-In: repositório principal e histórico
 
-O desenvolvimento e as entregas do Gene-In são reunidos em [AlexgrothViro/gene-in-estabilizado](https://github.com/AlexgrothViro/gene-in-estabilizado). Esta árvore identifica a versão de software **2.0.0**, distribuição final para pesquisa e triagem humana; consulte a [nota da versão](lancamento-20out.md), o [guia de uso](../README.md) e os [limites científicos](validacao.md). A rc1 e seus registros permanecem preservados como etapa anterior.
+O desenvolvimento desta entrega está em [AlexgrothViro/GENE-IN-2.0.0](https://github.com/AlexgrothViro/GENE-IN-2.0.0). O nome anterior `gene-in-estabilizado` não é este repositório. Esta árvore identifica a versão de software **2.0.0**, distribuição final para pesquisa e triagem humana; consulte a [nota da versão](lancamento-20out.md), o [guia de uso](../README.md) e os [limites científicos](validacao.md). A rc1 e seus registros permanecem preservados como etapa anterior.
 
 ## Endereços atuais
 
 | Necessidade | Endereço |
 |---|---|
-| Código e histórico da fonte principal | [Repositório principal](https://github.com/AlexgrothViro/gene-in-estabilizado) |
-| Versões publicadas | [Releases](https://github.com/AlexgrothViro/gene-in-estabilizado/releases) |
-| Propostas de alteração | [Pull requests](https://github.com/AlexgrothViro/gene-in-estabilizado/pulls) |
-| Relatar ou consultar problemas | [Issues](https://github.com/AlexgrothViro/gene-in-estabilizado/issues) |
+| Código e histórico da fonte | [Repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0) |
+| Versões publicadas | [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases) |
+| Propostas de alteração | [Pull requests](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pulls) |
+| Relatar ou consultar problemas | [Issues](https://github.com/AlexgrothViro/GENE-IN-2.0.0/issues) |
 | Instalar e usar esta cópia | [Documentação](README.md) |
 
 Uma proposta ou branch histórica não integra automaticamente a versão atual. Mudanças aproveitadas precisam ser verificadas contra a arquitetura, os contratos e os testes da fonte distribuída. A existência de uma release identifica software e não aprova resultados científicos.
@@ -29,7 +29,7 @@ Os endereços abaixo preservam linhas anteriores do projeto. O acesso depende da
 | [Gene-In_1.1](https://github.com/AlexgrothViro/Gene-In_1.1) | Linha 1.1 |
 | [Gene-In_1.0](https://github.com/AlexgrothViro/Gene-In_1.0) | Desenvolvimento inicial |
 
-O registro publicado de organização de 06/10 permanece identificável pela [release histórica](https://github.com/AlexgrothViro/gene-in-estabilizado/releases/tag/v2.0.0-alpha.2-20261006-r1). Ele não substitui a identificação e as verificações do pacote 2.0.0.
+O registro de organização de 06/10 foi associado ao nome anterior `gene-in-estabilizado`. Esse nome não aponta para este repositório. Ele não substitui a identificação e as verificações do pacote 2.0.0.
 
 ## Preservação dos registros
 

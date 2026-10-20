@@ -6,7 +6,7 @@ Gene-In recovers and organizes candidate sequences from fragmented sequencing da
 
 **2.0.0 — final software distribution for research and human review, prepared on 2026-10-20.** It consolidates the code verified in rc1 and the usage documentation. See the [release note](docs/lancamento-20out.md) for verification scope and the receipts identifying the final package. The Evidence contract remains `2.0.0-alpha.2`, with recovery policy `fragment_recovery_20_100_v1` and scientific revision `scientific_review_20261005_v1`.
 
-This is the [canonical repository](https://github.com/AlexgrothViro/gene-in-estabilizado). Published packages belong in [Releases](https://github.com/AlexgrothViro/gene-in-estabilizado/releases). Remote publication is outside this local delivery. Previous repositories are listed in the [history index](docs/repositorios-e-historico.md).
+This is the [repository](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Published packages belong in [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). Previous names are listed in the [history index](docs/repositorios-e-historico.md).
 
 ## Quick start
 

@@ -1,7 +1,7 @@
 {
   "delivery_id": "genein-release-20261020",
   "delivery_date": "2026-10-20",
-  "repository": "https://github.com/AlexgrothViro/gene-in-estabilizado",
+  "repository": "https://github.com/AlexgrothViro/GENE-IN-2.0.0",
   "software_version": "2.0.0",
   "distribution_channel": "research-release",
   "base_commit": "fb2f57a8f91e0846571945e4b9d7572a0e00eaa7",

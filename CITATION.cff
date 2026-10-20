@@ -6,9 +6,9 @@ authors:
   - family-names: Groth
     given-names: Alexsander
 version: 2.0.0
-repository-code: "https://github.com/AlexgrothViro/gene-in-estabilizado"
-url: "https://github.com/AlexgrothViro/gene-in-estabilizado"
-license-url: "https://github.com/AlexgrothViro/gene-in-estabilizado/blob/main/LICENSE"
+repository-code: "https://github.com/AlexgrothViro/GENE-IN-2.0.0"
+url: "https://github.com/AlexgrothViro/GENE-IN-2.0.0"
+license-url: "https://github.com/AlexgrothViro/GENE-IN-2.0.0/blob/main/LICENSE"
 abstract: "Recuperação e organização de sequências candidatas de dados de sequenciamento fragmentados para triagem humana. Uso e redistribuição sujeitos à Gene-In Limited Public Use License v1.0."
 keywords:
   - bioinformatics
