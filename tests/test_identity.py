@@ -1,12 +1,18 @@
 """Commit identity for a Git checkout and for a package without .git."""
 from pathlib import Path
 
+import pytest
+
 from genein.identity import source_commit
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.skipif(
+    not (ROOT / ".git").exists(),
+    reason="Pacote distribuído não traz .git; a identidade fica em SOURCE_COMMIT.",
+)
 def test_checkout_reports_head():
     import subprocess
     head = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()

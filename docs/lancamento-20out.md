@@ -44,13 +44,13 @@ A tabela abaixo documenta resultados da preparação da rc1. Eles sustentam a ba
 |---|---|
 | Documentação inicial e limpeza | 121 links/âncoras locais válidos na organização inicial; 141 na conferência documental após a limpeza, sem links quebrados; `git diff --check` aprovado |
 | Citação estruturada da rc1 | `CITATION.cff` aprovado como YAML e contra o schema oficial CFF 1.2.0; recibo anterior `CITACAO_VERIFICADA.json` |
-| Engenharia da base | 518 testes e 270 subtestes em `scripts/tests`, 130 testes em `tests/` e 17 testes JavaScript; recibos distinguem `fonte-final` e `limpeza-distribuicao` |
+| Engenharia da base | Na rc1, 518 testes e 270 subtestes em `scripts/tests`, 130 testes em `tests/` e 17 testes JavaScript; recibos distinguem `fonte-final` e `limpeza-distribuicao`. A suíte medida nesta árvore 2.0.1 está em [desenvolvimento e testes](guia-de-desenvolvimento.md): 531 testes e 273 subtestes, 133 testes em `tests/` e 17 testes JavaScript |
 | Shell e ajuda | ShellCheck de todos os scripts shell com saída 0; `make help` aprovado |
 | Painel da fonte | Oito rotas com HTTP 200 e captura visual conferida; recibo `painel-fonte/PAINEL_HTTP.json`; serviço de verificação encerrado |
 | Trilhas `all-safe` da fonte | Oito etapas `PASS`, todas com saída 0, incluindo a suíte operacional integral; recibo `fonte-final/ALL_SAFE_FONTE_FINAL.json` |
 | Recuperação sintética com ferramentas reais | Quatro cenários aprovados: 20 pb, mistura 20/34/54/74/100 pb, 20 pb com adaptador e controle de hospedeiro de 20 pb; logs e `summary.json` em `fonte-final/fragmentos` |
 
-Testes e subtestes são apresentados separadamente e não devem ser somados como execuções independentes. A limpeza da rc1 acrescentou uma verificação de preservação dos parâmetros experimentais, passando de 517 para 518 testes nessa suíte. Os registros b1/b2/b3 continuam pertencendo às próprias versões e ambientes.
+Testes e subtestes são apresentados separadamente e não devem ser somados como execuções independentes. A limpeza da rc1 acrescentou uma verificação de preservação dos parâmetros experimentais, passando de 517 para 518 testes nessa suíte histórica. A contagem da 2.0.1 não substitui esse recibo da rc1. Os registros b1/b2/b3 continuam pertencendo às próprias versões e ambientes.
 
 A primeira tentativa operacional falhou na construção de um banco sintético porque a ferramenta externa recebeu um caminho com espaços. Ela foi preservada e não representa aprovação operacional. A tentativa revelou também um erro no relatório das trilhas: falha realmente executada podia aparecer como teste não executado. O tratamento foi corrigido para manter `FAIL`; o código 77 continua indicando teste não executado. A repetição aprovada usou um diretório Linux sem espaços e tem seus próprios recibos.
 
