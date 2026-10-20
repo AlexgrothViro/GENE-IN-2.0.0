@@ -1,0 +1,697 @@
+{
+  "config/experimental/validation/optimization_grid_v1.json": {
+    "grid_id": "optimization-grid-v1-short-fragments",
+    "description": "Parameter sweep for short-fragment recovery vs false-positive trade-offs.",
+    "base_parameters": {
+      "blast.short_max_bp": 29,
+      "blast.dual_mode_min_bp": 30,
+      "blast.dual_mode_max_bp": 49,
+      "locus.minimum_candidate_bp": 50,
+      "locus.gap_bp": 100,
+      "specificity.minimum_delta_bitscore": 10,
+      "specificity.maximum_qcov_difference_pp": 5,
+      "support.minimum_unique_templates": 3,
+      "support.minimum_mapq": 10
+    },
+    "axes": {
+      "locus.minimum_candidate_bp": [
+        40,
+        45,
+        50
+      ],
+      "specificity.minimum_delta_bitscore": [
+        5,
+        10,
+        15
+      ],
+      "blast.dual_mode_max_bp": [
+        48,
+        49
+      ]
+    }
+  },
+  "config/experimental/validation/pipeline_round2_parameter_sets.json": {
+    "round_id": "pipeline-round2-v1",
+    "description": "Six parameter sets used for a comparable second analysis round.",
+    "sets": [
+      {
+        "role": "baseline-canonical-copy",
+        "overrides": {
+          "locus.minimum_candidate_bp": 50,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 49
+        }
+      },
+      {
+        "role": "round1-selected",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 5,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "round1-selected",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "round1-selected",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 15,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "round1-selected",
+        "overrides": {
+          "locus.minimum_candidate_bp": 45,
+          "specificity.minimum_delta_bitscore": 5,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "round1-selected",
+        "overrides": {
+          "locus.minimum_candidate_bp": 45,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 48
+        }
+      }
+    ]
+  },
+  "config/experimental/validation/pipeline_round3_parameter_sets.json": {
+    "round_id": "pipeline-round3-v1",
+    "description": "Six parameter sets used to compare dual_max 48/49 and delta 5/10/15.",
+    "sets": [
+      {
+        "role": "baseline-canonical-copy",
+        "overrides": {
+          "locus.minimum_candidate_bp": 50,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 49
+        }
+      },
+      {
+        "role": "round2-tie",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 5,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "round2-tie",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "round2-tie",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 15,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "round2-tie",
+        "overrides": {
+          "locus.minimum_candidate_bp": 45,
+          "specificity.minimum_delta_bitscore": 5,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "round2-tie",
+        "overrides": {
+          "locus.minimum_candidate_bp": 45,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 48
+        }
+      }
+    ]
+  },
+  "config/experimental/validation/pipeline_round4_parameter_sets.json": {
+    "round_id": "pipeline-round4-v1",
+    "description": "Recovery sweep over min_candidate, dual_max and delta combinations.",
+    "sets": [
+      {
+        "role": "baseline-canonical-copy",
+        "overrides": {
+          "locus.minimum_candidate_bp": 50,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 49
+        }
+      },
+      {
+        "role": "delta10-grid",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "delta10-grid",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 49
+        }
+      },
+      {
+        "role": "delta10-grid",
+        "overrides": {
+          "locus.minimum_candidate_bp": 45,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "delta10-grid",
+        "overrides": {
+          "locus.minimum_candidate_bp": 45,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 49
+        }
+      },
+      {
+        "role": "delta10-grid",
+        "overrides": {
+          "locus.minimum_candidate_bp": 50,
+          "specificity.minimum_delta_bitscore": 10,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "delta-anchor",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 5,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "delta-anchor",
+        "overrides": {
+          "locus.minimum_candidate_bp": 40,
+          "specificity.minimum_delta_bitscore": 15,
+          "blast.dual_mode_max_bp": 48
+        }
+      },
+      {
+        "role": "delta-anchor",
+        "overrides": {
+          "locus.minimum_candidate_bp": 45,
+          "specificity.minimum_delta_bitscore": 5,
+          "blast.dual_mode_max_bp": 48
+        }
+      }
+    ]
+  },
+  "config/experimental/validation/sample_panel_development.json": {
+    "panel_id": "development-synthetic-v1",
+    "partition": "development",
+    "description": "Deterministic synthetic fixtures for scientific-optimization. Not independent validation.",
+    "samples": [
+      {
+        "sample_id": "syn_target_20bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 20
+      },
+      {
+        "sample_id": "syn_target_29bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 29
+      },
+      {
+        "sample_id": "syn_target_30bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 30
+      },
+      {
+        "sample_id": "syn_target_49bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 49
+      },
+      {
+        "sample_id": "syn_target_50bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 50
+      },
+      {
+        "sample_id": "syn_target_79bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 79
+      },
+      {
+        "sample_id": "syn_target_100bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 100
+      },
+      {
+        "sample_id": "syn_near_49bp",
+        "partition": "development",
+        "sample_role": "competitor_neighbor",
+        "category": "NEAR_NON_TARGET_VIRUS",
+        "length_bp": 49
+      },
+      {
+        "sample_id": "syn_host_49bp",
+        "partition": "development",
+        "sample_role": "competitor_host",
+        "category": "HOST",
+        "length_bp": 49
+      },
+      {
+        "sample_id": "syn_contam_49bp",
+        "partition": "development",
+        "sample_role": "negative_control",
+        "category": "KNOWN_CONTAMINANT",
+        "length_bp": 49
+      },
+      {
+        "sample_id": "syn_lowcx_30bp",
+        "partition": "development",
+        "sample_role": "negative_control",
+        "category": "LOW_COMPLEXITY",
+        "length_bp": 30
+      }
+    ]
+  },
+  "config/experimental/validation/sample_panel_pipeline.json": {
+    "panel_id": "pipeline-development-v3",
+    "partition": "development",
+    "description": "Synthetic queries for real Evidence V2 pipeline execution. Not validation. Construction notes document how each fixture was built; BLAST and Evidence decide outcomes. Round 3 adds routing, mid-delta FP, and a 4-mismatch competitive window.",
+    "construction_notes": {
+      "unique_block": "Length-ladder TARGET queries are prefixes of UNIQUE_TARGET (100 bp), a block assembled to be unrelated to host/neighbor unique blocks. These samples probe recovery and locus.minimum_candidate_bp at 39/40 and 49/50, not a near-threshold competitive margin.",
+      "competitive_windows": "Separate 50 bp windows on target_ref are identical to one non-target subject except 1, 2, 3, or 4 transversions. Mismatch counts are a construction hypothesis around minimum_delta_bitscore 5/10/15. Observed BLAST delta is empirical.",
+      "hard_negatives": "HOST/NEAR_NON_TARGET queries are the mutated competitor windows themselves, so they remain similar to target_ref and can produce a TARGET_VIRUS locus. The mid-delta decoy is the target 2-mismatch window labeled HOST so BLAST may rank TARGET first. Easy contaminant remains poly-T.",
+      "routing_49bp": "pipe_route_short_only_49bp is a 49 bp query with transversions every 10 bp versus a unique target window. Designed so blastn-short may recover it and conventional blastn may not, discriminating dual_mode_max_bp 48 vs 49. Outcome is empirical.",
+      "no_forced_outcome": "No fixture asserts TARGET_SPECIFIC, a numeric delta, recovery, or FP."
+    },
+    "samples": [
+      {
+        "sample_id": "pipe_target_29bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 29,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Exact prefix of UNIQUE_TARGET, 29 bp (bucket 20–29, blastn-short only). Preserved from v1."
+      },
+      {
+        "sample_id": "pipe_target_30bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 30,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Exact prefix of UNIQUE_TARGET, 30 bp (bucket 30–39, dual-mode start)."
+      },
+      {
+        "sample_id": "pipe_target_35bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 35,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Exact prefix of UNIQUE_TARGET, 35 bp (interior of bucket 30–39)."
+      },
+      {
+        "sample_id": "pipe_target_39bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 39,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Exact prefix of UNIQUE_TARGET, 39 bp. Boundary vs 40 bp for locus.minimum_candidate_bp=40 (exploratory if min_cand=40)."
+      },
+      {
+        "sample_id": "pipe_target_40bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 40,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Exact prefix of UNIQUE_TARGET, 40 bp. Boundary vs 39 bp; LOCUS_CANDIDATE if min_cand=40, exploratory if min_cand is 45 or 50. Preserved from v1."
+      },
+      {
+        "sample_id": "pipe_target_49bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 49,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Exact prefix of UNIQUE_TARGET, 49 bp. Boundary vs 50 bp for min_cand=50 and for blast.dual_mode_max_bp 48 vs 49. Preserved from v1."
+      },
+      {
+        "sample_id": "pipe_target_50bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 50,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Exact prefix of UNIQUE_TARGET, 50 bp. Boundary vs 49 bp; blastn-only; LOCUS_CANDIDATE for all grid min_cand values."
+      },
+      {
+        "sample_id": "pipe_target_51bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 51,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Exact prefix of UNIQUE_TARGET, 51 bp. Just above the 50 bp blastn / min_cand public boundary."
+      },
+      {
+        "sample_id": "pipe_target_79bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 79,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Exact prefix of UNIQUE_TARGET, 79 bp (bucket 50–99). Preserved from v1."
+      },
+      {
+        "sample_id": "pipe_target_100bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 100,
+        "pipeline_enabled": true,
+        "recipe": "target_unique_prefix",
+        "construction": "Full UNIQUE_TARGET, 100 bp (bucket ≥100). Preserved from v1."
+      },
+      {
+        "sample_id": "pipe_compete_host_1mm_49bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 49,
+        "pipeline_enabled": true,
+        "recipe": "target_window_host_1mm",
+        "design_delta_bitscore": 5,
+        "construction": "Query is the first 49 bp of the target host-1-mismatch window. host_ref matches this window except one transversion at index 12. Designed so BLAST margin may fall near delta=5; dual_mode_max_bp 48 vs 49 also applies at 49 bp. Outcome is empirical."
+      },
+      {
+        "sample_id": "pipe_compete_host_1mm_50bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 50,
+        "pipeline_enabled": true,
+        "recipe": "target_window_host_1mm",
+        "design_delta_bitscore": 5,
+        "construction": "Query is the 50 bp target host-1-mismatch window. host_ref has one transversion at index 12. Designed so conventional blastn margin may fall near delta=5. Outcome is empirical."
+      },
+      {
+        "sample_id": "pipe_compete_host_2mm_50bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 50,
+        "pipeline_enabled": true,
+        "recipe": "target_window_host_2mm",
+        "design_delta_bitscore": 10,
+        "construction": "Query is the 50 bp target host-2-mismatch window. host_ref_2mm has transversions at indices 12 and 24. Designed so BLAST margin may fall near delta=10. Outcome is empirical."
+      },
+      {
+        "sample_id": "pipe_compete_neigh_3mm_50bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 50,
+        "pipeline_enabled": true,
+        "recipe": "target_window_neigh_3mm",
+        "design_delta_bitscore": 15,
+        "construction": "Query is the 50 bp target neighbor-3-mismatch window. neighbor_ref has transversions at indices 12, 24 and 36. Designed so BLAST margin may fall near delta=15. Outcome is empirical."
+      },
+      {
+        "sample_id": "pipe_compete_neigh_4mm_50bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 50,
+        "pipeline_enabled": true,
+        "recipe": "target_window_neigh_4mm",
+        "design_delta_bitscore": 15,
+        "construction": "Query is the 50 bp target neighbor-4-mismatch window. neighbor_ref has transversions at indices 12, 24, 36 and 48. Designed so conventional blastn margin may meet or exceed delta=15. Outcome is empirical."
+      },
+      {
+        "sample_id": "pipe_route_short_only_49bp",
+        "partition": "development",
+        "sample_role": "positive_target",
+        "category": "TARGET_VIRUS",
+        "length_bp": 49,
+        "pipeline_enabled": true,
+        "recipe": "target_window_route_49",
+        "construction": "Query is the 49 bp routing probe: the unique target window with transversions every 10 bp so 11-mers break and 7-mers remain. Designed so recovery may depend on whether blastn-short runs (dual_mode_max_bp=49) or only conventional blastn (dual_mode_max_bp=48). Outcome is empirical."
+      },
+      {
+        "sample_id": "pipe_fp_hostlike_50bp",
+        "partition": "development",
+        "sample_role": "negative_control",
+        "category": "HOST",
+        "length_bp": 50,
+        "pipeline_enabled": true,
+        "recipe": "host_window_1mm",
+        "construction": "Query is the HOST version of the 1-mismatch window (one transversion vs target window). Ground truth is HOST. Tests whether a TARGET_VIRUS locus is still recovered (FP risk). No expected call is asserted."
+      },
+      {
+        "sample_id": "pipe_fp_hostlike_2mm_50bp",
+        "partition": "development",
+        "sample_role": "negative_control",
+        "category": "HOST",
+        "length_bp": 50,
+        "pipeline_enabled": true,
+        "recipe": "host_window_2mm",
+        "construction": "Query is the HOST version of the 2-mismatch window. Slightly more distant from target_ref than pipe_fp_hostlike_50bp. Ground truth HOST; FP if a TARGET_VIRUS candidate is recovered."
+      },
+      {
+        "sample_id": "pipe_fp_neighborlike_50bp",
+        "partition": "development",
+        "sample_role": "negative_control",
+        "category": "NEAR_NON_TARGET_VIRUS",
+        "length_bp": 50,
+        "pipeline_enabled": true,
+        "recipe": "neighbor_window_3mm",
+        "construction": "Query is the NEIGHBOR version of the 3-mismatch window. Ground truth NEAR_NON_TARGET_VIRUS; FP if a TARGET_VIRUS candidate is recovered."
+      },
+      {
+        "sample_id": "pipe_fp_delta_mid_50bp",
+        "partition": "development",
+        "sample_role": "negative_control",
+        "category": "HOST",
+        "length_bp": 50,
+        "pipeline_enabled": true,
+        "recipe": "target_window_fp_mid",
+        "design_delta_bitscore": 5,
+        "construction": "Host-labeled decoy identical to the target 2-mismatch FP window. host_ref has transversions at indices 12 and 24. Designed so BLAST may rank TARGET first with a margin between 5 and 10, separating minimum_delta_bitscore=5 from 10/15 on TARGET_SPECIFIC. Outcome is empirical."
+      },
+      {
+        "sample_id": "pipe_contam_49bp",
+        "partition": "development",
+        "sample_role": "negative_control",
+        "category": "KNOWN_CONTAMINANT",
+        "length_bp": 49,
+        "pipeline_enabled": true,
+        "recipe": "contaminant_poly_t",
+        "construction": "Poly-T 49 bp easy negative. Preserved from v1. Not a near-target FP probe."
+      }
+    ]
+  },
+  "config/experimental/validation/sample_panel_validation_template.json": {
+    "panel_id": "validation-template-v1",
+    "partition": "validation",
+    "description": "Template for an independent validation panel.",
+    "status": "ACTIVE",
+    "samples": []
+  },
+  "config/experimental/validation/schemas/experiment_result_v1.json": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "required": [
+      "run_id",
+      "experiment_id",
+      "parameter_set_id",
+      "commit",
+      "configuration",
+      "sample_id",
+      "status"
+    ],
+    "properties": {
+      "run_id": {
+        "type": "string"
+      },
+      "experiment_id": {
+        "type": "string"
+      },
+      "parameter_set_id": {
+        "type": "string",
+        "pattern": "^ps-[0-9a-f]{16}$"
+      },
+      "commit": {
+        "type": "string"
+      },
+      "configuration": {
+        "type": "object"
+      },
+      "sample_id": {
+        "type": "string"
+      },
+      "ground_truth": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "sample_role": {
+        "type": "string"
+      },
+      "expected_length_bp": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "recovered_length_bp": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "identity_pct": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "coverage_pct": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "bitscore": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "evalue": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "evidence_found": {
+        "type": "boolean"
+      },
+      "recovered": {
+        "type": "boolean"
+      },
+      "observed_classification": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "expected_classification": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "concordant": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      },
+      "false_positive": {
+        "type": "boolean"
+      },
+      "false_negative": {
+        "type": "boolean"
+      },
+      "competition_outcome": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "runtime_seconds": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "technical_failure": {
+        "type": "boolean"
+      },
+      "failure_reason": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "status": {
+        "enum": [
+          "PASS",
+          "FAIL",
+          "NOT_EXECUTED",
+          "REVIEW"
+        ]
+      }
+    },
+    "additionalProperties": true
+  },
+  "config/experimental/validation/validation_criteria_template.json": {
+    "status": "ACTIVE",
+    "description": "Configurable comparison criteria.",
+    "acceptance_criteria": {
+      "recovery_total_pct": {
+        "minimum": 80.0
+      },
+      "recovery_20_49_pct": {
+        "minimum": 50.0
+      },
+      "false_positives": {
+        "maximum": 0
+      },
+      "false_negatives": {
+        "maximum": 2
+      }
+    }
+  }
+}

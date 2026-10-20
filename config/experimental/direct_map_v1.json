@@ -1,0 +1,67 @@
+{
+  "aligner": {
+    "bowtie2_version": "2.5.5",
+    "mode": "--very-sensitive-local",
+    "placements_mode": "-a",
+    "samtools_version": "1.24",
+    "seed": 1729
+  },
+  "deduplication": {
+    "coordinate_exclusion": "ABLATION_ONLY",
+    "umi": "ABLATION_ONLY_WHEN_DECLARED"
+  },
+  "grid": {
+    "baseq": [0, 20, 30],
+    "mapq": [0, 10, 20, 30],
+    "scopes": ["REFERENCE", "LOCUS"],
+    "stages": ["PRE_DEDUP", "POST_COORDINATE_EXCLUSION", "POST_UMI"],
+    "tracks": ["unique", "all_eligible"],
+    "units": ["READ", "TEMPLATE"],
+    "windows_bp": [20, 50, 100]
+  },
+  "measurement_states": [
+    "MEASURED",
+    "NOT_MEASURED",
+    "UNDEFINED",
+    "NOT_APPLICABLE"
+  ],
+  "measurement_error_scope": {
+    "primary_reconciliation": "ALL_TRACKS_ALL_THRESHOLDS",
+    "template_pairing": "ALL_TEMPLATE_CELLS_PER_STAGE_TRACK_MAPQ_BASEQ_REGION_AFTER_FILTERS",
+    "unknown_primary_mapq": "UNIQUE_ALL_THRESHOLDS_PER_CELL_AFTER_STAGE_AND_FILTERS",
+    "unknown_placement_mapq": "ALL_ELIGIBLE_MAPQ_ZERO_INCLUDED_POSITIVE_THRESHOLDS_PER_CELL_AFTER_STAGE_AND_FILTERS"
+  },
+  "pipeline_version": "experimental-direct-map-1.2",
+  "output_contracts": {
+    "coverage_tsv": "experimental-direct-map-coverage-v2",
+    "invariants": "experimental-direct-map-invariants-v2",
+    "metrics": "experimental-direct-map-metrics-v2"
+  },
+  "profile_compatibility": {
+    "previous_profile_id": "GENEIN-EV2-DIRECT-MAP-001.profile-v1.1",
+    "run_identity": "PROFILE_ID_PROFILE_SHA256_COMMIT",
+    "semantic_compatibility": "INCOMPATIBLE_MAPQ255_MEASUREMENT"
+  },
+  "profile_id": "GENEIN-EV2-DIRECT-MAP-001.profile-v1.2",
+  "profile_revision": "1.2",
+  "provenance_requirements": {
+    "controls": "REQUIRED_STATE_OR_RECORDS",
+    "negativeome": "REQUIRED_STATE_OR_REFERENCES",
+    "panel_manifest": "REQUIRED"
+  },
+  "schema_version": "experimental-direct-map-profile-v2",
+  "track_semantics": {
+    "all_eligible_mapq_source": "PLACEMENT",
+    "cross_track_unique_le_all_eligible": {
+      "mapq_zero": "EVALUATE_WHEN_BOTH_CELLS_MEASURED",
+      "positive_thresholds": "NOT_APPLICABLE",
+      "reason": "At minimum_mapq=0 no MAPQ filter is applied and unique must be contained in all_eligible when both cells are measured; positive thresholds use incomparable MAPQ sources."
+    },
+    "orthogonal_count_source": "PLACEMENTS_PASS",
+    "supplementary_in_coverage": false,
+    "template_pairing_failure": "TEMPLATE_CELLS_NOT_MEASURED",
+    "unknown_placement_mapq": "MAPQ_ZERO_INCLUDED_POSITIVE_THRESHOLDS_NOT_MEASURED",
+    "unknown_primary_mapq": "ALL_THRESHOLDS_NOT_MEASURED",
+    "unique_mapq_source": "PRIMARY_DEFAULT_PASS"
+  }
+}

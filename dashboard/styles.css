@@ -1,0 +1,110 @@
+/* Gene-In — layout de página. Tokens em tokens.css; componentes em gene-in.css (prefixo gi-). */
+
+/* ---------- reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--canvas); scroll-behavior: smooth; }
+body { min-width: 320px; }
+button, input, select, textarea { color: inherit; font: inherit; }
+a { color: var(--teal-strong); }
+img, svg { max-width: 100%; }
+h1, h2, h3, p { margin-top: 0; }
+h1, h2, h3 { font-family: var(--font-display); }
+h3 { font-size: 16px; line-height: 22px; }
+code { font-family: var(--font-mono); overflow-wrap: anywhere; }
+fieldset { min-width: 0; padding: 0; border: 0; }
+legend { margin-bottom: var(--space-2); font-weight: 600; }
+details { margin-top: var(--space-2); }
+summary { cursor: pointer; font-weight: 600; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* ---------- skip-link ---------- */
+.skip-link { position: fixed; z-index: 100; top: var(--space-1); left: var(--space-1); transform: translateY(-180%); padding: var(--space-1) var(--space-2); background: var(--petrol); color: var(--on-petrol); }
+.skip-link:focus { transform: none; }
+
+/* ---------- AppBar: posição e menu responsivo ---------- */
+.app-header { position: sticky; z-index: 20; top: 0; }
+.gi-appbar__row { position: relative; max-width: 1280px; margin-inline: auto; padding-inline: var(--space-2); }
+.menu-toggle { min-height: 36px; border-style: solid; border-color: var(--on-petrol-muted); background: transparent; color: var(--on-petrol); cursor: pointer; }
+.primary-nav { display: none; }
+.primary-nav[data-open="true"] { position: absolute; top: 100%; right: var(--space-2); display: grid; width: min(280px, calc(100vw - 32px)); padding: var(--space-1) 0; background: var(--petrol); box-shadow: var(--shadow-overlay); }
+.primary-nav[data-open="true"] a { min-height: 44px; padding-inline: var(--space-2); border: 0; border-left: 3px solid transparent; }
+.primary-nav[data-open="true"] a[aria-current="page"] { border-left-color: var(--cyan); }
+.primary-nav .advanced-entry--mobile { margin: var(--space-1) var(--space-2) 0; }
+.primary-nav[data-open="true"] .advanced-entry--mobile { border: 1px dashed var(--pollen); }
+.advanced-entry::before { content: "◇"; }
+.advanced-entry--desktop { display: none; }
+@media (min-width: 1040px) {
+  .menu-toggle { display: none; }
+  .primary-nav { display: flex; }
+  .primary-nav .advanced-entry--mobile { display: none; }
+  .advanced-entry--desktop { display: inline-flex; }
+}
+.gi-context { padding-inline: max(0px, calc((100vw - 1280px) / 2)); }
+
+/* ---------- área principal ---------- */
+#app-main { width: min(100% - 32px, 1280px); min-height: 70vh; margin: 0 auto; padding: var(--space-4) 0 var(--space-6); }
+#app-main:focus { outline: none; }
+.stack { display: grid; gap: var(--space-2); min-width: 0; }
+.stack > .gi-pagehead { margin-bottom: var(--space-1); }
+.advanced-shell { display: grid; gap: var(--space-1); min-width: 0; }
+
+/* ---------- grades ---------- */
+.grid { display: grid; gap: var(--space-2); }
+.grid--2, .grid--3, .grid--4 { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) {
+  .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ---------- ritmo vertical dentro de painéis ---------- */
+.gi-panel > .gi-status, .gi-panel > .gi-outcome, .gi-panel > .gi-table-wrap, .gi-panel > .chart, .gi-panel > .gi-btnrow,
+.gi-panel > .gi-metrics, .gi-panel > .gi-timeline, .gi-panel > .gi-btn, .gi-panel > .stack { margin: 0 0 var(--space-2); }
+.gi-field--check label { display: flex; align-items: center; gap: var(--space-1); font-weight: 400; }
+.gi-field--check input[type="checkbox"] { width: auto; min-height: 0; margin: 0; }
+.log-output { max-height: 420px; margin: 0; padding: var(--space-2); overflow: auto; white-space: pre-wrap; background: var(--surface-sunken); color: var(--ink); }
+
+/* Explorador Evidence: mantenha tabelas densas dentro de quadros roláveis,
+   preservando os gráficos e o contexto da execução na página. */
+.gi-analytics-data .gi-table-wrap, .gi-analytics-visual .gi-table-wrap {
+  max-height: min(56vh, 560px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.gi-analytics-data .gi-table th { z-index: 2; }
+.gi-analytics-visual .chart { max-height: min(56vh, 560px); overflow: auto; overscroll-behavior: contain; }
+.gi-analytics-data > summary { padding: var(--space-2); border: 1px solid var(--line); border-radius: var(--radius-1); background: var(--surface); }
+.gi-analytics-data[open] > summary { margin-bottom: var(--space-2); }
+.gi-analytics-nav { position: sticky; z-index: 10; top: 64px; display: flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-1); border: 1px solid var(--line); border-radius: var(--radius-1); background: color-mix(in srgb, var(--surface) 94%, transparent); }
+.gi-analytics-nav .gi-btn { margin: 0; }
+
+/* ---------- RouteList com cinco módulos (área avançada) ---------- */
+@media (min-width: 861px) { .gi-routes--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 860px) { .gi-routes--5 .gi-route:nth-child(5) { border-left: 0; } }
+
+/* ---------- estados do StatusLine que gene-in.css deixa no neutro ---------- */
+.gi-status[data-state="empty"], .gi-status[data-state="unavailable"], .gi-status[data-state="cancelled"],
+.gi-status[data-state="not_applicable"], .gi-status[data-state="no_evidence"], .gi-status[data-state="info"] { background: var(--surface); }
+.gi-status[data-state="partial"] { background: var(--warning-soft); border-color: transparent; }
+.gi-status[data-state="partial"] .gi-status__icon { background: var(--warning); }
+.gi-status[data-state="not_evaluable"] { background: repeating-linear-gradient(135deg, var(--surface-sunken) 0 10px, var(--surface) 10px 20px); }
+.gi-status[data-state="shadow"], .gi-status[data-state="experimental"] { background: repeating-linear-gradient(135deg, var(--warning-soft) 0 8px, var(--surface) 8px 16px); border: 1px dashed var(--warning); }
+.gi-status[data-state="shadow"] .gi-status__icon, .gi-status[data-state="experimental"] .gi-status__icon { background: var(--warning); }
+
+/* ---------- gráficos ---------- */
+.chart { min-height: 220px; overflow-x: auto; }
+.chart svg[role="img"] { display: block; min-width: 560px; height: auto; }
+.chart-note { color: var(--ink-muted); font-size: 13px; }
+
+/* ---------- camadas flutuantes ---------- */
+.notifications { position: fixed; z-index: 50; right: var(--space-2); bottom: var(--space-2); display: grid; gap: var(--space-1); width: min(400px, calc(100vw - 32px)); }
+.gi-modal-backdrop { position: fixed; z-index: 60; inset: 0; }
+.gi-modal__body > * + * { margin-top: var(--space-2); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+@media print {
+  .app-header, .gi-context, .gi-btn, .gi-btnrow, .gi-advanced__nav, .notifications, .skip-link { display: none !important; }
+  #app-main { width: 100%; padding: 0; }
+  .gi-panel { break-inside: avoid; }
+}

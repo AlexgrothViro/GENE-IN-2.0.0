@@ -1,0 +1,11 @@
+{
+  "schema_version": "validation-validation-criteria-v1",
+  "status": "ACTIVE",
+  "description": "Configurable comparison criteria.",
+  "acceptance_criteria": {
+    "recovery_total_pct": {"minimum": 80.0},
+    "recovery_20_49_pct": {"minimum": 50.0},
+    "false_positives": {"maximum": 0},
+    "false_negatives": {"maximum": 2}
+  }
+}

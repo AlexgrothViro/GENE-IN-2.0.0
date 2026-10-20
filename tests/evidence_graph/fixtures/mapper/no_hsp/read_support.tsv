@@ -1,0 +1,2 @@
+sample_id	reference_id	category	locus_id	orientation	query_ids	library_mode	umi_mode	support_status	unique_templates	distinct_starts	proper_pair_templates	discordant_templates	minimum_mapq
+fixture-alpha2	ref1	candidate	LOCUS_hist0001	+	contig1	unknown	none	NOT_EVALUATED	1	1	0	0	30

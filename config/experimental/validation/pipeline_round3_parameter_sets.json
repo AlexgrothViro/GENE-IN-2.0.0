@@ -1,0 +1,55 @@
+{
+  "schema_version": "validation-pinned-parameter-sets-v1",
+  "round_id": "pipeline-round3-v1",
+  "description": "Six parameter sets used to compare dual_max 48/49 and delta 5/10/15.",
+  "sets": [
+    {
+      "role": "baseline-canonical-copy",
+      "overrides": {
+        "locus.minimum_candidate_bp": 50,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 49
+      }
+    },
+    {
+      "role": "round2-tie",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 5,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "round2-tie",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "round2-tie",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 15,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "round2-tie",
+      "overrides": {
+        "locus.minimum_candidate_bp": 45,
+        "specificity.minimum_delta_bitscore": 5,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "round2-tie",
+      "overrides": {
+        "locus.minimum_candidate_bp": 45,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 48
+      }
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+# Ignorar artefatos locais e saídas geradas
+.bundle/
+logs/
+data/
+results/
+blastdb/
+bowtie2/
+
+# DBs locais (se você quiser versionar "db/" no futuro, remova esta linha)
+db/
+
+# Temporários
+tmp/
+tmp/validation/
+dist/
+
+# Validation experiment outputs (local only; FASTQ never versioned)
+results/validation/
+config/experimental/validation/local/
+*.local-manifest.json
+
+# Chaves privadas Gene-In (NUNCA commitar!)
+keys/
+*.pem
+
+# =========================
+# Bioinfo artefacts
+# =========================
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+*.fasta
+*.fa
+*.fna
+*.sam
+*.bam
+*.bt2
+*.bt2l
+!scripts/tests/fixtures/pipeline_e2e/target.fa
+
+# =========================
+# Temporários / backups
+# =========================
+*.log
+*.swp
+*.tmp
+*.bak
+*.bak_*
+*.bak.*
+*.bak-*
+*BROKEN*.bak
+
+# Temporarios gerados durante manutencao local
+tmp_ux_orig.py
+
+# =========================
+# Config local sensivel (não versionar)
+# =========================
+config.env
+config/picornavirus.env
+config/secrets.env
+config/authorized_pilot.local.json
+
+# Referencias e indices locais de hospedeiro (podem ter varios GB)
+ref/host/
+
+# Entradas comuns
+__pycache__/
+*.pyc
+.env
+.vscode/
+.idea/
+
+# =========================
+# Notas internas de desenvolvimento (não publicar no GitHub)
+# =========================
+# Auditorias, matrizes de remediação, relatórios de estado
+# técnico e outras notas de trabalho que não são documentação pública do
+# projeto. Ficam disponíveis localmente para quem trabalha no repositório.
+internal/
+
+# Python test cache
+.pytest_cache/
+*.egg-info/
+.venv/
+venv/
+build/
+node_modules/
+VERIFICACAO_REAL/
+
+# Artefatos locais de investigacao; preservados fora da candidata
+/workspace/

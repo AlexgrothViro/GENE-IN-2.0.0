@@ -1,0 +1,12 @@
+{
+  "VERSION": "549912e2a664ce1af8f675468855640658c8a7ffdff10c4eca9845dd788d4322",
+  "config/analysis_profiles.json": "8d7fe00ca9bd79a592c7b80078a242eb5905f4d8be330226b205248f9353a974",
+  "config/evidence_activation.json": "34419dfec57a285e60766e79df15bd4c5aeab34e4ffa7b5fe5ff0d9f1912586b",
+  "config/evidence_profiles.json": "1d9c10c77f0665cab20c53ef36142a0c962c761c57bbd474113aebb956fecdfc",
+  "config/experimental/direct_map_v1.json": "1471106747426f7b13f1307cc654b6ffce7d86ad1ba38f83e3f37a609f938d1c",
+  "config/picornavirus.env.example": "a6700e90efd67aa7c609495cf12db8a8a657d733f18d7af592380b1ada8b2c29",
+  "config/targets.json": "1d34fb12d4ea678dc2b10eecfa988ae801e289d5d46966ac32f08a85dbf69cab",
+  "environment.lock.yml": "6a33d0eed9b01529d0f5ac37d6376c1dcb79eab4117ecd55794681d6d611ec64",
+  "environment.yml": "c4b2517a082b32e7887d82b66597ee04d1dd9d6158ebfeb1cb1660959afc38f9",
+  "requirements.lock.txt": "99b784404e6bb614589ab62c02802b492a0760c2024bb83fadd2b0b8fef23d3e"
+}

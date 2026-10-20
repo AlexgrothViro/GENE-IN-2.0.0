@@ -1,0 +1,130 @@
+/* Gene-In — tokens (gerado do sistema de design, tokens.json). Não editar à mão. */
+@font-face { font-family: "Archivo"; src: url("/vendor/fonts/Archivo-Variable-latin.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("/vendor/fonts/IBMPlexSans-400-latin.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("/vendor/fonts/IBMPlexSans-400italic-latin.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("/vendor/fonts/IBMPlexSans-500-latin.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Sans"; src: url("/vendor/fonts/IBMPlexSans-600-latin.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/vendor/fonts/IBMPlexMono-400-latin.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/vendor/fonts/IBMPlexMono-500-latin.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+
+:root, [data-theme="light"] {
+  --canvas: #eef3f3;
+  --surface: #ffffff;
+  --surface-sunken: #e2eaeb;
+  --line: #c3d1d4;
+  --line-strong: #738a90;
+  --ink: #0c2330;
+  --ink-muted: #4a6069;
+  --petrol: #062331;
+  --petrol-raised: #0d3445;
+  --on-petrol: #e6f1f2;
+  --on-petrol-muted: #9fb9bf;
+  --teal: #00696a;
+  --on-teal: #ffffff;
+  --teal-strong: #004f50;
+  --teal-soft: #d6efed;
+  --cyan: #00c2bd;
+  --pollen: #e2b72c;
+  --focus: #9a6b00;
+  --success: #1f6f4a;
+  --success-soft: #dcefe4;
+  --danger: #b3261e;
+  --danger-soft: #fbe4e1;
+  --warning: #835500;
+  --warning-soft: #fbedc8;
+  --info: #1b5c8a;
+  --info-soft: #e1eef7;
+  --chart-target: var(--teal);
+  --chart-competitor: #a85400;
+  --chart-depth: var(--info);
+  --chart-pending: #6f8288;
+  --shadow-overlay: 0 12px 32px rgba(4, 18, 25, 0.24);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --canvas: #09161d;
+  --surface: #0f2029;
+  --surface-sunken: #0b1b23;
+  --line: #23404b;
+  --line-strong: #5f7f89;
+  --ink: #e3eef0;
+  --ink-muted: #93acb3;
+  --petrol: #041219;
+  --petrol-raised: #0b2533;
+  --on-petrol: #e6f1f2;
+  --on-petrol-muted: #9fb9bf;
+  --teal: #2fc4bd;
+  --on-teal: #04232a;
+  --teal-strong: #5fd8d1;
+  --teal-soft: #0f3a3d;
+  --cyan: #22d3cc;
+  --pollen: #e9bf3c;
+  --focus: #e9bf3c;
+  --success: #5ec48f;
+  --success-soft: #123325;
+  --danger: #ff8a7a;
+  --danger-soft: #3d1814;
+  --warning: #e9b44c;
+  --warning-soft: #3a2a08;
+  --info: #7fbbe8;
+  --info-soft: #11293d;
+  --chart-target: var(--teal);
+  --chart-competitor: #f0a25a;
+  --chart-depth: var(--info);
+  --chart-pending: #7f969d;
+  --shadow-overlay: 0 12px 32px rgba(0, 0, 0, 0.55);
+    color-scheme: dark;
+  }
+}
+[data-theme="dark"] {
+  --canvas: #09161d;
+  --surface: #0f2029;
+  --surface-sunken: #0b1b23;
+  --line: #23404b;
+  --line-strong: #5f7f89;
+  --ink: #e3eef0;
+  --ink-muted: #93acb3;
+  --petrol: #041219;
+  --petrol-raised: #0b2533;
+  --on-petrol: #e6f1f2;
+  --on-petrol-muted: #9fb9bf;
+  --teal: #2fc4bd;
+  --on-teal: #04232a;
+  --teal-strong: #5fd8d1;
+  --teal-soft: #0f3a3d;
+  --cyan: #22d3cc;
+  --pollen: #e9bf3c;
+  --focus: #e9bf3c;
+  --success: #5ec48f;
+  --success-soft: #123325;
+  --danger: #ff8a7a;
+  --danger-soft: #3d1814;
+  --warning: #e9b44c;
+  --warning-soft: #3a2a08;
+  --info: #7fbbe8;
+  --info-soft: #11293d;
+  --chart-target: var(--teal);
+  --chart-competitor: #f0a25a;
+  --chart-depth: var(--info);
+  --chart-pending: #7f969d;
+  --shadow-overlay: 0 12px 32px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+:root {
+  --space-half: 4px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --radius-0: 0px;
+  --radius-1: 2px;
+  --radius-full: 999px;
+  --cut-sm: 6px;
+  --cut-md: 9px;
+  --cut-lg: 18px;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+}

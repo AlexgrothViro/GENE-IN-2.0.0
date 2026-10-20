@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "genein"
+version = "2.0.0"
+description = "Recovery and human review of candidate sequences in fragmented sequencing data"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+dependencies = [
+    "jsonschema>=4.0",
+]
+
+[project.scripts]
+genein = "genein.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.urls]
+Repository = "https://github.com/AlexgrothViro/gene-in-estabilizado"
+Documentation = "https://github.com/AlexgrothViro/gene-in-estabilizado/tree/main/docs"
+Issues = "https://github.com/AlexgrothViro/gene-in-estabilizado/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"genein.evidence_graph" = ["schema/*.json", "config/*.json"]

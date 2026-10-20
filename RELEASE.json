@@ -1,0 +1,17 @@
+{
+  "delivery_id": "genein-release-20261020",
+  "delivery_date": "2026-10-20",
+  "repository": "https://github.com/AlexgrothViro/gene-in-estabilizado",
+  "software_version": "2.0.0",
+  "distribution_channel": "research-release",
+  "base_commit": "fb2f57a8f91e0846571945e4b9d7572a0e00eaa7",
+  "candidate_version": "2.0.0rc1",
+  "evidence_contract": "2.0.0-alpha.2",
+  "recovery_policy": "fragment_recovery_20_100_v1",
+  "scientific_revision": "scientific_review_20261005_v1",
+  "scope": "Functional candidate sequence recovery and human review",
+  "scientific_validation": "Additional biological validation pending; historical G0.8 remains failed",
+  "source_baseline": "fb2f57a8f91e0846571945e4b9d7572a0e00eaa7",
+  "source_archive_sha256": "pending",
+  "source_archive_sha256_note": "Este campo permanece pending na fonte. scripts/ops/build_release.py calcula os hashes após fechar e verificar ZIP/tar.gz e grava SHA256SUMS, <arquivo>.sha256 e archive-release.json no diretório de entrega. O hash do arquivo completo permanece fora dele."
+}

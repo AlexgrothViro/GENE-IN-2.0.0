@@ -1,0 +1,24 @@
+{
+  "rule_catalog_version": "rule-catalog:0.1",
+  "rules": [
+    {"rule_id": "ADMIT-DERIVED_FROM", "status": "active"},
+    {"rule_id": "ADMIT-PROCESSED_FROM", "status": "active"},
+    {"rule_id": "ADMIT-SUPPORTS", "status": "active"},
+    {"rule_id": "ADMIT-ASSEMBLED_FROM", "status": "active"},
+    {"rule_id": "ADMIT-ALIGNS_TO", "status": "active"},
+    {"rule_id": "ADMIT-MATCHES", "status": "active"},
+    {"rule_id": "ADMIT-LOCATED_IN", "status": "active"},
+    {"rule_id": "ADMIT-AGGREGATES_INTO", "status": "active"},
+    {"rule_id": "ADMIT-HSP", "status": "active"},
+    {"rule_id": "ADMIT-CONTIG", "status": "active"},
+    {"rule_id": "ADMIT-LOCUS", "status": "active"},
+    {"rule_id": "ADMIT-READSUPPORT", "status": "active"},
+    {"rule_id": "ADMIT-TEMPLATE-LINEAGE", "status": "active"},
+    {"rule_id": "ADMIT-MAPPER", "status": "active"},
+    {"rule_id": "EVIDENCES-001", "status": "active"},
+    {"rule_id": "CONTRADICTS-001", "status": "active"},
+    {"rule_id": "COMPETES-001", "status": "active"},
+    {"rule_id": "CONCORDANT-001", "status": "active"},
+    {"rule_id": "EXCEPTION-COINFECTION", "status": "active"}
+  ]
+}

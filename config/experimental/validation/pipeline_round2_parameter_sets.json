@@ -1,0 +1,55 @@
+{
+  "schema_version": "validation-pinned-parameter-sets-v1",
+  "round_id": "pipeline-round2-v1",
+  "description": "Six parameter sets used for a comparable second analysis round.",
+  "sets": [
+    {
+      "role": "baseline-canonical-copy",
+      "overrides": {
+        "locus.minimum_candidate_bp": 50,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 49
+      }
+    },
+    {
+      "role": "round1-selected",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 5,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "round1-selected",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "round1-selected",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 15,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "round1-selected",
+      "overrides": {
+        "locus.minimum_candidate_bp": 45,
+        "specificity.minimum_delta_bitscore": 5,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "round1-selected",
+      "overrides": {
+        "locus.minimum_candidate_bp": 45,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 48
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": "validation-sample-panel-v1",
+  "panel_id": "development-synthetic-v1",
+  "partition": "development",
+  "description": "Deterministic synthetic fixtures for scientific-optimization. Not independent validation.",
+  "samples": [
+    {"sample_id": "syn_target_20bp", "partition": "development", "sample_role": "positive_target", "category": "TARGET_VIRUS", "length_bp": 20},
+    {"sample_id": "syn_target_29bp", "partition": "development", "sample_role": "positive_target", "category": "TARGET_VIRUS", "length_bp": 29},
+    {"sample_id": "syn_target_30bp", "partition": "development", "sample_role": "positive_target", "category": "TARGET_VIRUS", "length_bp": 30},
+    {"sample_id": "syn_target_49bp", "partition": "development", "sample_role": "positive_target", "category": "TARGET_VIRUS", "length_bp": 49},
+    {"sample_id": "syn_target_50bp", "partition": "development", "sample_role": "positive_target", "category": "TARGET_VIRUS", "length_bp": 50},
+    {"sample_id": "syn_target_79bp", "partition": "development", "sample_role": "positive_target", "category": "TARGET_VIRUS", "length_bp": 79},
+    {"sample_id": "syn_target_100bp", "partition": "development", "sample_role": "positive_target", "category": "TARGET_VIRUS", "length_bp": 100},
+    {"sample_id": "syn_near_49bp", "partition": "development", "sample_role": "competitor_neighbor", "category": "NEAR_NON_TARGET_VIRUS", "length_bp": 49},
+    {"sample_id": "syn_host_49bp", "partition": "development", "sample_role": "competitor_host", "category": "HOST", "length_bp": 49},
+    {"sample_id": "syn_contam_49bp", "partition": "development", "sample_role": "negative_control", "category": "KNOWN_CONTAMINANT", "length_bp": 49},
+    {"sample_id": "syn_lowcx_30bp", "partition": "development", "sample_role": "negative_control", "category": "LOW_COMPLEXITY", "length_bp": 30}
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "key": "teschovirus_a",
+    "display_name": "Teschovirus A (PTV)",
+    "taxid": null,
+    "query_default": "\"Teschovirus\"[Organism]",
+    "type": "picornaviridae",
+    "notes": "Compatível com o fluxo histórico focado em PTV"
+  },
+  {
+    "key": "enterovirus_g",
+    "display_name": "Enterovirus G",
+    "taxid": null,
+    "query_default": "\"Enterovirus G\"[Organism]",
+    "type": "picornaviridae",
+    "notes": "Alvo comum em suínos"
+  },
+  {
+    "key": "sapelovirus_a",
+    "display_name": "Sapelovirus A",
+    "taxid": null,
+    "query_default": "\"Sapelovirus A\"[Organism]",
+    "type": "picornaviridae",
+    "notes": "Picornavírus suínos"
+  },
+  {
+    "key": "astrovirus_suino",
+    "display_name": "Porcine astrovirus",
+    "taxid": null,
+    "query_default": "\"Porcine astrovirus\"[Organism]",
+    "type": "small_virus",
+    "notes": "Exemplo de vírus pequeno fora de Picornaviridae"
+  }
+]

@@ -1,0 +1,28 @@
+name: gene-in
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11.15=hd63d673_0_cpython
+  - dos2unix=7.5.5=ha4b6fd6_1
+  - spades=4.2.0=h8d6e82b_2
+  - velvet=1.2.10=h577a1d6_9
+  - blast=2.17.0=h66d330f_0
+  - bowtie2=2.5.5=ha27dd3b_0
+  - samtools=1.24=h9dcdb79_0
+  - umi_tools=1.1.6=py311haab0aaa_0
+  - fastp=1.3.6=h43da1c4_0
+  - mafft=7.525=h031d066_1
+  - fasttree=2.2.0=h7b50bb2_1
+  - iqtree=3.1.1=hde5307d_1
+  - entrez-direct=24.0=he881be0_0
+  - ncbi-datasets-cli=18.33.1=ha770c72_0
+  - unzip=6.0=hb03c661_4
+  - pip=26.1.1=pyh8b19718_0
+  - setuptools=82.0.1=pyh332efcf_0
+  - pip:
+      - attrs==26.1.0
+      - jsonschema==4.26.0
+      - jsonschema-specifications==2025.9.1
+      - referencing==0.37.0
+      - rpds-py==2026.6.3

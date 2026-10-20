@@ -1,0 +1,1 @@
+qseqid	task	target_sseqid	target_taxon	target_bitscore	target_qcov	competitor_sseqid	competitor_taxon	competitor_category	competitor_bitscore	competitor_qcov	delta_bitscore	delta_bitscore_fraction	qcov_difference_pp	qcov_difference_abs_pp	specificity_status	specificity_flags

@@ -1,0 +1,21 @@
+{
+  "schema_version": "validation-optimization-grid-v1",
+  "grid_id": "optimization-grid-v1-short-fragments",
+  "description": "Parameter sweep for short-fragment recovery vs false-positive trade-offs.",
+  "base_parameters": {
+    "blast.short_max_bp": 29,
+    "blast.dual_mode_min_bp": 30,
+    "blast.dual_mode_max_bp": 49,
+    "locus.minimum_candidate_bp": 50,
+    "locus.gap_bp": 100,
+    "specificity.minimum_delta_bitscore": 10,
+    "specificity.maximum_qcov_difference_pp": 5,
+    "support.minimum_unique_templates": 3,
+    "support.minimum_mapq": 10
+  },
+  "axes": {
+    "locus.minimum_candidate_bp": [40, 45, 50],
+    "specificity.minimum_delta_bitscore": [5, 10, 15],
+    "blast.dual_mode_max_bp": [48, 49]
+  }
+}

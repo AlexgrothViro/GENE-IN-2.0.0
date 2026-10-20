@@ -1,0 +1,2 @@
+locus_id	sseqid	taxon	category	segment	orientation	task	query_intervals	query_covered_bp	reference_intervals	reference_start	reference_end	covered_reference_bp	reference_length	reference_breadth	query_ids	query_count	unique_sequence_count	hsp_count	best_bitscore	sum_bitscore	best_adj_identity	best_evalue	max_query_length	max_query_covered_bp	low_complexity_queries	coord_system
+LOCUS_deadbeef0001	ref1	Picornaviridae	candidate	seg1	+	blastn-short	1-120	120	100-220;350-400	100	400	170	8000	0.02	contig1	1	1	2	180.0	360.0	0.88	1e-20	120	120	0	1-based-inclusive

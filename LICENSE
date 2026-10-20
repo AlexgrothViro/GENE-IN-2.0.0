@@ -1,0 +1,54 @@
+Gene-In Limited Public Use License v1.0
+
+Copyright (c) 2026 Alexsander Groth. All rights reserved.
+
+This software, known as Gene-In, is made publicly available for limited use under the terms described below.
+
+1. Permitted Use
+
+You may download, install, execute, and use Gene-In for:
+
+- academic evaluation;
+- educational use;
+- non-commercial research;
+- demonstration and testing;
+- personal or institutional assessment of the software.
+
+2. Restrictions
+
+You may not, without prior written permission from the copyright holder:
+
+- redistribute Gene-In or modified copies of Gene-In;
+- sell, sublicense, rent, host, or provide Gene-In as a commercial service;
+- modify, adapt, translate, or create derivative works based on Gene-In;
+- decompile, reverse engineer, disassemble, or attempt to reconstruct the source code;
+- remove copyright notices, license notices, authorship information, or attribution;
+- use Gene-In in a way that suggests clinical, diagnostic, regulatory, or official validation without independent confirmation.
+
+3. Scientific and Technical Disclaimer
+
+Gene-In is a bioinformatics support tool for the recovery, screening, operational classification, organization, and interpretation support of candidate viral fragments from sequencing data.
+
+Gene-In does not provide biological confirmation, clinical diagnosis, definitive pathogen detection, or regulatory-grade validation.
+
+Similarity-based bioinformatic results must be interpreted conservatively and must be evaluated together with sample context, laboratory methods, sequencing quality, reference database limitations, and independent confirmatory analyses when applicable.
+
+4. No Warranty
+
+Gene-In is provided "as is", without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, non-infringement, accuracy, availability, or suitability for diagnostic use.
+
+The author is not liable for any claim, damage, data loss, interpretation error, or other liability arising from the use or inability to use the software.
+
+5. Permission for Broader Use
+
+Requests for commercial use, redistribution, modification, collaboration, institutional licensing, or access to non-public versions of Gene-In must be made directly to the copyright holder.
+
+6. Citation and Attribution
+
+Academic or research use of Gene-In should cite the associated academic work, when available, and should acknowledge:
+
+Gene-In — developed by Alexsander Groth as part of a master's research project in virology and bioinformatics.
+
+7. Governing Terms
+
+Any use of Gene-In implies acceptance of this license. If you do not agree with these terms, do not use the software.

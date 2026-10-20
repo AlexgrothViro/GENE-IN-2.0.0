@@ -1,0 +1,1 @@
+qseqid	sseqid	task	category	taxon	segment	orientation	qlen	slen	hsp_count	query_intervals	reference_intervals	query_covered_bp	reference_covered_bp	query_coverage	weighted_pident	identity_covered_bp	best_evalue	best_bitscore	sum_bitscore	adj_identity_raw	adj_identity	integrity_flags	sequence_sha256	sequence_entropy	n_fraction	max_homopolymer_fraction	low_complexity_status

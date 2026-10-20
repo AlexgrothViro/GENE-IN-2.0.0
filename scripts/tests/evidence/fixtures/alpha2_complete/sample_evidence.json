@@ -1,0 +1,86 @@
+{
+  "analysis_outcome": "NO_EVIDENCE_RECOVERED",
+  "candidates": [],
+  "caveats": [
+    "Evidence 2.0 alpha.2 opera em shadow mode; E2 e E3 permanecem estruturalmente bloqueados.",
+    "E1 autoriza relatar apenas evidência computacional exploratória, não presença ou identidade viral.",
+    "Nenhuma evidência recuperada sob os limiares configurados; isso não demonstra ausência viral.",
+    "Controles não autorizam promoção: UNCONTROLLED."
+  ],
+  "control_status": "UNCONTROLLED",
+  "controls": {
+    "metrics": {},
+    "status": "UNCONTROLLED"
+  },
+  "coverage": {
+    "by_candidate": [],
+    "status": "COVERAGE_UNAVAILABLE"
+  },
+  "coverage_status": "COVERAGE_UNAVAILABLE",
+  "evidence_level": "E1",
+  "execution_status": "done",
+  "library_mode": "unknown",
+  "metrics": {
+    "breadth_1x": 0.0,
+    "breadth_3x": 0.0,
+    "candidate_count": 0,
+    "distinct_starts": 0,
+    "max_window_depth_fraction": 0.0,
+    "median_depth_covered": 0.0,
+    "promotion_eligible_candidate_count": 0,
+    "proper_pair_templates": 0,
+    "qualifying_loci": 0,
+    "total_nonredundant_reference_bp": 0,
+    "unique_templates": 0
+  },
+  "pipeline_version": "2.0.0-alpha.2",
+  "promotion_gates": [
+    {
+      "gate_id": "candidate_evidence",
+      "reason": "Nenhum locus específico atende locus.minimum_candidate_bp.",
+      "status": "BLOCKED"
+    },
+    {
+      "gate_id": "competitive_specificity",
+      "reason": "NOT_EVALUATED",
+      "status": "BLOCKED"
+    },
+    {
+      "gate_id": "reference_scoped_support",
+      "reason": "Nenhum suporte candidato-específico atende os limiares configurados.",
+      "status": "BLOCKED"
+    },
+    {
+      "gate_id": "multi_locus_evidence",
+      "reason": "Candidatos não atendem os limiares multi-locus configurados.",
+      "status": "BLOCKED"
+    },
+    {
+      "gate_id": "reference_scoped_coverage",
+      "reason": "Nenhuma cobertura candidato-específica atende os limiares configurados.",
+      "status": "BLOCKED"
+    },
+    {
+      "gate_id": "controls",
+      "reason": "UNCONTROLLED",
+      "status": "BLOCKED"
+    },
+    {
+      "gate_id": "alpha_shadow_ceiling",
+      "reason": "A política alpha.2 mantém o teto em E1 até benchmark aprovado.",
+      "status": "BLOCKED"
+    }
+  ],
+  "provenance": {
+    "fixture": true
+  },
+  "reported_conclusion": "SHADOW_ONLY",
+  "run_id": "fixture-alpha2-run",
+  "sample_id": "fixture-alpha2",
+  "schema_version": "2.0",
+  "shadow_mode": true,
+  "specificity": {
+    "status": "NOT_EVALUATED"
+  },
+  "specificity_status": "NOT_EVALUATED"
+}

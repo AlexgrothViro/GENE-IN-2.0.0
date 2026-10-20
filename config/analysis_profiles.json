@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "default_profile": "default",
+  "plugins": [
+    {
+      "id": "assembly.velvet",
+      "kind": "assembly",
+      "status": "ACTIVE",
+      "implementation": "scripts/pipeline/assemblers/velvet.sh",
+      "input_contract": "validated_fastq_single_or_paired",
+      "output_contract": "validated_fasta_contigs",
+      "evidence_authority": "ANALYSIS",
+      "required_tools": [
+        "velveth",
+        "velvetg"
+      ]
+    },
+    {
+      "id": "assembly.spades",
+      "kind": "assembly",
+      "status": "ACTIVE",
+      "implementation": "scripts/pipeline/assemblers/spades.sh",
+      "input_contract": "validated_fastq_single_or_paired",
+      "output_contract": "validated_fasta_contigs",
+      "evidence_authority": "ANALYSIS",
+      "required_tools": [
+        "spades.py"
+      ]
+    },
+    {
+      "id": "assembly.metaspades",
+      "kind": "assembly",
+      "status": "ACTIVE",
+      "implementation": "scripts/pipeline/assemblers/metaspades.sh",
+      "input_contract": "validated_fastq_paired",
+      "output_contract": "validated_fasta_contigs",
+      "evidence_authority": "ANALYSIS",
+      "required_tools": [
+        "metaspades.py"
+      ]
+    }
+  ],
+  "profiles": {
+    "default": {
+      "status": "ACTIVE",
+      "scientific_role": "GENERAL",
+      "evidence_ceiling": "UNRESTRICTED",
+      "assembly": {
+        "strategy": "single",
+        "assemblers": [
+          "spades"
+        ],
+        "minimum_successful_assemblers": 1,
+        "allow_manual_assembler_override": true,
+        "concordance_policy": "NOT_APPLICABLE"
+      },
+      "enabled_plugins": [
+        "assembly.velvet",
+        "assembly.spades",
+        "assembly.metaspades"
+      ]
+    },
+    "assembly-consensus": {
+      "status": "ACTIVE",
+      "scientific_role": "GENERAL",
+      "evidence_ceiling": "UNRESTRICTED",
+      "assembly": {
+        "strategy": "consensus",
+        "assemblers": [
+          "velvet",
+          "spades",
+          "metaspades"
+        ],
+        "minimum_successful_assemblers": 2,
+        "allow_manual_assembler_override": false,
+        "concordance_policy": "REFERENCE_LOCUS_MULTI_ASSEMBLER"
+      },
+      "enabled_plugins": [
+        "assembly.velvet",
+        "assembly.spades",
+        "assembly.metaspades"
+      ]
+    }
+  }
+}

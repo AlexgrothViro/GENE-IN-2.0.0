@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "genein:evidence-graph:0.2",
+  "title": "GENE_IN Evidence Graph 0.2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "graph_id",
+    "rule_catalog_version",
+    "mapper_version",
+    "rule_catalog_digest",
+    "source_manifest_digest",
+    "source_artifacts",
+    "source_run_id",
+    "created_at",
+    "nodes",
+    "edges",
+    "evaluation"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.2"},
+    "graph_id": {"type": "string", "pattern": "^G-[A-Za-z0-9._-]+$"},
+    "mapper_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "rule_catalog_version": {"type": "string", "pattern": "^rule-catalog:\\d+\\.\\d+$"},
+    "rule_catalog_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "source_manifest_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "source_artifacts": {
+      "type": "object",
+      "additionalProperties": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "source_run_id": {"type": "string"},
+    "mapper_scope_notes": {"type": "array", "items": {"type": "string"}},
+    "nodes": {"type": "array", "items": {"$ref": "#/$defs/node"}, "minItems": 1},
+    "edges": {"type": "array", "items": {"$ref": "#/$defs/edge"}},
+    "evaluation": {"type": "array", "items": {"$ref": "#/$defs/evaluation"}, "minItems": 0}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "nonEmptyString": {"type": "string", "minLength": 1},
+    "nullableNonEmptyString": {"type": ["string", "null"], "minLength": 1},
+    "idArray": {"type": "array", "items": {"$ref": "#/$defs/nonEmptyString"}, "uniqueItems": true},
+    "rejectionReason": {
+      "enum": [
+        "INCOMPLETE_PROVENANCE",
+        "MISSING_FIELD",
+        "INVALID_COORDINATES",
+        "UNKNOWN_RULE",
+        "DEPRECATED_RULE",
+        "DUPLICATE_LINEAGE",
+        "DUPLICATE_SOURCE_OBSERVATION",
+        "OUT_OF_DECLARED_SCOPE"
+      ]
+    },
+    "observation": {
+      "type": "object",
+      "required": ["observed", "eligible", "raw", "rule_id"],
+      "properties": {
+        "observed": {"type": "boolean"},
+        "eligible": {"type": "boolean"},
+        "raw": {"type": "object"},
+        "rule_id": {"$ref": "#/$defs/nonEmptyString"},
+        "status": {"const": "NOT_EVALUABLE"},
+        "rejection_reason": {"$ref": "#/$defs/rejectionReason"},
+        "missing_fields": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"eligible": {"const": false}}, "required": ["eligible"]},
+          "then": {
+            "required": ["status", "rejection_reason", "missing_fields"],
+            "properties": {"status": {"const": "NOT_EVALUABLE"}}
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_system", "source_ref", "source_digest", "method", "parameters_digest", "software", "software_version", "operator_or_agent", "recorded_at"],
+      "properties": {
+        "source_system": {"$ref": "#/$defs/nonEmptyString"},
+        "source_ref": {"$ref": "#/$defs/nonEmptyString"},
+        "source_digest": {"$ref": "#/$defs/nonEmptyString"},
+        "method": {"$ref": "#/$defs/nonEmptyString"},
+        "parameters_digest": {"$ref": "#/$defs/nonEmptyString"},
+        "software": {"$ref": "#/$defs/nonEmptyString"},
+        "software_version": {"$ref": "#/$defs/nonEmptyString"},
+        "operator_or_agent": {"$ref": "#/$defs/nonEmptyString"},
+        "recorded_at": {"type": "string", "format": "date-time"},
+        "model": {"type": "string"},
+        "model_version_or_date": {"type": "string"},
+        "prompt_hash": {"type": "string"},
+        "review_status": {"enum": ["unreviewed", "reviewed", "rejected"]}
+      },
+      "allOf": [{
+        "if": {"required": ["model"]},
+        "then": {"required": ["model_version_or_date", "prompt_hash", "review_status"]}
+      }],
+      "additionalProperties": false
+    },
+    "derivation": {
+      "type": "object",
+      "required": ["input_ids", "evaluator_version"],
+      "properties": {
+        "input_ids": {"$ref": "#/$defs/idArray"},
+        "evaluator_version": {"$ref": "#/$defs/nonEmptyString"}
+      },
+      "additionalProperties": true
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "type", "provenance"],
+      "properties": {
+        "id": {"$ref": "#/$defs/nonEmptyString"},
+        "type": {"enum": ["Sample", "Run", "ReadSupport", "Contig", "HSP", "Reference", "Locus", "Claim", "EvidenceAggregate"]},
+        "provenance": {"$ref": "#/$defs/provenance"},
+        "sample_ref": {"type": "string"},
+        "run_ref": {"type": "string"},
+        "toolchain": {},
+        "support_ref": {"type": "string"},
+        "observation": {"$ref": "#/$defs/observation"},
+        "lineage_id": {"type": ["string", "null"]},
+        "read_count": {"type": ["integer", "null"], "minimum": 0},
+        "mapped_bases": {"type": ["integer", "null"], "minimum": 0},
+        "contig_ref": {"type": "string"},
+        "length": {"type": ["integer", "null"], "minimum": 1},
+        "assembly_method": {"type": ["string", "null"], "minLength": 1},
+        "sequence_digest": {"type": ["string", "null"], "minLength": 1},
+        "hsp_ref": {"type": "string"},
+        "query_length": {"type": ["integer", "null"], "minimum": 1},
+        "alignment_length": {"type": ["integer", "null"], "minimum": 1},
+        "identity_pct": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "matches": {"type": ["integer", "null"], "minimum": 0},
+        "mismatches": {"type": ["integer", "null"], "minimum": 0},
+        "gaps": {"type": ["integer", "null"], "minimum": 0},
+        "evalue": {"type": ["number", "null"], "minimum": 0},
+        "bitscore": {"type": ["number", "null"]},
+        "strand": {"type": ["string", "null"], "enum": ["+", "-", "plus", "minus", null]},
+        "coord_system": {"type": ["string", "null"], "minLength": 1},
+        "reference_ref": {"type": "string"},
+        "reference_id": {"type": ["string", "null"], "minLength": 1},
+        "interval": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "array", "prefixItems": [{"type": "integer"}, {"type": "integer"}], "minItems": 2, "maxItems": 2},
+            {"type": "object", "required": ["start", "end"], "properties": {"start": {"type": "integer"}, "end": {"type": "integer"}}, "additionalProperties": false},
+            {"type": "array", "items": {"type": "object", "required": ["start", "end"], "properties": {"start": {"type": "integer", "minimum": 1}, "end": {"type": "integer", "minimum": 1}}, "additionalProperties": false}, "minItems": 1}
+          ]
+        },
+        "claim_kind": {"type": "string"},
+        "status": {"enum": ["COHERENT", "CONFLICTED", "INSUFFICIENT", "NOT_EVALUABLE"]},
+        "locus_id": {"$ref": "#/$defs/nonEmptyString"},
+        "hypothesis": {
+          "type": "object",
+          "required": ["reference_ids"],
+          "properties": {"reference_ids": {"$ref": "#/$defs/idArray"}},
+          "additionalProperties": false
+        },
+        "aggregation_method": {"const": "UNION_ALL_ELIGIBLE"},
+        "derivation": {"$ref": "#/$defs/derivation"},
+        "lineage_set": {"$ref": "#/$defs/idArray"}
+      },
+      "allOf": [
+        {"if": {"properties": {"type": {"const": "Sample"}}}, "then": {"required": ["sample_ref"]}},
+        {"if": {"properties": {"type": {"const": "Run"}}}, "then": {"required": ["run_ref", "toolchain"]}},
+        {"if": {"properties": {"type": {"const": "ReadSupport"}}}, "then": {"required": ["support_ref", "observation", "lineage_id", "read_count", "mapped_bases"]}},
+        {"if": {"properties": {"type": {"const": "Contig"}}}, "then": {"required": ["contig_ref", "length", "assembly_method", "sequence_digest"]}},
+        {"if": {"properties": {"type": {"const": "HSP"}}}, "then": {"required": ["hsp_ref", "query_length", "alignment_length", "identity_pct", "matches", "mismatches", "gaps", "evalue", "bitscore", "strand", "coord_system", "observation"]}},
+        {"if": {"properties": {"type": {"const": "Reference"}}}, "then": {"required": ["reference_ref"]}},
+        {"if": {"properties": {"type": {"const": "Locus"}}}, "then": {"required": ["reference_id", "interval", "coord_system"]}},
+        {"if": {"properties": {"type": {"const": "Claim"}}}, "then": {"required": ["claim_kind", "status"]}},
+        {"if": {"properties": {"type": {"const": "EvidenceAggregate"}}}, "then": {"required": ["locus_id", "hypothesis", "aggregation_method", "derivation"]}}
+      ],
+      "additionalProperties": true
+    },
+    "edge": {
+      "type": "object",
+      "required": ["id", "type", "source", "target", "observed", "eligible", "decision_relevant", "rule_id", "provenance", "created_at"],
+      "properties": {
+        "id": {"$ref": "#/$defs/nonEmptyString"},
+        "type": {"enum": ["DERIVED_FROM", "PROCESSED_FROM", "SUPPORTS", "ASSEMBLED_FROM", "ALIGNS_TO", "MATCHES", "LOCATED_IN", "AGGREGATES_INTO", "EVIDENCES", "CONTRADICTS", "COMPETES_WITH", "CONCORDANT_WITH", "EXPLAINS"]},
+        "source": {"$ref": "#/$defs/nonEmptyString"},
+        "target": {"$ref": "#/$defs/nonEmptyString"},
+        "observed": {"type": "boolean"},
+        "eligible": {"type": "boolean"},
+        "decision_relevant": {"type": "boolean"},
+        "rule_id": {"$ref": "#/$defs/nonEmptyString"},
+        "provenance": {"$ref": "#/$defs/provenance"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "derivation": {"$ref": "#/$defs/derivation"},
+        "rejection_reason": {"$ref": "#/$defs/rejectionReason"},
+        "lineage_set": {"$ref": "#/$defs/idArray"},
+        "rationale": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {"if": {"properties": {"eligible": {"const": false}}}, "then": {"required": ["rejection_reason", "rule_id"]}},
+        {"if": {"properties": {"type": {"enum": ["EVIDENCES", "CONTRADICTS", "COMPETES_WITH", "CONCORDANT_WITH"]}}}, "then": {"required": ["derivation"]}},
+        {"if": {"properties": {"type": {"const": "EXPLAINS"}}}, "then": {"required": ["rationale", "provenance"], "properties": {"rule_id": {"pattern": "^EXCEPTION-"}}}}
+      ],
+      "additionalProperties": true
+    },
+    "evaluation": {
+      "type": "object",
+      "required": ["claim_id", "status", "used_edge_ids", "exclusions", "scope_node_ids", "scope_edge_ids"],
+      "properties": {
+        "claim_id": {"$ref": "#/$defs/nonEmptyString"},
+        "status": {"enum": ["COHERENT", "CONFLICTED", "INSUFFICIENT", "NOT_EVALUABLE"]},
+        "used_edge_ids": {"$ref": "#/$defs/idArray"},
+        "exclusions": {"type": "array", "items": {"type": "object"}},
+        "scope_node_ids": {"$ref": "#/$defs/idArray"},
+        "scope_edge_ids": {"$ref": "#/$defs/idArray"},
+        "rationale": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,1 @@
+locus_id	sseqid	taxon	category	segment	orientation	task	query_intervals	query_covered_bp	reference_intervals	reference_start	reference_end	covered_reference_bp	reference_length	reference_breadth	query_ids	query_count	unique_sequence_count	hsp_count	best_bitscore	sum_bitscore	best_adj_identity	best_evalue	max_query_length	max_query_covered_bp	low_complexity_queries

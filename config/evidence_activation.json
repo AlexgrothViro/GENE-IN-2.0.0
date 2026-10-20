@@ -1,0 +1,10 @@
+{
+  "schema_version": "2.0",
+  "activation_record_id": "OPEN-ANALYSIS",
+  "status": "ACTIVE",
+  "target_profile": {
+    "profile_id": "open-analysis",
+    "profile_version": "3.0",
+    "expected_profile_sha256": "2f69e4c2463ab779355fd709718786001fbe31866560240ad1c9d7334d41ec00"
+  }
+}

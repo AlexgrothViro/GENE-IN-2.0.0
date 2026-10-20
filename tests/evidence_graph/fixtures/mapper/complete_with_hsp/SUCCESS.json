@@ -1,0 +1,12 @@
+{
+  "artifact_count": 12,
+  "artifact_manifest_sha256": "placeholder",
+  "pipeline_version": "2.0.0-alpha.2",
+  "policy_version": "2.0-alpha",
+  "run_id": "fixture-alpha2-run",
+  "sample_evidence_sha256": "placeholder",
+  "shadow_mode": true,
+  "status": "done",
+  "validated_at": "2026-07-17T00:00:00+00:00",
+  "mapper_source_version": "0.2.2"
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "profiles": {
+    "open-analysis": {
+      "profile_id": "open-analysis",
+      "profile_version": "3.0",
+      "status": "ACTIVE",
+      "scientific_role": "GENERAL",
+      "shadow_mode": false,
+      "evidence_ceiling": "UNRESTRICTED",
+      "allowed_evidence_levels": ["DETECTED", "NO_SIGNAL", "NOT_EVALUABLE"],
+      "diagnostic_language_allowed": false,
+      "analysis_profile_id": "default",
+      "thresholds": {
+        "blast": {"short_max_bp": 29, "dual_mode_min_bp": 30, "dual_mode_max_bp": 49, "explicit_dust": true, "soft_masking": true},
+        "locus": {"gap_bp": 100, "minimum_candidate_bp": 50},
+        "support": {"minimum_unique_templates": 3, "minimum_distinct_starts_shotgun": 2, "minimum_mapq": 10, "minimum_base_quality": 20, "require_proper_pair_shotgun": true},
+        "specificity": {"minimum_delta_bitscore": 10, "maximum_qcov_difference_pp": 5},
+        "sample_evidence": {"multi_locus_minimum": 2, "multi_locus_total_bp": 150, "genome_breadth_1x": 0.2, "median_covered_depth": 3, "concentration_window_bp": 100},
+        "controls": {"provisional_sample_to_negative_ratio": 10, "uncontrolled_maximum": "MULTI_LOCUS_CANDIDATE"},
+        "phylogeny": {"minimum_aligned_bp": 200, "minimum_informative_sites": 20, "minimum_references": 4, "maximum_n_fraction": 0.05, "maximum_gap_fraction": 0.5}
+      },
+      "gates": [],
+      "presentation": {"reported_conclusion": "ANALYSIS_RESULT", "required_caveats": []}
+    }
+  }
+}

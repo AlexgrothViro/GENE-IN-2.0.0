@@ -1,0 +1,33 @@
+# Normalizacao de fim de linha.
+# Objetivo: eliminar diffs falsos entre Windows (CRLF) e WSL/Linux (LF).
+# Regra geral: LF no indice E na arvore de trabalho.
+* text=auto eol=lf
+
+# Scripts nativos do Windows precisam de CRLF na arvore de trabalho.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Contratos que devem permanecer LF (explicito e redundante, por seguranca).
+*.sh    text eol=lf
+*.env   text eol=lf
+*.md    text eol=lf
+*.py    text eol=lf
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.tsv   text eol=lf
+*.txt   text eol=lf
+*.fa    text eol=lf
+*.fasta text eol=lf
+Makefile text eol=lf
+
+# Binarios: nunca normalizar, nunca diferenciar como texto.
+*.ico  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gz   binary
+*.bam  binary
+*.bt2  binary
+*.bt2l binary

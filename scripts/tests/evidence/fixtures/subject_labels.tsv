@@ -1,0 +1,3 @@
+sseqid	category	taxon	segment
+ref_target	TARGET_VIRUS	Synthetic target	segment_1
+ref_near	NEAR_NON_TARGET_VIRUS	Synthetic near target	segment_1

@@ -1,0 +1,79 @@
+{
+  "schema_version": "validation-pinned-parameter-sets-v1",
+  "round_id": "pipeline-round4-v1",
+  "description": "Recovery sweep over min_candidate, dual_max and delta combinations.",
+  "sets": [
+    {
+      "role": "baseline-canonical-copy",
+      "overrides": {
+        "locus.minimum_candidate_bp": 50,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 49
+      }
+    },
+    {
+      "role": "delta10-grid",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "delta10-grid",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 49
+      }
+    },
+    {
+      "role": "delta10-grid",
+      "overrides": {
+        "locus.minimum_candidate_bp": 45,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "delta10-grid",
+      "overrides": {
+        "locus.minimum_candidate_bp": 45,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 49
+      }
+    },
+    {
+      "role": "delta10-grid",
+      "overrides": {
+        "locus.minimum_candidate_bp": 50,
+        "specificity.minimum_delta_bitscore": 10,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "delta-anchor",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 5,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "delta-anchor",
+      "overrides": {
+        "locus.minimum_candidate_bp": 40,
+        "specificity.minimum_delta_bitscore": 15,
+        "blast.dual_mode_max_bp": 48
+      }
+    },
+    {
+      "role": "delta-anchor",
+      "overrides": {
+        "locus.minimum_candidate_bp": 45,
+        "specificity.minimum_delta_bitscore": 5,
+        "blast.dual_mode_max_bp": 48
+      }
+    }
+  ]
+}

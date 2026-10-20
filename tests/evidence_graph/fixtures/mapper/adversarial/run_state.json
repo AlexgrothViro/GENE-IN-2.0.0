@@ -1,0 +1,126 @@
+{
+  "action": "evidence_single",
+  "analysis_outcome": "NO_EVIDENCE_RECOVERED",
+  "artifacts": {},
+  "batch_id": null,
+  "created_at": "2026-07-17T00:00:00+00:00",
+  "current_stage": null,
+  "evidence_level": "E1",
+  "evidence_v2_status": "done",
+  "execution_status": "done",
+  "failed_command": null,
+  "failed_stage": null,
+  "failure_message": null,
+  "failure_type": null,
+  "finished_at": "2026-07-17T00:00:00+00:00",
+  "official_v1_status": "not_started",
+  "pipeline_version": "2.0.0-alpha.2",
+  "policy_version": "2.0-alpha",
+  "provenance": {},
+  "run_id": "fixture-alpha2-run",
+  "sample_ids": [
+    "fixture-alpha2"
+  ],
+  "shadow_mode": true,
+  "stages": [
+    {
+      "finished_at": null,
+      "id": "input_validation",
+      "label": "Validação da entrada",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "quality_control",
+      "label": "Controle de qualidade",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "assembly",
+      "label": "Montagem",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "initial_blast",
+      "label": "BLAST inicial",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "hsp_aggregation",
+      "label": "Agregação de HSPs",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "locus_building",
+      "label": "Construção de loci",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "competitive_search",
+      "label": "Busca competitiva",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "read_remapping",
+      "label": "Remapeamento das reads",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "coverage",
+      "label": "Cálculo de cobertura",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "controls",
+      "label": "Avaliação de controles",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "evidence_classification",
+      "label": "Geração de evidências",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    },
+    {
+      "finished_at": null,
+      "id": "report_export",
+      "label": "Exportação do relatório",
+      "message": null,
+      "started_at": null,
+      "status": "pending"
+    }
+  ],
+  "started_at": null,
+  "status": "done",
+  "warnings": []
+}

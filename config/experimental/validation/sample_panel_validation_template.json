@@ -1,0 +1,8 @@
+{
+  "schema_version": "validation-sample-panel-v1",
+  "panel_id": "validation-template-v1",
+  "partition": "validation",
+  "description": "Template for an independent validation panel.",
+  "status": "ACTIVE",
+  "samples": []
+}
