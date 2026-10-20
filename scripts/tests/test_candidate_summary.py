@@ -1,13 +1,31 @@
 """candidate_summary.tsv keeps one best hit and leaves the full table unchanged."""
 import json
-from pathlib import Path
+import shutil
+import subprocess
 import sys
+from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "evidence"))
 from common import sha256_text
-from export_candidate_sequences import export
+from export_candidate_sequences import export, titles_from_blast_db
 from validate_run_artifacts import validate_candidate_exports
+
+_BLAST_TOOLS = ("makeblastdb", "blastdbcmd", "blastn")
+_QUERY = (
+    "CAGATTTTCATATTATGCAGAAAATCTACTTCGCCTGATACGAGTCGGTTATCTTCGGATACTGTATAGTCCCACCTGGTGATCCTATGCTTGTGAGTACCCAGAAAATAGCGACGGACCGCGGTGTTAAGTGTCGAGCTACATCACTTCTCATGTAGCCAGAAGGCTGCAACTCATCGACTCTATGTAGTGACCGCGTC"
+)
+_OTHER = (
+    "GATGTCAAACCCCGGGGGGAGCTCAGATATCCGATACAGGGATGAAGAAATAACCTCATCCCATTGGTGACGAAAGGTTGTAAGTAGCTGGCCGCCGAGATAGCTGAGCGGCGAACCACTAGAAAAGGTTCAGACCCCGGAGCCCAGCCGTCACGATTGTTATGCGTATAAGCCCGGTTCACTACGTCCGTTCTGGCAAG"
+)
+_REFERENCE = (
+    ">PTV1 Porcine teschovirus 1 strain X, complete genome\n"
+    f"{_QUERY}\n"
+    ">NC_009999.1 Other virus isolate Y, partial genome\n"
+    f"{_OTHER}\n"
+)
 
 
 def test_summary_is_one_best_hit_and_full_table_keeps_every_row(tmp_path):
@@ -98,3 +116,64 @@ def test_summary_keeps_bitscore_winner_and_fills_taxon_from_the_title(tmp_path):
     assert full.splitlines()[1].split("\t")[6] == ""
     (out / "fragment_evidence.tsv").write_bytes(fragments.read_bytes())
     assert validate_candidate_exports(out) == []
+
+
+def _makeblastdb(fasta: Path, prefix: Path, parse_seqids: bool) -> None:
+    command = ["makeblastdb", "-in", str(fasta), "-dbtype", "nucl", "-out", str(prefix)]
+    if parse_seqids:
+        command.append("-parse_seqids")
+    built = subprocess.run(command, capture_output=True, text=True, check=False)
+    assert built.returncode == 0, built.stderr
+
+
+def _blastn_sseqid(query: Path, prefix: Path) -> str:
+    hit = subprocess.run(
+        ["blastn", "-query", str(query), "-db", str(prefix), "-outfmt", "6 sseqid", "-max_target_seqs", "1"],
+        capture_output=True, text=True, check=False,
+    )
+    assert hit.returncode == 0, hit.stderr
+    assert hit.stdout.strip(), hit.stderr
+    return hit.stdout.splitlines()[0].split("\t")[0]
+
+
+@pytest.mark.skipif(
+    not all(shutil.which(name) for name in _BLAST_TOOLS),
+    reason="BLAST+ ausente",
+)
+def test_summary_fills_taxon_from_a_real_blast_database(tmp_path):
+    fasta = tmp_path / "reference.fa"
+    fasta.write_text(_REFERENCE, encoding="utf-8")
+    query = tmp_path / "query.fa"
+    query.write_text(f">q1\n{_QUERY}\n", encoding="utf-8")
+    sequence = _QUERY
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"schema_version": "1.0", "queries": {
+        "q1": {"length_bp": len(sequence), "sequence_sha256": sha256_text(sequence), "source_counts": {"read": 1}},
+    }}), encoding="utf-8")
+    queries = tmp_path / "queries.fa"
+    queries.write_text(f">q1\n{sequence}\n", encoding="utf-8")
+    header = "\t".join([
+        "qseqid", "sseqid", "category", "taxon", "task", "query_covered_bp", "query_coverage",
+        "weighted_pident", "best_bitscore", "best_evalue", "assembly_method",
+    ])
+    for name, parse_seqids in (("unparsed", False), ("parsed", True)):
+        prefix = tmp_path / name / "local"
+        prefix.parent.mkdir()
+        _makeblastdb(fasta, prefix, parse_seqids)
+        sseqid = _blastn_sseqid(query, prefix)
+        catalog = titles_from_blast_db(prefix)
+        assert sseqid in catalog, (name, sseqid, sorted(catalog))
+        fragments = tmp_path / f"{name}.tsv"
+        fragments.write_text(
+            header + f"\nq1\t{sseqid}\tUNLABELED\t\tblastn\t{len(sequence)}\t1\t100\t80\t1e-8\tspades\n",
+            encoding="utf-8",
+        )
+        out = tmp_path / name / "out"
+        export(queries, manifest, fragments, out, blast_db=prefix)
+        row = (out / "candidate_summary.tsv").read_text(encoding="utf-8").splitlines()[1].split("\t")
+        assert row[4] == sseqid
+        assert row[5] == "UNLABELED"
+        assert row[6] == "Porcine teschovirus 1", (name, row[6], row[-3])
+        assert "Porcine teschovirus 1 strain X" in row[-3]
+        full = (out / "candidate_sequences.tsv").read_text(encoding="utf-8").splitlines()[1].split("\t")
+        assert full[6] == ""

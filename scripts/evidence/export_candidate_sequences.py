@@ -117,11 +117,12 @@ def titles_from_fasta(path: Path) -> dict[str, tuple[str, str]]:
 
 
 def titles_from_blast_db(prefix: Path) -> dict[str, tuple[str, str]]:
+    """Read accession and title. ``%f`` is FASTA and ignores every other specifier."""
     if shutil.which("blastdbcmd") is None:
         return {}
     try:
         result = subprocess.run(
-            ["blastdbcmd", "-db", str(prefix), "-entry", "all", "-outfmt", "%f\t%t"],
+            ["blastdbcmd", "-db", str(prefix), "-entry", "all", "-outfmt", "%a\t%t"],
             capture_output=True, text=True, check=False, timeout=120,
         )
     except (OSError, subprocess.SubprocessError):
@@ -130,9 +131,18 @@ def titles_from_blast_db(prefix: Path) -> dict[str, tuple[str, str]]:
         return {}
     catalog: dict[str, tuple[str, str]] = {}
     for line in result.stdout.splitlines():
-        identifier, separator, title = line.partition("\t")
-        if separator:
-            _remember(catalog, identifier.strip(), title)
+        accession, separator, title = line.partition("\t")
+        accession = accession.strip()
+        title = title.strip()
+        if not separator or not accession or not title:
+            continue
+        _remember(catalog, accession, title)
+        # Without -parse_seqids, %a is BL_ORD_ID:N and blastn sseqid is the
+        # first token of the original FASTA header, which %t still carries.
+        if accession.startswith("BL_ORD_ID"):
+            token = title.split(None, 1)[0]
+            if token and token != accession:
+                _remember(catalog, token, title)
     return catalog
 
 
