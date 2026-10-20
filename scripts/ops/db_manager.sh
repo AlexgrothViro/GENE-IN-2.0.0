@@ -32,10 +32,12 @@ if [[ -f "${CONFIG_FILE}" ]]; then
 fi
 
 # 2. RESTAURA AS VARIÁVEIS (Sobrescrevendo o config.env)
-if [[ -n "$INCOMING_DB" ]]; then
+# Perfil nomeado (DB=ptv e demais, inclusive um nome local) ignora DB_QUERY.
+# Só custom — ou uma consulta sem nome de banco — usa a consulta do chamador.
+if [[ -n "$INCOMING_DB" && "$INCOMING_DB" != "custom" ]]; then
   DB="$INCOMING_DB"
-fi
-if [[ -n "$INCOMING_DB_QUERY" ]]; then
+  unset DB_QUERY
+elif [[ -n "$INCOMING_DB_QUERY" ]]; then
   DB_QUERY="$INCOMING_DB_QUERY"
 elif [[ -n "$INCOMING_DB" && -z "$INCOMING_REF_FASTA" ]]; then
   unset DB_QUERY
@@ -128,7 +130,8 @@ Comandos:
 
 Variáveis (env):
   DB             (padrão: ptv)
-  DB_QUERY       (se definido, sobrescreve a query padrão do perfil)
+  DB_QUERY       (só o banco custom usa esta consulta e a grava no manifesto;
+                  um perfil nomeado ignora o valor e mantém a query do perfil)
   NCBI_DB        (padrão: nucleotide)
 
   REF_FASTA      (padrão: data/ref/<DB>.fa)
@@ -235,6 +238,10 @@ NCBI_DB="${NCBI_DB:-nucleotide}"
 # Alias resolution moved to top of the script
 
 DEFAULT_QUERY="${DB_QUERIES[$DB]:-}"
+if [[ "$DB" != "custom" && -n "${INCOMING_DB_QUERY}" ]]; then
+  log_warning "DB=${DB} não é custom; a consulta externa foi ignorada. Só o banco custom usa DB_QUERY e grava essa consulta no manifesto."
+  unset DB_QUERY
+fi
 DB_QUERY="${DB_QUERY:-$DEFAULT_QUERY}"
 REFRESH_CUSTOM=0
 

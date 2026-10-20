@@ -77,7 +77,6 @@ REF_DIR         := $(subst ",,$(REF_DIR))
 REF_FASTA       := $(subst ",,$(REF_FASTA))
 BLAST_DB        := $(subst ",,$(BLAST_DB))
 BOWTIE2_INDEX   := $(subst ",,$(BOWTIE2_INDEX))
-DB_QUERY        := $(subst ",,$(DB_QUERY))
 ASSEMBLER       := $(subst ",,$(ASSEMBLER))
 ANALYSIS_PROFILE := $(subst ",,$(ANALYSIS_PROFILE))
 SPADES_PARAMS   := $(subst ",,$(SPADES_PARAMS))
@@ -109,6 +108,16 @@ endif
 # is a download destination inside db_manager.sh; passing it unconditionally
 # makes a missing profile FASTA look like a local file.
 PASS_REF_FASTA := $(if $(filter command line,$(origin REF_FASTA)),REF_FASTA="$(REF_FASTA)",$(if $(strip $(ENV_REF_FASTA)),REF_FASTA="$(ENV_REF_FASTA)",))
+
+# Só custom recebe DB_QUERY. Um perfil nomeado (make db DB=ptv) ignora a
+# consulta que veio do ambiente ou de picornavirus.env. As aspas da consulta
+# NCBI ficam intactas: o Makefile não as remove.
+PASS_DB_QUERY :=
+ifeq ($(DB),custom)
+ifneq ($(strip $(DB_QUERY)),)
+PASS_DB_QUERY := DB_QUERY='$(subst ','"'"',$(DB_QUERY))'
+endif
+endif
 
 .PHONY: cfg-all cfg-db cfg-assembly cfg-blast
 
@@ -228,12 +237,12 @@ pipeline:
 	scripts/pipeline/run.sh "$${PIPELINE_ARGS[@]}"
 
 db:
-	DB="$(DB)" DB_QUERY="$(DB_QUERY)" $(PASS_REF_FASTA) \
+	DB="$(DB)" $(PASS_DB_QUERY) $(PASS_REF_FASTA) \
 	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
 	$(SCRIPTS_DIR)/ops/db_manager.sh setup
 
 db-blast:
-	DB="$(DB)" DB_QUERY="$(DB_QUERY)" $(PASS_REF_FASTA) \
+	DB="$(DB)" $(PASS_DB_QUERY) $(PASS_REF_FASTA) \
 	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
 	$(SCRIPTS_DIR)/ops/db_manager.sh setup-blast
 
@@ -369,7 +378,7 @@ db-list:
 	DB="$(DB)" scripts/ops/db_manager.sh list
 
 db-setup:
-	DB="$(DB)" DB_QUERY="$(DB_QUERY)" $(PASS_REF_FASTA) \
+	DB="$(DB)" $(PASS_DB_QUERY) $(PASS_REF_FASTA) \
 	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
 	scripts/ops/db_manager.sh setup
 
