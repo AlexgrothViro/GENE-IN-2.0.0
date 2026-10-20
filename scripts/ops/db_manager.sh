@@ -64,9 +64,21 @@ fi
 # shellcheck disable=SC1091
 source "${SCRIPTS_ROOT}/lib/common.sh"
 
-mkdir -p "${REPO_ROOT}/tmp"
+# O lock acompanha o trabalho quando a pessoa pede um diretório fora da fonte.
+LOCK_DIR="${REPO_ROOT}/tmp"
+if [[ -n "${GENEIN_WORK_ROOT:-}" ]]; then
+  case "${GENEIN_WORK_ROOT}" in
+    /*) ;;
+    *) log_error "GENEIN_WORK_ROOT precisa ser um diretório absoluto: ${GENEIN_WORK_ROOT}" ;;
+  esac
+  if [[ ! -d "${GENEIN_WORK_ROOT}" ]]; then
+    log_error "GENEIN_WORK_ROOT não existe: ${GENEIN_WORK_ROOT}"
+  fi
+  LOCK_DIR="${GENEIN_WORK_ROOT}/tmp"
+fi
+mkdir -p "${LOCK_DIR}"
 if [[ "${DB_MANAGER_LOCK_HELD:-0}" != "1" ]]; then
-  exec 9>"${REPO_ROOT}/tmp/db-manager.lock"
+  exec 9>"${LOCK_DIR}/db-manager.lock"
   flock -x 9
 fi
 trap 'rm -f "${REF_TMP:-}" "${NORMALIZED_FASTA:-}"' EXIT
@@ -243,6 +255,21 @@ bowtie2_index_complete() {
 
 if [[ ! "$DB" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]*$ ]]; then
   log_error "Nome de banco inválido em DB='${DB}'. Use letras, números, ponto, _, + ou - (exemplo: DB=meu_banco)."
+fi
+
+# Sem caminho explícito, GENEIN_WORK_ROOT guarda FASTA padrão, BLAST e Bowtie2
+# fora da fonte. Um REF_FASTA, BLAST_DB ou BOWTIE2_INDEX do chamador prevalece.
+if [[ -n "${GENEIN_WORK_ROOT:-}" ]]; then
+  if [[ -z "${INCOMING_REF_FASTA}" ]]; then
+    REF_FASTA="${GENEIN_WORK_ROOT}/data/ref/${DB}.fa"
+  fi
+  if [[ -z "${INCOMING_BLAST_DB}" ]]; then
+    BLAST_DB="${GENEIN_WORK_ROOT}/blastdb/${DB}"
+  fi
+  if [[ -z "${INCOMING_BOWTIE2_INDEX}" ]]; then
+    BOWTIE2_INDEX="${GENEIN_WORK_ROOT}/bowtie2/${DB}"
+  fi
+  log_info "Diretório de trabalho: ${GENEIN_WORK_ROOT} (DB=${DB})"
 fi
 
 REF_FASTA="$(resolve_path "${REF_FASTA:-data/ref/${DB}.fa}")"

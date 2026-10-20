@@ -22,6 +22,10 @@ bash run_linux.sh
 
 Open the URL printed in the terminal. The dashboard binds to `127.0.0.1`; keep its terminal open and stop the server with Ctrl+C when finished. Keep the source tree in place because the editable installation also uses its shell adapters. See the [installation guide](docs/installation-reproducibility.md).
 
+The scientific environment lives outside the source tree. The default prefix is `~/.gene-in-bundle`. Set `GENEIN_BUNDLE_DIR` before installing, opening the dashboard and running analyses when another directory is wanted. The Windows launcher uses the default.
+
+Reference data can live outside the source tree as well. When `GENEIN_WORK_ROOT` is an existing absolute directory, the default download FASTA, BLAST database and Bowtie2 index are created there. An explicit `REF_FASTA`, `BLAST_DB` or `BOWTIE2_INDEX` stays on the path you chose. The CLI already requires `--output-root` outside the source tree. Export `GENEIN_OUTPUT_ROOT` to the directory that holds those outputs, or to one output directory that contains `execution.json`, before `bash run_linux.sh`, so the dashboard history lists them.
+
 In the dashboard, select the input reads, prepare/select a database, choose MULTI or one assembler and start with a small library and known controls. MULTI combines Velvet, SPAdes and metaSPAdes outputs and keeps sequences produced by a single assembler. Supply actual library adapters when needed and enable host filtering explicitly with a matching index and host identity.
 
 For data of the size measured in the b3 retest, 300,000 read pairs and about 30 million HSPs, the environment check warns below **45 GB free**. This is working space, not a universal capacity requirement. RAM, disk and time depend on the input, database and assembler.

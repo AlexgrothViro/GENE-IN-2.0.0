@@ -22,6 +22,10 @@ bash run_linux.sh
 
 Abra a URL indicada no terminal. O painel roda localmente em `127.0.0.1` e escolhe outra porta se necessário. Mantenha o terminal aberto e use Ctrl+C para encerrar o servidor após os trabalhos. Veja [instalação e reprodução](docs/installation-reproducibility.md) para pré-requisitos e ambientes separados.
 
+O ambiente científico fica fora da fonte. O prefixo padrão é `~/.gene-in-bundle`. Para outro diretório, exporte `GENEIN_BUNDLE_DIR` antes de instalar, abrir o painel e analisar. O lançador Windows usa o padrão.
+
+Bancos e índices também podem ficar fora da fonte. Com `GENEIN_WORK_ROOT` apontando para um diretório absoluto que já existe, o FASTA padrão de download, o BLAST e o Bowtie2 passam a ser criados ali. Um caminho informado em `REF_FASTA`, `BLAST_DB` ou `BOWTIE2_INDEX` continua onde a pessoa escolheu. A CLI já exige `--output-root` fora da fonte. Para o painel listar essas execuções, exporte `GENEIN_OUTPUT_ROOT` com a pasta que contém as saídas — ou com a própria saída que tem `execution.json` — antes de `bash run_linux.sh`.
+
 Na interface:
 
 1. Em **Nova análise → Banco**, escolha o perfil e use **Preparar banco selecionado**, ou selecione um banco já preparado.

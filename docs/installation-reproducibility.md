@@ -46,6 +46,8 @@ Sem essa variável, o prefixo padrão é `~/.gene-in-bundle`. O lançador Window
 
 `GENEIN_WHEELHOUSE` pode apontar para wheels já disponíveis. O cache Conda/micromamba é separado da fonte. A disponibilidade de cache não representa uma instalação totalmente offline verificada.
 
+`GENEIN_WORK_ROOT` é um diretório absoluto existente para o FASTA padrão, o banco BLAST e o índice Bowtie2. Sem essa variável, esses padrões continuam dentro da fonte. Um caminho passado em `REF_FASTA`, `BLAST_DB` ou `BOWTIE2_INDEX` não muda de lugar. A CLI continua exigindo `--output-root` novo e fora da fonte. `GENEIN_OUTPUT_ROOT`, exportado antes do painel, faz o histórico listar os `execution.json` dessa pasta.
+
 ## Painel e hospedagem local
 
 O comando `bash run_linux.sh` abre o servidor em loopback (`127.0.0.1`), com porta inicial 8000. Se estiver ocupada, tenta as próximas portas dentro do limite documentado. Use sempre o endereço impresso no terminal; veja [portas do painel](dashboard-portas.md).

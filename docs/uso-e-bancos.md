@@ -40,7 +40,7 @@ bash bundle/run.sh db \
   BOWTIE2_INDEX=/dados/bowtie2/meu_banco
 ```
 
-`REF_FASTA` é o arquivo de referência. `DB` é o nome do banco. `BLAST_DB` e `BOWTIE2_INDEX` podem apontar para pastas fora da fonte; se forem omitidos, os índices ficam em `blastdb/<DB>` e `bowtie2/<DB>`. O mesmo vale na chamada direta, sem o wrapper:
+`REF_FASTA` é o arquivo de referência. `DB` é o nome do banco. `BLAST_DB` e `BOWTIE2_INDEX` podem apontar para pastas fora da fonte. Se forem omitidos, os índices ficam em `blastdb/<DB>` e `bowtie2/<DB>` dentro da fonte. Com `GENEIN_WORK_ROOT` apontando para um diretório absoluto existente, esses padrões e o FASTA de download passam para esse diretório. O painel inclui execuções de fora da fonte quando `GENEIN_OUTPUT_ROOT` aponta para a pasta das saídas. O mesmo vale na chamada direta, sem o wrapper:
 
 ```bash
 DB=meu_banco REF_FASTA=/dados/referencia.fa \

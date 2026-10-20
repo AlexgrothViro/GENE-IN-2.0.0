@@ -3,7 +3,7 @@
 Distribuição final de software para pesquisa e triagem humana, preparada em 20/10/2026. O programa é geral: hospedeiro e banco de referência são escolhas de quem analisa. Suíno e picornavírus são o caso-modelo de validação. Confira o [alcance das verificações e os recibos do pacote](docs/lancamento-20out.md). A licença rege a distribuição desta versão.
 
 1. Leia o [guia inicial](README.md) para conhecer as utilidades e os resultados.
-2. Instale em Linux x86_64 ou Windows x86_64 com WSL2/Ubuntu. No Windows, extraia o pacote inteiro em uma pasta permanente e execute `INSTALAR_GENEIN.bat`, depois `ABRIR_GENEIN.bat`. No Linux, use `bash bundle/install_wsl.sh` e `bash run_linux.sh`.
+2. Instale em Linux x86_64 ou Windows x86_64 com WSL2/Ubuntu. No Windows, extraia o pacote inteiro em uma pasta permanente e execute `INSTALAR_GENEIN.bat`, depois `ABRIR_GENEIN.bat`. No Linux, use `bash bundle/install_wsl.sh` e `bash run_linux.sh`. O ambiente fica em `~/.gene-in-bundle`, salvo se `GENEIN_BUNDLE_DIR` apontar para outro diretório. `GENEIN_WORK_ROOT` e `GENEIN_OUTPUT_ROOT` separam bancos e saídas da fonte; o guia inicial explica os dois.
 3. Prepare um banco e faça a primeira análise com uma biblioteca pequena e controles conhecidos. Veja [uso e bancos](docs/uso-e-bancos.md).
 4. Preserve candidatos, relatórios, logs, configuração e manifestos. Use o [guia de citação](docs/citacao.md) para relatar a execução.
 

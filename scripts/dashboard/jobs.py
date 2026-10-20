@@ -1366,8 +1366,57 @@ def list_run_history():
             "comparison": True,
         })
 
+    runs.extend(_external_output_runs(seen_ids))
     runs.sort(key=lambda item: item.get("end_epoch", 0), reverse=True)
     return runs
+
+
+def _external_output_runs(seen_ids):
+    """List CLI receipts under GENEIN_OUTPUT_ROOT. Unset leaves history unchanged."""
+    raw = os.environ.get("GENEIN_OUTPUT_ROOT", "").strip()
+    if not raw:
+        return []
+    root = Path(raw).expanduser()
+    if not root.is_dir():
+        return []
+    folders = []
+    if (root / "execution.json").is_file():
+        folders.append(root)
+    else:
+        try:
+            children = sorted(path for path in root.iterdir() if path.is_dir())
+        except OSError:
+            children = []
+        folders.extend(child for child in children if (child / "execution.json").is_file())
+    status_map = {"completed": "done", "running": "running", "cancelled": "cancelled", "failed": "failed"}
+    found = []
+    for folder in folders:
+        try:
+            receipt = json.loads((folder / "execution.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, UnicodeError):
+            continue
+        if not isinstance(receipt, dict):
+            continue
+        run_id = str(receipt.get("run_id") or folder.name)
+        if not run_id or run_id in seen_ids:
+            continue
+        seen_ids.add(run_id)
+        finished = receipt.get("finished_at")
+        found.append({
+            "id": run_id,
+            "run_id": run_id,
+            "run_dir": "",
+            "output_root": str(folder),
+            "action": "genein_run",
+            "sample": "",
+            "start": receipt.get("started_at"),
+            "end": finished,
+            "end_epoch": _history_epoch(finished),
+            "status": status_map.get(receipt.get("status"), receipt.get("status") or "unavailable"),
+            "label": str(folder),
+            "external_output": True,
+        })
+    return found
 
 
 def resolve_history_file(run_dir, file_type):

@@ -90,10 +90,11 @@ TRACK           := $(subst ",,$(TRACK))
 # Recalculate paths to ensure consistency and quote-free values.
 # Command-line values are kept by GNU make. Values coming from the
 # environment are captured above and restored here, because a plain
-# assignment would otherwise drop them.
-REF_FASTA     := $(REF_DIR)/$(DB).fa
-BLAST_DB      := blastdb/$(DB)
-BOWTIE2_INDEX := bowtie2/$(DB)
+# assignment would otherwise drop them. GENEIN_WORK_ROOT, when set,
+# places these defaults outside the source tree.
+REF_FASTA     := $(WORK_PREFIX)$(REF_DIR)/$(DB).fa
+BLAST_DB      := $(WORK_PREFIX)blastdb/$(DB)
+BOWTIE2_INDEX := $(WORK_PREFIX)bowtie2/$(DB)
 ifneq ($(strip $(ENV_REF_FASTA)),)
 REF_FASTA := $(ENV_REF_FASTA)
 endif
@@ -103,6 +104,11 @@ endif
 ifneq ($(strip $(ENV_BOWTIE2_INDEX)),)
 BOWTIE2_INDEX := $(ENV_BOWTIE2_INDEX)
 endif
+
+# Forward REF_FASTA only when the user chose the file. The computed default
+# is a download destination inside db_manager.sh; passing it unconditionally
+# makes a missing profile FASTA look like a local file.
+PASS_REF_FASTA := $(if $(filter command line,$(origin REF_FASTA)),REF_FASTA="$(REF_FASTA)",$(if $(strip $(ENV_REF_FASTA)),REF_FASTA="$(ENV_REF_FASTA)",))
 
 .PHONY: cfg-all cfg-db cfg-assembly cfg-blast
 
@@ -151,6 +157,7 @@ help:
 	@echo "  SAMPLE=$(SAMPLE) KMER=$(KMER)"
 	@echo "  ID=$(ID) R1=$(R1) R2=$(R2) SINGLE=$(SINGLE)"
 	@echo "  DB=$(DB) DB_QUERY=$(DB_QUERY)"
+	@echo "  GENEIN_WORK_ROOT=$(GENEIN_WORK_ROOT) (vazio: padrões dentro da fonte)"
 	@echo "  THREADS=$(THREADS) KMERS=$(KMERS)"
 	@echo
 	@echo "Exemplos de montagem:"
@@ -221,12 +228,12 @@ pipeline:
 	scripts/pipeline/run.sh "$${PIPELINE_ARGS[@]}"
 
 db:
-	DB="$(DB)" DB_QUERY="$(DB_QUERY)" REF_FASTA="$(REF_FASTA)" \
+	DB="$(DB)" DB_QUERY="$(DB_QUERY)" $(PASS_REF_FASTA) \
 	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
 	$(SCRIPTS_DIR)/ops/db_manager.sh setup
 
 db-blast:
-	DB="$(DB)" DB_QUERY="$(DB_QUERY)" REF_FASTA="$(REF_FASTA)" \
+	DB="$(DB)" DB_QUERY="$(DB_QUERY)" $(PASS_REF_FASTA) \
 	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
 	$(SCRIPTS_DIR)/ops/db_manager.sh setup-blast
 
@@ -362,7 +369,7 @@ db-list:
 	DB="$(DB)" scripts/ops/db_manager.sh list
 
 db-setup:
-	DB="$(DB)" DB_QUERY="$(DB_QUERY)" REF_FASTA="$(REF_FASTA)" \
+	DB="$(DB)" DB_QUERY="$(DB_QUERY)" $(PASS_REF_FASTA) \
 	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
 	scripts/ops/db_manager.sh setup
 
