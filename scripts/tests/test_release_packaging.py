@@ -96,9 +96,14 @@ class ReleasePackagingTests(unittest.TestCase):
             self.assertNotEqual(expected, local)
             with zipfile.ZipFile(out / record["source_archive_name"]) as archive:
                 for info in archive.infolist():
-                    self.assertEqual(info.date_time, expected)
-                    self.assertEqual(calendar.timegm(info.date_time), epoch)
-                    self.assertLessEqual(calendar.timegm(info.date_time), int(time.time()))
+                    # ZIP stores the clock in DOS format, which keeps even seconds only.
+                    self.assertEqual(info.date_time[:5], expected[:5])
+                    self.assertLessEqual(abs(info.date_time[5] - expected[5]), 1)
+                    self.assertNotEqual(info.date_time[3], local[3])
+                    stamped = calendar.timegm(info.date_time)
+                    self.assertLessEqual(stamped, epoch)
+                    self.assertGreaterEqual(stamped, epoch - 1)
+                    self.assertLessEqual(stamped, int(time.time()))
         finally:
             if previous is None:
                 os.environ.pop("TZ", None)
