@@ -43,6 +43,70 @@ class ExternalWorkRootTests(unittest.TestCase):
         self.assertIn('BLAST_DB="blastdb/ptv"', inside.stdout)
         self.assertNotIn("REF_FASTA=", inside.stdout)
 
+    def test_make_pipeline_uses_blast_db_from_the_work_config(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "work"
+            config = work / "config"
+            config.mkdir(parents=True)
+            env_file = config / "picornavirus.env"
+            env_file.write_text("DB=ptv\nBLAST_DB=/dados/blastdb/ptv\n", encoding="utf-8")
+            env_file.chmod(0o644)
+            result = _run(
+                ["make", "-n", "pipeline", "SAMPLE=demo"],
+                {"GENEIN_WORK_ROOT": str(work), "HOME": str(root / "home")},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('BLAST_DB="/dados/blastdb/ptv"', result.stdout)
+            self.assertNotIn("blastdb/custom", result.stdout)
+
+    def test_make_pipeline_finds_a_prepared_database_outside_the_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "work"
+            config = work / "config"
+            config.mkdir(parents=True)
+            env_file = config / "picornavirus.env"
+            env_file.write_text("DB=ptv\n", encoding="utf-8")
+            env_file.chmod(0o644)
+            manifest = work / "blastdb" / "ptv.db-manifest.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text("{}\n", encoding="utf-8")
+            result = _run(
+                ["make", "-n", "pipeline", "SAMPLE=demo"],
+                {"GENEIN_WORK_ROOT": str(work), "HOME": str(root / "home")},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(f'BLAST_DB="{work}/blastdb/ptv"', result.stdout)
+
+    def test_panel_finds_a_prepared_database_outside_the_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "work"
+            prefix = work / "blastdb" / "ptv"
+            manifest = work / "blastdb" / "ptv.db-manifest.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text("{}\n", encoding="utf-8")
+            env = os.environ.copy()
+            env["GENEIN_WORK_ROOT"] = str(work)
+            env["HOME"] = str(root / "home")
+            env.pop("GENEIN_CONFIG_FILE", None)
+            env.pop("BLAST_DB", None)
+            with patch.dict(os.environ, env, clear=True):
+                from scripts.dashboard.config import list_db_profiles
+                profiles = list_db_profiles()
+                ptv = next(item for item in profiles if item["id"] == "ptv")
+                self.assertTrue(ptv["prepared"])
+                self.assertEqual(ptv["prefix"], str(prefix))
+                self.assertFalse(str(ptv["prefix"]).startswith(str(ROOT / "blastdb")))
+                _cmd, built = jobs.build_command(
+                    "evidence_pipeline",
+                    {"sample": "SAMPLE", "db": "ptv", "assembler": "consensus",
+                     "host_filter_mode": "none", "run_id": "first-run-00001"},
+                )
+            self.assertEqual(built["BLAST_DB"], str(prefix))
+            self.assertNotEqual(built["BLAST_DB"], str(ROOT / "blastdb" / "ptv"))
+
     def test_profile_download_uses_the_work_root_without_a_local_fasta(self):
         with tempfile.TemporaryDirectory() as directory:
             result = _run(["make", "db", "DB=ptv"], {"GENEIN_WORK_ROOT": directory})

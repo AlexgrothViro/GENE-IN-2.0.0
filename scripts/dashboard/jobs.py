@@ -45,8 +45,9 @@ from dashboard.config import (
     LOG_DIR, RUNS_DIR, REPO_ROOT, iso_now, _DB_ALIAS, host_env_from_params,
     runtime_environment,
     load_config_env, validate_config_updates, save_config_env,
-    get_repo_root, get_runs_dir, user_config_env_path,
+    get_repo_root, get_runs_dir, user_config_env_path, parse_env_file,
 )
+from genein.paths import resolve_blast_db, resolve_config_file
 
 EVIDENCE_SERVICE = EvidenceDashboardService(REPO_ROOT, background_inspection=True)
 EVIDENCE_ANALYTICS = EvidenceAnalyticsService(EVIDENCE_SERVICE)
@@ -837,9 +838,17 @@ def build_command(action, params):
             env["EVIDENCE_EXPECTED_TARGET"] = str(params["expected_target"])
         if "GENEIN_CONFIG_FILE" not in os.environ:
             env["GENEIN_CONFIG_FILE"] = str(user_config_env_path())
+        # The per-run directory below is only the output root. The database is
+        # resolved from the user's work directory and config before that swap.
+        if "BLAST_DB" not in env and not os.environ.get("BLAST_DB"):
+            configured = ""
+            config_path = resolve_config_file(os.environ, Path.home(), REPO_ROOT)
+            if config_path.is_file():
+                configured = str(parse_env_file(config_path).get("BLAST_DB") or "")
+            env["BLAST_DB"] = resolve_blast_db(
+                env["DB"], os.environ, Path.home(), REPO_ROOT, configured=configured,
+            )
         env["GENEIN_WORK_ROOT"] = str(REPO_ROOT / "results" / "dashboard-work" / run_id)
-        if "BLAST_DB" not in env:
-            env["BLAST_DB"] = str(REPO_ROOT / "blastdb" / env["DB"])
         raw_dir = REPO_ROOT / "data/raw"
         suffix = ".fastq.gz"
         for candidate in (".fastq.gz", ".fastq", ".fq.gz", ".fq"):

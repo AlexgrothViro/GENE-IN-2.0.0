@@ -22,29 +22,88 @@ def test_shell_and_python_choose_the_same_user_file(tmp_path, monkeypatch):
     assert result.stdout.strip() == str(user_config_env_path())
 
 
+def _resolve_shell(env):
+    helper = str(ROOT / "scripts/lib/genein_config_path.sh")
+    return subprocess.run(
+        ["bash", "-c", 'source "$1"; genein_resolve_config_file', "test", helper],
+        env=env, text=True, capture_output=True, check=False,
+    )
+
+
 def test_shell_prefers_the_user_file_and_otherwise_keeps_the_checkout_copy(tmp_path):
     repo = tmp_path / "repo"
     (repo / "config").mkdir(parents=True)
     (repo / "config/picornavirus.env").write_text("THREADS=6\n", encoding="utf-8")
     work = tmp_path / "work"
     work.mkdir()
-    helper = str(ROOT / "scripts/lib/genein_config_path.sh")
+    home = tmp_path / "home"
+    home.mkdir()
     env = os.environ.copy()
-    env.update(REPO_ROOT=str(repo), GENEIN_WORK_ROOT=str(work))
+    env.update(REPO_ROOT=str(repo), GENEIN_WORK_ROOT=str(work), HOME=str(home))
     env.pop("GENEIN_CONFIG_FILE", None)
-    checkout = subprocess.run(
-        ["bash", "-c", 'source "$1"; genein_resolve_config_file', "test", helper],
-        env=env, text=True, capture_output=True, check=True,
-    )
+    checkout = _resolve_shell(env)
+    assert checkout.returncode == 0, checkout.stderr
     assert checkout.stdout.strip() == str(repo / "config/picornavirus.env")
     user = work / "config"
     user.mkdir()
     (user / "picornavirus.env").write_text("THREADS=3\n", encoding="utf-8")
-    chosen = subprocess.run(
-        ["bash", "-c", 'source "$1"; genein_resolve_config_file', "test", helper],
-        env=env, text=True, capture_output=True, check=True,
-    )
+    (user / "picornavirus.env").chmod(0o644)
+    chosen = _resolve_shell(env)
+    assert chosen.returncode == 0, chosen.stderr
     assert chosen.stdout.strip() == str(user / "picornavirus.env")
+
+
+def test_home_config_wins_over_the_source_when_the_work_file_is_missing(tmp_path):
+    repo = tmp_path / "repo"
+    (repo / "config").mkdir(parents=True)
+    (repo / "config/picornavirus.env").write_text("DB=ptv\n", encoding="utf-8")
+    work = tmp_path / "work"
+    work.mkdir()
+    home = tmp_path / "home"
+    home_file = home / ".gene-in" / "config" / "picornavirus.env"
+    home_file.parent.mkdir(parents=True)
+    home_file.write_text("DB=fmdv\n", encoding="utf-8")
+    env = os.environ.copy()
+    env.update(REPO_ROOT=str(repo), GENEIN_WORK_ROOT=str(work), HOME=str(home))
+    env.pop("GENEIN_CONFIG_FILE", None)
+    chosen = _resolve_shell(env)
+    assert chosen.returncode == 0, chosen.stderr
+    assert chosen.stdout.strip() == str(home_file)
+    from genein.paths import resolve_config_file
+    assert resolve_config_file(env, home, repo) == home_file
+
+
+def test_explicit_config_file_is_exclusive_and_group_writable_work_file_is_refused(tmp_path):
+    repo = tmp_path / "repo"
+    (repo / "config").mkdir(parents=True)
+    (repo / "config/picornavirus.env").write_text("DB=ptv\n", encoding="utf-8")
+    work = tmp_path / "work"
+    cfg = work / "config" / "picornavirus.env"
+    cfg.parent.mkdir(parents=True)
+    cfg.write_text("DB=evg\n", encoding="utf-8")
+    cfg.chmod(0o664)
+    explicit = tmp_path / "explicit.env"
+    explicit.write_text("DB=custom\n", encoding="utf-8")
+    env = os.environ.copy()
+    env.update(
+        REPO_ROOT=str(repo), GENEIN_WORK_ROOT=str(work), HOME=str(tmp_path / "home"),
+        GENEIN_CONFIG_FILE=str(explicit),
+    )
+    chosen = _resolve_shell(env)
+    assert chosen.returncode == 0, chosen.stderr
+    assert chosen.stdout.strip() == str(explicit)
+    env.pop("GENEIN_CONFIG_FILE")
+    refused = _resolve_shell(env)
+    assert refused.returncode == 2
+    assert "grupo" in refused.stderr
+    assert refused.stdout.strip() == ""
+    from genein.paths import ConfigPermissionError, resolve_config_file
+    try:
+        resolve_config_file(env, tmp_path / "home", repo)
+    except ConfigPermissionError as exc:
+        assert "grupo" in str(exc)
+    else:
+        raise AssertionError("config gravável por grupo deveria ser recusada")
 
 
 def test_panel_writes_the_example_outside_the_source(tmp_path, monkeypatch):

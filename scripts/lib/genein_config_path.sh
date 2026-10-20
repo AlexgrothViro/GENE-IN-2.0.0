@@ -30,12 +30,50 @@ genein_user_log_dir() {
   printf '%s\n' "${TMPDIR:-/tmp}/gene-in-logs"
 }
 
+# Group or other write (permission digit 2, 3, 6 or 7). Source files are not checked.
+genein_config_writable_by_group_or_others() {
+  local path="$1"
+  local mode group other
+  mode="$(stat -c %a "${path}" 2>/dev/null || stat -f %OLp "${path}")"
+  group="${mode: -2:1}"
+  other="${mode: -1}"
+  case "${group}" in
+    2|3|6|7) return 0 ;;
+  esac
+  case "${other}" in
+    2|3|6|7) return 0 ;;
+  esac
+  return 1
+}
+
+# Read path. GENEIN_CONFIG_FILE is exclusive even when the file is missing.
+# Then an existing $GENEIN_WORK_ROOT/config/picornavirus.env, then
+# ~/.gene-in/config/picornavirus.env, then the source file, then config.env.
+# A work-root file writable by group or others is refused (exit 2); the
+# search does not fall through to another file.
 genein_resolve_config_file() {
-  local user_file repo_file legacy
-  user_file="$(genein_user_config_file)"
-  if [[ -f "${user_file}" ]]; then
-    printf '%s\n' "${user_file}"
+  local work_file home_file repo_file legacy
+  if [[ -n "${GENEIN_CONFIG_FILE:-}" ]]; then
+    printf '%s\n' "${GENEIN_CONFIG_FILE}"
     return 0
+  fi
+  if [[ -n "${GENEIN_WORK_ROOT:-}" && "${GENEIN_WORK_ROOT}" == /* && -d "${GENEIN_WORK_ROOT}" ]]; then
+    work_file="${GENEIN_WORK_ROOT}/config/picornavirus.env"
+    if [[ -f "${work_file}" ]]; then
+      if genein_config_writable_by_group_or_others "${work_file}"; then
+        printf 'picornavirus.env no diretório de trabalho é gravável por grupo ou outros: %s\n' "${work_file}" >&2
+        return 2
+      fi
+      printf '%s\n' "${work_file}"
+      return 0
+    fi
+  fi
+  if [[ -n "${HOME:-}" ]]; then
+    home_file="${HOME}/.gene-in/config/picornavirus.env"
+    if [[ -f "${home_file}" ]]; then
+      printf '%s\n' "${home_file}"
+      return 0
+    fi
   fi
   repo_file="${REPO_ROOT}/config/picornavirus.env"
   if [[ -f "${repo_file}" ]]; then
@@ -47,5 +85,44 @@ genein_resolve_config_file() {
     printf '%s\n' "${legacy}"
     return 0
   fi
-  printf '%s\n' "${user_file}"
+  genein_user_config_file
+}
+
+# BLAST prefix. $1 is the database name. $2, when set, is BLAST_DB from the
+# winning config and wins outright. Otherwise the first non-empty
+# *.db-manifest.json wins: work directory, ~/.gene-in, then the source tree.
+genein_resolve_blast_db() {
+  local db="${1:-}"
+  local configured="${2:-}"
+  local manifest
+  if [[ -n "${configured}" ]]; then
+    printf '%s\n' "${configured}"
+    return 0
+  fi
+  if [[ -n "${GENEIN_WORK_ROOT:-}" && "${GENEIN_WORK_ROOT}" == /* && -d "${GENEIN_WORK_ROOT}" ]]; then
+    manifest="${GENEIN_WORK_ROOT}/blastdb/${db}.db-manifest.json"
+    if [[ -s "${manifest}" ]]; then
+      printf '%s\n' "${GENEIN_WORK_ROOT}/blastdb/${db}"
+      return 0
+    fi
+  fi
+  if [[ -n "${HOME:-}" ]]; then
+    manifest="${HOME}/.gene-in/blastdb/${db}.db-manifest.json"
+    if [[ -s "${manifest}" ]]; then
+      printf '%s\n' "${HOME}/.gene-in/blastdb/${db}"
+      return 0
+    fi
+  fi
+  if [[ -n "${REPO_ROOT:-}" ]]; then
+    manifest="${REPO_ROOT}/blastdb/${db}.db-manifest.json"
+    if [[ -s "${manifest}" ]]; then
+      printf '%s\n' "${REPO_ROOT}/blastdb/${db}"
+      return 0
+    fi
+  fi
+  if [[ -n "${GENEIN_WORK_ROOT:-}" && "${GENEIN_WORK_ROOT}" == /* ]]; then
+    printf '%s\n' "${GENEIN_WORK_ROOT}/blastdb/${db}"
+    return 0
+  fi
+  printf '%s\n' "blastdb/${db}"
 }

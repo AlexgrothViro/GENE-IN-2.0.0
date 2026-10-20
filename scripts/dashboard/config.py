@@ -23,7 +23,10 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "experimental" / "contig_comparis
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from genein.paths import user_config_env_path, user_log_dir
+from genein.paths import (
+    ConfigPermissionError, config_writable_by_group_or_others, resolve_blast_db,
+    resolve_config_file, user_config_env_path, user_log_dir,
+)
 from input_validation import validate_sample_id
 from analysis_profiles import load_profiles, resolve_profile
 
@@ -214,26 +217,48 @@ def list_db_profiles():
         if not isinstance(data, list):
             return []
         for item in data:
-            prefix = REPO_ROOT / "blastdb" / item["id"]
+            prefix = Path(resolve_blast_db(item["id"], os.environ, Path.home(), REPO_ROOT))
+            if not prefix.is_absolute():
+                prefix = REPO_ROOT / prefix
             manifest = Path(str(prefix) + ".db-manifest.json")
             item["prepared"] = manifest.is_file() and manifest.stat().st_size > 0
             item["prefix"] = str(prefix)
-            reference = REPO_ROOT / "data/ref" / f'{item["id"]}.fa'
+            reference = prefix.parent.parent / "data" / "ref" / f'{item["id"]}.fa'
+            if not reference.is_file():
+                reference = REPO_ROOT / "data/ref" / f'{item["id"]}.fa'
             item["reference_size_bytes"] = reference.stat().st_size if reference.is_file() else None
         return data
+    except ConfigPermissionError:
+        raise
     except Exception:
         return []
 
 
 def get_config_env_path():
-    """User file first, then a config that already exists in the source, then config.env."""
+    """Same read order as Make and the shell.
+
+    A patched ``CONFIG_ENV_PRIMARY`` that already exists stays the file the
+    panel reads, so a save followed by a load uses that path. ``GENEIN_CONFIG_FILE``
+    remains exclusive. A missing write path continues the search at the home
+    file, then the source.
+    """
+    explicit = str(os.environ.get("GENEIN_CONFIG_FILE") or "").strip()
+    if explicit:
+        return Path(explicit).expanduser()
     if CONFIG_ENV_PRIMARY.is_file():
+        work = str(os.environ.get("GENEIN_WORK_ROOT") or "").strip()
+        expected = Path(work).expanduser() / "config" / "picornavirus.env" if work else None
+        try:
+            same = expected is not None and CONFIG_ENV_PRIMARY.resolve() == expected.resolve()
+        except OSError:
+            same = False
+        if same and config_writable_by_group_or_others(CONFIG_ENV_PRIMARY):
+            raise ConfigPermissionError(
+                "picornavirus.env no diretório de trabalho é gravável por grupo ou outros: "
+                f"{CONFIG_ENV_PRIMARY}"
+            )
         return CONFIG_ENV_PRIMARY
-    if REPO_CONFIG_ENV.is_file():
-        return REPO_CONFIG_ENV
-    if CONFIG_ENV_LEGACY.is_file():
-        return CONFIG_ENV_LEGACY
-    return CONFIG_ENV_PRIMARY
+    return resolve_config_file(os.environ, Path.home(), REPO_ROOT)
 
 
 def ensure_user_config_env():

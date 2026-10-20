@@ -8,6 +8,7 @@ GENEIN_WORK_ROOT ?=
 WORK_PREFIX := $(if $(strip $(GENEIN_WORK_ROOT)),$(GENEIN_WORK_ROOT)/,)
 
 ENV_DB := $(if $(filter environment environment\ override,$(origin DB)),$(DB),)
+CMD_DB := $(if $(filter command line,$(origin DB)),$(DB),)
 ENV_DB_QUERY := $(if $(filter environment environment\ override,$(origin DB_QUERY)),$(DB_QUERY),)
 ENV_REF_FASTA := $(if $(filter environment environment\ override,$(origin REF_FASTA)),$(REF_FASTA),)
 ENV_BLAST_DB := $(if $(filter environment environment\ override,$(origin BLAST_DB)),$(BLAST_DB),)
@@ -51,14 +52,20 @@ REF_DIR       ?= data/ref
 REF_FASTA     := $(REF_DIR)/$(DB).fa
 BLAST_DB      := blastdb/$(DB)
 BOWTIE2_INDEX := bowtie2/$(DB)
+# Snapshot taken before the config file, so a BLAST_DB written there is kept.
+BLAST_DB_BEFORE_CONFIG := $(BLAST_DB)
 .PHONY: help setup_dirs deps test-env test-env-advanced filter-host test-velvet test-blast \
   ptv-fasta ptv-fasta-legacy blastdb bowtie2-index db-blast pipeline test clean clean-safe clean-all fix-wsl \
   db db-list sample-add run smoke-test benchmark-demo test-validation
 
-ifneq ($(wildcard config/picornavirus.env),)
--include config/picornavirus.env
-else
--include config.env
+# Same search as scripts and the panel: GENEIN_CONFIG_FILE, then
+# $GENEIN_WORK_ROOT/config, then ~/.gene-in/config, then the source file.
+RESOLVED_CONFIG := $(shell REPO_ROOT='$(CURDIR)' GENEIN_WORK_ROOT='$(GENEIN_WORK_ROOT)' GENEIN_CONFIG_FILE='$(GENEIN_CONFIG_FILE)' bash -c 'source scripts/lib/genein_config_path.sh && genein_resolve_config_file' || echo __GENEIN_CONFIG_REFUSED__)
+ifeq ($(RESOLVED_CONFIG),__GENEIN_CONFIG_REFUSED__)
+$(error picornavirus.env no diretório de trabalho é gravável por grupo ou outros)
+endif
+ifneq ($(wildcard $(RESOLVED_CONFIG)),)
+-include $(RESOLVED_CONFIG)
 endif
 
 ifneq ($(strip $(ENV_DB)),)
@@ -86,22 +93,39 @@ BLAST_EVALUE    := $(subst ",,$(BLAST_EVALUE))
 SKIP_QC         := $(subst ",,$(SKIP_QC))
 TRACK           := $(subst ",,$(TRACK))
 
+# A config assignment that changed BLAST_DB is kept. The pre-include default
+# is not treated as a choice from the file.
+FILE_BLAST_DB :=
+ifneq ($(BLAST_DB),$(BLAST_DB_BEFORE_CONFIG))
+FILE_BLAST_DB := $(BLAST_DB)
+endif
+
 # Recalculate paths to ensure consistency and quote-free values.
 # Command-line values are kept by GNU make. Values coming from the
 # environment are captured above and restored here, because a plain
-# assignment would otherwise drop them. GENEIN_WORK_ROOT, when set,
-# places these defaults outside the source tree.
+# assignment would otherwise drop them. Without an explicit BLAST_DB, the
+# prefix comes from the same resolver the panel and the shell use.
 REF_FASTA     := $(WORK_PREFIX)$(REF_DIR)/$(DB).fa
-BLAST_DB      := $(WORK_PREFIX)blastdb/$(DB)
 BOWTIE2_INDEX := $(WORK_PREFIX)bowtie2/$(DB)
 ifneq ($(strip $(ENV_REF_FASTA)),)
 REF_FASTA := $(ENV_REF_FASTA)
 endif
-ifneq ($(strip $(ENV_BLAST_DB)),)
-BLAST_DB := $(ENV_BLAST_DB)
-endif
 ifneq ($(strip $(ENV_BOWTIE2_INDEX)),)
 BOWTIE2_INDEX := $(ENV_BOWTIE2_INDEX)
+endif
+ifneq ($(strip $(ENV_BLAST_DB)),)
+BLAST_DB := $(ENV_BLAST_DB)
+else
+ifneq ($(strip $(CMD_DB)$(ENV_DB)),)
+# DB veio de fora do arquivo: o BLAST_DB do arquivo era de outro banco.
+BLAST_DB := $(shell REPO_ROOT='$(CURDIR)' GENEIN_WORK_ROOT='$(GENEIN_WORK_ROOT)' bash -c 'source scripts/lib/genein_config_path.sh && genein_resolve_blast_db "$(DB)"')
+else
+ifneq ($(strip $(FILE_BLAST_DB)),)
+BLAST_DB := $(FILE_BLAST_DB)
+else
+BLAST_DB := $(shell REPO_ROOT='$(CURDIR)' GENEIN_WORK_ROOT='$(GENEIN_WORK_ROOT)' bash -c 'source scripts/lib/genein_config_path.sh && genein_resolve_blast_db "$(DB)"')
+endif
+endif
 endif
 
 # Forward REF_FASTA only when the user chose the file. The computed default
