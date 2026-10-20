@@ -35,8 +35,11 @@ def bash_path(path: Path) -> str:
 
 
 def workspace_tempdir() -> tempfile.TemporaryDirectory:
-    """System temp. A suite run must not create tmp/ inside the source tree."""
-    return tempfile.TemporaryDirectory(prefix="genein-host-")
+    """Inside the source so paths stay relative, and removed when the test ends.
+
+    The directory is not ``tmp/``. A finished suite must not leave that folder.
+    """
+    return tempfile.TemporaryDirectory(prefix=".genein-test-", dir=ROOT)
 
 
 def repo_relative_path(path: Path) -> str:
