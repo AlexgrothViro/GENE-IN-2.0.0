@@ -46,7 +46,7 @@ Sem essa variável, o prefixo padrão é `~/.gene-in-bundle`. O lançador Window
 
 `GENEIN_WHEELHOUSE` pode apontar para wheels já disponíveis. O cache Conda/micromamba é separado da fonte. A disponibilidade de cache não representa uma instalação totalmente offline verificada.
 
-`GENEIN_WORK_ROOT` é um diretório absoluto existente para o FASTA padrão, o banco BLAST e o índice Bowtie2. Sem essa variável, esses padrões continuam dentro da fonte. Um caminho passado em `REF_FASTA`, `BLAST_DB` ou `BOWTIE2_INDEX` não muda de lugar. A CLI continua exigindo `--output-root` novo e fora da fonte. `GENEIN_OUTPUT_ROOT`, exportado antes do painel, faz o histórico listar os `execution.json` dessa pasta.
+`GENEIN_WORK_ROOT` é um diretório absoluto existente para o FASTA padrão, o banco BLAST e o índice Bowtie2. Sem essa variável, esses padrões continuam dentro da fonte. Um caminho passado em `REF_FASTA`, `BLAST_DB` ou `BOWTIE2_INDEX` não muda de lugar. A CLI continua exigindo `--output-root` novo e fora da fonte. `GENEIN_OUTPUT_ROOT`, exportado antes do painel, faz o histórico listar os `execution.json` dessa pasta. A configuração persistente do painel fica em `$GENEIN_WORK_ROOT/config/picornavirus.env` quando esse diretório existe, ou em `~/.gene-in/config/picornavirus.env`. Ela não é gravada dentro da fonte.
 
 ## Painel e hospedagem local
 

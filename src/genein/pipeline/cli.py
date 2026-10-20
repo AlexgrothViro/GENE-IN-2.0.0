@@ -16,6 +16,7 @@ import sys
 import uuid
 
 from genein.identity import source_commit, software_version
+from genein.paths import user_config_env_path
 from .sample import BatchCancelled, ProcessRunner
 
 
@@ -233,6 +234,9 @@ def prepare(args, root: Path) -> tuple[Path, list[str], dict[str, str], str]:
     # explicit shell input flags below still take precedence over config files.
     for name in ("SAMPLE_R1", "SAMPLE_R2", "SAMPLE_SINGLE", "CONTIGS", "EVIDENCE_RESERVATION_TOKEN"):
         env.pop(name, None)
+    # Remember the user config before this run replaces GENEIN_WORK_ROOT with the output.
+    if not env.get("GENEIN_CONFIG_FILE"):
+        env["GENEIN_CONFIG_FILE"] = str(user_config_env_path(env))
     env.update({"GENEIN_WORK_ROOT": str(output), "BLAST_DB": db,
                 "EVIDENCE_RUN_ID": run_id, "PYTHONDONTWRITEBYTECODE": "1"})
     # Shell adapters call python3; use the interpreter running this CLI.

@@ -21,7 +21,9 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "evidence"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "pipeline"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "experimental" / "contig_comparison"))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
+sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from genein.paths import user_config_env_path
 from input_validation import validate_sample_id
 from analysis_profiles import load_profiles, resolve_profile
 
@@ -29,7 +31,9 @@ DASHBOARD_DIR = REPO_ROOT / "dashboard"
 LOG_DIR = REPO_ROOT / "logs"
 RUNS_DIR = REPO_ROOT / "results" / "runs"
 TARGETS_FILE = REPO_ROOT / "config" / "targets.json"
-CONFIG_ENV_PRIMARY = REPO_ROOT / "config" / "picornavirus.env"
+REPO_CONFIG_ENV = REPO_ROOT / "config" / "picornavirus.env"
+# Write target. Tests and the facade patch this name; do not point it at the source tree.
+CONFIG_ENV_PRIMARY = user_config_env_path()
 CONFIG_ENV_EXAMPLE = REPO_ROOT / "config" / "picornavirus.env.example"
 CONFIG_ENV_LEGACY = REPO_ROOT / "config.env"
 ENVIRONMENT_YML = REPO_ROOT / "environment.yml"
@@ -220,12 +224,33 @@ def list_db_profiles():
 
 
 def get_config_env_path():
-    """Return the path to the config env file to use (prefer picornavirus.env over config.env)"""
-    if CONFIG_ENV_PRIMARY.exists():
+    """User file first, then a config that already exists in the source, then config.env."""
+    if CONFIG_ENV_PRIMARY.is_file():
         return CONFIG_ENV_PRIMARY
-    elif CONFIG_ENV_LEGACY.exists():
+    if REPO_CONFIG_ENV.is_file():
+        return REPO_CONFIG_ENV
+    if CONFIG_ENV_LEGACY.is_file():
         return CONFIG_ENV_LEGACY
     return CONFIG_ENV_PRIMARY
+
+
+def ensure_user_config_env():
+    """Copy the example into the user path. Never create config/picornavirus.env in the source."""
+    if CONFIG_ENV_PRIMARY.exists() or REPO_CONFIG_ENV.exists() or CONFIG_ENV_LEGACY.exists():
+        return False
+    if not CONFIG_ENV_EXAMPLE.is_file():
+        return False
+    CONFIG_ENV_PRIMARY.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(CONFIG_ENV_EXAMPLE, CONFIG_ENV_PRIMARY)
+    return True
+
+
+def _readonly_config_seed():
+    """Lines already stored in the source, copied only as the starting text of a new user file."""
+    for source in (REPO_CONFIG_ENV, CONFIG_ENV_LEGACY):
+        if source.is_file():
+            return source.read_text(encoding="utf-8")
+    return ""
 
 
 def parse_env_file(filepath):
@@ -349,8 +374,11 @@ def save_config_env(updates):
     existing_lines = []
     existing_keys = set()
 
-    if env_path.exists():
+    if env_path.is_file():
         content = env_path.read_text(encoding="utf-8")
+    else:
+        content = _readonly_config_seed()
+    if content:
         for line in content.splitlines():
             stripped = line.strip()
             if stripped and not stripped.startswith("#"):

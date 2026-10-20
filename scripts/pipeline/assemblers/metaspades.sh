@@ -23,7 +23,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 REPO_ROOT="$(cd "$SCRIPTS_ROOT/.." && pwd)"
 
-CONFIG_FILE="${REPO_ROOT}/config/picornavirus.env"
+# shellcheck disable=SC1091
+source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
+CONFIG_FILE="$(genein_resolve_config_file)"
 LEGACY_CONFIG="${REPO_ROOT}/config.env"
 
 # Se chamado pelo pipeline principal, não recarregar config.env.
@@ -31,9 +33,6 @@ if [[ "${PIPELINE_CONFIG_LOADED:-0}" != "1" ]]; then
   if [[ -f "${CONFIG_FILE}" ]]; then
     # shellcheck disable=SC1090
     source "${CONFIG_FILE}"
-  elif [[ -f "${LEGACY_CONFIG}" ]]; then
-    # shellcheck disable=SC1090
-    source "${LEGACY_CONFIG}"
   fi
 fi
 

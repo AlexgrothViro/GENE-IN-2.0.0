@@ -166,6 +166,20 @@ def test_successful_run_writes_receipt_and_propagates_env(cli_repo, tmp_path, mo
     assert record["env"]["EVIDENCE_RUN_ID"]
 
 
+def test_prepare_keeps_the_user_config_when_the_output_replaces_the_work_root(cli_repo, tmp_path, monkeypatch):
+    work = tmp_path / "user-work"
+    work.mkdir()
+    monkeypatch.setenv("GENEIN_WORK_ROOT", str(work))
+    monkeypatch.delenv("GENEIN_CONFIG_FILE", raising=False)
+    output = tmp_path / "external output"
+    args = build_args(single=fastq(tmp_path, "se.fq"), output_root=output,
+                      blast_db=blast_db(tmp_path), sample="sample-1")
+    _output, _command, env, _run_id = pipeline_cli.prepare(args, cli_repo)
+    assert env["GENEIN_WORK_ROOT"] == str(output.resolve())
+    assert env["GENEIN_CONFIG_FILE"] == str(work / "config" / "picornavirus.env")
+    assert not env["GENEIN_CONFIG_FILE"].startswith(str(cli_repo))
+
+
 def test_host_expected_public_option_is_forwarded_to_filter_environment(cli_repo, tmp_path):
     args = build_args(single=fastq(tmp_path, "se.fq"), output_root=tmp_path / "host-expected-run",
                       blast_db=blast_db(tmp_path), sample="sample-1", host_expected="false")

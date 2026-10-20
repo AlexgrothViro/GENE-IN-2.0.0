@@ -105,13 +105,14 @@ QC_ADAPTER_R1=SEQUENCIA_REAL_R1 QC_ADAPTER_R2=SEQUENCIA_REAL_R2 \
 
 Os textos `SEQUENCIA_REAL_R1/R2` são marcadores, não adaptadores válidos. Omita as variáveis quando não souber as sequências; confira o QC e a distribuição de comprimentos. A detecção automática falhou em um dos cenários históricos de moléculas de 20 pb com adaptador; não se presume um adaptador universal.
 
-Para persistir ajustes locais:
+Para persistir ajustes locais, copie o exemplo para o diretório de trabalho. Com `GENEIN_WORK_ROOT` apontando para um diretório absoluto existente:
 
 ```bash
-cp config/picornavirus.env.example config/picornavirus.env
+mkdir -p "$GENEIN_WORK_ROOT/config"
+cp config/picornavirus.env.example "$GENEIN_WORK_ROOT/config/picornavirus.env"
 ```
 
-Edite a cópia conforme entradas, banco, recursos, hospedeiro e adaptadores da análise. Esse arquivo fica ignorado pelo Git. O nome vem do desenvolvimento histórico com picornavírus e não define um alvo universal. Os perfis JSON versionados e os parâmetros científicos devem conservar sua identidade; confira a configuração resolvida nos resultados.
+Sem essa variável, o painel grava em `~/.gene-in/config/picornavirus.env`. `GENEIN_CONFIG_FILE` escolhe outro caminho. O painel não cria `config/picornavirus.env` dentro da fonte. Edite a cópia conforme entradas, banco, recursos, hospedeiro e adaptadores da análise. O nome vem do desenvolvimento histórico com picornavírus e não define um alvo universal. Os perfis JSON versionados e os parâmetros científicos devem conservar sua identidade; confira a configuração resolvida nos resultados.
 
 ## Filtro do hospedeiro
 

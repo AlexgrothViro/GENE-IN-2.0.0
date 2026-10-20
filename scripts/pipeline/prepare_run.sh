@@ -72,16 +72,14 @@ for var in "${TIER_A_CONFIG_VARS[@]}"; do
   RESOLVE_CONFIG_INCOMING_ARGS+=(--incoming "${var}=${!var:-}")
 done
 
-CONFIG_FILE="${REPO_ROOT}/config/picornavirus.env"
+# shellcheck disable=SC1091
+source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
+CONFIG_FILE="$(genein_resolve_config_file)"
 LEGACY_CONFIG="${REPO_ROOT}/config.env"
 if [[ -f "${CONFIG_FILE}" ]]; then
   # User config/generated metadata is resolved at runtime.
   # shellcheck disable=SC1090
   source "${CONFIG_FILE}"
-elif [[ -f "${LEGACY_CONFIG}" ]]; then
-  # User config/generated metadata is resolved at runtime.
-  # shellcheck disable=SC1090
-  source "${LEGACY_CONFIG}"
 fi
 
 RESOLVE_CONFIG_SOURCED_ARGS=()
@@ -139,7 +137,7 @@ Prioridade de configuração:
   1. argumentos da linha de comando
   2. variáveis de ambiente / config.env
   3. padrões internos seguros
-Obs.: se existir config/picornavirus.env (ou config.env legado), ele será usado como base de configuração.
+Obs.: picornavirus.env no diretório de trabalho (ou config.env legado) é a base de configuração. O painel não grava esse arquivo dentro da fonte.
 USAGE
 }
 resolve_path() {

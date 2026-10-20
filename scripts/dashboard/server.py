@@ -20,26 +20,22 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "pipeline"))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from dashboard.config import (
-    CONFIG_ENV_PRIMARY, CONFIG_ENV_EXAMPLE, get_config_env_path,
+    get_config_env_path,
     parse_env_file, is_loopback_host,
 )
 from dashboard.handler import DashboardHandler, logger
 
 
 def _ensure_config_env():
-    """Bootstrap config/picornavirus.env from the bundled example if it doesn't exist yet."""
-    if not CONFIG_ENV_PRIMARY.exists():
-        if CONFIG_ENV_EXAMPLE.exists():
-            CONFIG_ENV_PRIMARY.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(CONFIG_ENV_EXAMPLE, CONFIG_ENV_PRIMARY)
-            logger.info(
-                "config/picornavirus.env criado a partir do exemplo: %s", CONFIG_ENV_EXAMPLE.name
-            )
-        else:
-            logger.warning(
-                "config/picornavirus.env não encontrado e nenhum .example disponível; "
-                "usando config.env como fallback."
-            )
+    """Bootstrap the user config file. Read the config module at call time."""
+    from dashboard import config as dashboard_config
+    if dashboard_config.ensure_user_config_env():
+        logger.info("Configuração gravada fora da fonte: %s", dashboard_config.CONFIG_ENV_PRIMARY)
+    elif not dashboard_config.CONFIG_ENV_EXAMPLE.exists() and not dashboard_config.get_config_env_path().is_file():
+        logger.warning(
+            "picornavirus.env não encontrado e nenhum .example disponível; "
+            "usando config.env como fallback."
+        )
 
 
 PORT_ATTEMPTS = 20

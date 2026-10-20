@@ -45,7 +45,7 @@ from dashboard.config import (
     LOG_DIR, RUNS_DIR, REPO_ROOT, iso_now, _DB_ALIAS, host_env_from_params,
     runtime_environment,
     load_config_env, validate_config_updates, save_config_env,
-    get_repo_root, get_runs_dir,
+    get_repo_root, get_runs_dir, user_config_env_path,
 )
 
 EVIDENCE_SERVICE = EvidenceDashboardService(REPO_ROOT, background_inspection=True)
@@ -833,6 +833,8 @@ def build_command(action, params):
             env["EVIDENCE_BATCH_ID"] = validate_sample_id(params["batch_id"])
         if params.get("expected_target"):
             env["EVIDENCE_EXPECTED_TARGET"] = str(params["expected_target"])
+        if "GENEIN_CONFIG_FILE" not in os.environ:
+            env["GENEIN_CONFIG_FILE"] = str(user_config_env_path())
         env["GENEIN_WORK_ROOT"] = str(REPO_ROOT / "results" / "dashboard-work" / run_id)
         if "BLAST_DB" not in env:
             env["BLAST_DB"] = str(REPO_ROOT / "blastdb" / env["DB"])
