@@ -35,6 +35,6 @@ O registro de organização de 06/10 foi associado ao nome anterior `gene-in-est
 
 A organização de 06/10 produziu espelhos Git e bundles dos nove repositórios, com verificação de integridade, referências e SHA-256. Os inventários detalhados, hashes dos bundles e propostas preservadas continuam guardados pelo autor em `ORGANIZACAO_GENEIN_GITHUB_06OUT_2026`. Esses nomes identificam evidências locais, não arquivos incluídos na distribuição nem downloads públicos.
 
-Na preparação de 20/10, os inventários internos e a auditoria documental de testes foram preservados fora da fonte, com caminhos relativos e hashes, no conjunto `EVIDENCIAS_LANCAMENTO_20OUT_2026/historico-documental-fora-da-distribuicao`. A limpeza da documentação distribuída não altera os commits, as evidências ou as conclusões das verificações anteriores.
+Na preparação de 20/10, inventários internos de testes foram preservados fora da fonte, com caminhos relativos e hashes, em diretórios locais do autor. Esses diretórios não entram no pacote e não são downloads públicos. A limpeza da documentação distribuída não altera os commits nem as conclusões das verificações anteriores.
 
 O plano oficial mantido pelo autor continua sendo a referência de andamento das análises. Este índice serve à navegação do software e de suas versões; não é um plano de validação concorrente.

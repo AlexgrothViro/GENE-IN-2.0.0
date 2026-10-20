@@ -9,7 +9,7 @@
 - O pacote grava `SOURCE_COMMIT` para leitura sem a pasta `.git`.
 - O micromamba do instalador fica em 2.9.0, com hash do tar.bz2.
 - Registros internos de reteste ficam em `docs/desenvolvimento/` e fora do pacote.
-- A nota interna de bastidor fica em `descarte/` e não entra no pacote.
+- O texto de preparação de 20/10 fica em `descarte/` e não entra no pacote.
 
 ## 2026-10-20 — 2.0.0, distribuição final de pesquisa
 

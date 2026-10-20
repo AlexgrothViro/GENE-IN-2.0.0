@@ -30,7 +30,7 @@ O contrato Evidence continua `2.0.0-alpha.2`, a recuperação é `fragment_recov
 
 ## Registros de desenvolvimento
 
-Os retestes, as auditorias internas e `PROBLEMAS_GENEIN.md` estão em `docs/desenvolvimento/` no repositório Git. Essa pasta não entra no pacote distribuído. Esses registros documentam suas próprias versões e ambientes. Não substituem a verificação identificada do pacote nem a referência oficial das análises mantida pelo autor.
+Os registros de desenvolvimento e `PROBLEMAS_GENEIN.md` estão em `docs/desenvolvimento/` no repositório Git. Essa pasta não entra no pacote distribuído. Esses registros documentam suas próprias versões e ambientes. Não substituem a verificação identificada do pacote nem a referência oficial das análises mantida pelo autor.
 
 | Entrega ainda neste pacote | Registro |
 |---|---|

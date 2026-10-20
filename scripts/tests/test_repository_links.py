@@ -31,6 +31,26 @@ class RepositoryLinkTests(unittest.TestCase):
         self.assertIn("bundle/install_wsl.sh não usam rsync", warning)
         self.assertNotIn('[[ "$cmd" == "rsync" && -n "${GENEIN_WORK_ROOT:-}" ]]', warning)
 
+    def test_distributed_docs_omit_backstage_notes(self):
+        phrases = (
+            "reteste b3",
+            "nota interna de bastidor",
+            "auditoria",
+            "EVIDENCIAS_LANCAMENTO_20OUT_2026",
+        )
+        paths = [ROOT / "README.md", ROOT / "README.en.md", ROOT / "CHANGELOG.md"]
+        for path in (ROOT / "docs").rglob("*"):
+            if not path.is_file():
+                continue
+            relative = path.relative_to(ROOT).as_posix()
+            if relative.startswith("docs/desenvolvimento/"):
+                continue
+            paths.append(path)
+        for path in paths:
+            text = path.read_text(encoding="utf-8")
+            for phrase in phrases:
+                self.assertNotIn(phrase, text, f"{path.relative_to(ROOT)}: {phrase}")
+
 
 if __name__ == "__main__":
     unittest.main()

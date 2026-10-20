@@ -33,7 +33,7 @@ Na interface:
 3. Informe os adaptadores reais da biblioteca quando houver read-through. Configure o filtro de hospedeiro somente com um índice correspondente e identidade documentada.
 4. Confira o estado técnico, os avisos, o suporte e as referências antes de interpretar os candidatos. Exporte as sequências e a proveniência.
 
-Não mova a fonte após instalar: o pacote usa instalação editável e os adaptadores da mesma pasta. Para dados no porte medido no reteste b3, de 300.000 pares e cerca de 30 milhões de HSPs, o diagnóstico usa **45 GB livres** como aviso de espaço. RAM, tempo e disco variam com biblioteca, banco e montador; consulte [recursos e limites](docs/installation-reproducibility.md#recursos-e-limites).
+Não mova a fonte após instalar: o pacote usa instalação editável e os adaptadores da mesma pasta. Para dados no porte de 300.000 pares e cerca de 30 milhões de HSPs, o diagnóstico usa **45 GB livres** como aviso de espaço. RAM, tempo e disco variam com biblioteca, banco e montador; consulte [recursos e limites](docs/installation-reproducibility.md#recursos-e-limites).
 
 ## Linha de comando
 

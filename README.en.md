@@ -28,7 +28,7 @@ Reference data can live outside the source tree as well. When `GENEIN_WORK_ROOT`
 
 In the dashboard, select the input reads, prepare/select a database, choose MULTI or one assembler and start with a small library and known controls. MULTI combines Velvet, SPAdes and metaSPAdes outputs and keeps sequences produced by a single assembler. Supply actual library adapters when needed and enable host filtering explicitly with a matching index and host identity.
 
-For data of the size measured in the b3 retest, 300,000 read pairs and about 30 million HSPs, the environment check warns below **45 GB free**. This is working space, not a universal capacity requirement. RAM, disk and time depend on the input, database and assembler.
+For data of about 300,000 read pairs and 30 million HSPs, the environment check warns below **45 GB free**. This is working space, not a universal capacity requirement. RAM, disk and time depend on the input, database and assembler.
 
 ## Command line
 
