@@ -66,7 +66,8 @@ fi
 source "${SCRIPTS_ROOT}/lib/common.sh"
 
 # O lock acompanha o trabalho quando a pessoa pede um diretório fora da fonte.
-LOCK_DIR="${REPO_ROOT}/tmp"
+# Sem esse diretório, o lock fica em ~/.gene-in/tmp e não cria tmp/ na fonte.
+LOCK_DIR="$(genein_scratch_dir)"
 if [[ -n "${GENEIN_WORK_ROOT:-}" ]]; then
   case "${GENEIN_WORK_ROOT}" in
     /*) ;;

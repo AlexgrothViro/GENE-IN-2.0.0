@@ -10,6 +10,7 @@
 - O micromamba do instalador fica em 2.9.0, com hash do tar.bz2.
 - Registros internos de reteste ficam em `docs/desenvolvimento/` e fora do pacote.
 - O texto de preparação de 20/10 fica em `descarte/` e não entra no pacote.
+- Make, os scripts e o painel leem `picornavirus.env` e o banco BLAST na mesma ordem: `GENEIN_CONFIG_FILE`, o diretório de trabalho, `~/.gene-in` e a fonte. Na 2.0.0 essa leitura ficava só na fonte. Um perfil nomeado ignora `DB_QUERY`; só `custom` grava a consulta no manifesto.
 
 ## 2026-10-20 — 2.0.0, distribuição final de pesquisa
 

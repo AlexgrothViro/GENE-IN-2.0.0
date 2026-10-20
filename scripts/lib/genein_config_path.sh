@@ -18,6 +18,20 @@ genein_user_config_file() {
   printf '%s\n' "${REPO_ROOT}/config/picornavirus.env"
 }
 
+# Scratch and locks stay in the work directory when one was requested.
+# Otherwise they stay out of the source tree, so a test run does not create tmp/.
+genein_scratch_dir() {
+  if [[ -n "${GENEIN_WORK_ROOT:-}" && "${GENEIN_WORK_ROOT}" == /* && -d "${GENEIN_WORK_ROOT}" ]]; then
+    printf '%s\n' "${GENEIN_WORK_ROOT}/tmp"
+    return 0
+  fi
+  if [[ -n "${HOME:-}" ]]; then
+    printf '%s\n' "${HOME}/.gene-in/tmp"
+    return 0
+  fi
+  printf '%s\n' "${TMPDIR:-/tmp}/gene-in-locks"
+}
+
 genein_user_log_dir() {
   if [[ -n "${GENEIN_WORK_ROOT:-}" && "${GENEIN_WORK_ROOT}" == /* && -d "${GENEIN_WORK_ROOT}" ]]; then
     printf '%s\n' "${GENEIN_WORK_ROOT}/logs"

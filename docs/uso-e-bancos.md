@@ -112,7 +112,7 @@ mkdir -p "$GENEIN_WORK_ROOT/config"
 cp config/picornavirus.env.example "$GENEIN_WORK_ROOT/config/picornavirus.env"
 ```
 
-Sem essa variável, o painel grava em `~/.gene-in/config/picornavirus.env`. `GENEIN_CONFIG_FILE` escolhe outro caminho. O painel não cria `config/picornavirus.env` dentro da fonte. Edite a cópia conforme entradas, banco, recursos, hospedeiro e adaptadores da análise. O nome vem do desenvolvimento histórico com picornavírus e não define um alvo universal. Os perfis JSON versionados e os parâmetros científicos devem conservar sua identidade; confira a configuração resolvida nos resultados.
+Sem essa variável, o painel grava em `~/.gene-in/config/picornavirus.env`. `GENEIN_CONFIG_FILE` escolhe outro caminho. O painel não cria `config/picornavirus.env` dentro da fonte. A leitura, no Make, nos scripts e no painel, segue `GENEIN_CONFIG_FILE`, depois o arquivo do diretório de trabalho, depois `~/.gene-in/config/picornavirus.env` e por fim a cópia da fonte. O banco BLAST usa a mesma ordem; o detalhe está em [instalação e reprodutibilidade](installation-reproducibility.md). Na 2.0.0 essa leitura ficava só na fonte. Edite a cópia conforme entradas, banco, recursos, hospedeiro e adaptadores da análise. O nome vem do desenvolvimento histórico com picornavírus e não define um alvo universal. Os perfis JSON versionados e os parâmetros científicos devem conservar sua identidade; confira a configuração resolvida nos resultados.
 
 ## Filtro do hospedeiro
 

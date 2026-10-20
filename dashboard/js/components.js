@@ -57,14 +57,14 @@ export function outcomePanel(outcome) {
     return outcomePlate(
       "NO_EVIDENCE_RECOVERED",
       "A análise foi tecnicamente válida e não recuperou candidato classificável nas condições configuradas.",
-      "SEM_CANDIDATOS_PARA_REVISAO",
+      "Sem candidatos para revisão",
     );
   }
   if (outcome === "EVIDENCE_RECOVERED" || outcome === "CANDIDATOS_PARA_REVISAO" || outcome === "DETECTED") {
     return outcomePlate(
       "EVIDENCE_RECOVERED",
       "Há candidatos para revisão humana. A recuperação não confirma origem viral nem espécie.",
-      "CANDIDATOS_PARA_REVISAO",
+      "Candidatos para revisão",
     );
   }
   if (outcome === "NOT_EVALUABLE") {

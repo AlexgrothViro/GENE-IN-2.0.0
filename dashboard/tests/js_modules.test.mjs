@@ -58,9 +58,9 @@ function fakeDocument() {
 }
 
 test("recovery labels never turn a candidate into confirmed viral detection", () => {
-  assert.equal(evidenceLabel("DETECTED"), "CANDIDATOS_PARA_REVISAO");
-  assert.equal(evidenceLabel("EVIDENCE_RECOVERED"), "CANDIDATOS_PARA_REVISAO");
-  assert.equal(evidenceLabel("NO_SIGNAL"), "SEM_CANDIDATOS_PARA_REVISAO");
+  assert.equal(evidenceLabel("DETECTED"), "Candidatos para revisão");
+  assert.equal(evidenceLabel("EVIDENCE_RECOVERED"), "Candidatos para revisão");
+  assert.equal(evidenceLabel("NO_SIGNAL"), "Sem candidatos para revisão");
   assert.equal(evidenceLabel("NOT_EVALUABLE"), "Não avaliável");
 });
 
@@ -72,7 +72,8 @@ test("rendered dimensions explain recovery in both user flows", () => {
   const text = (node) => [node.textContent || "", ...(node.children || []).map(text)].join(" ");
   try {
     const dimensions = text(analysisDimensions({ evidence_level: "DETECTED" }));
-    assert.match(dimensions, /CANDIDATOS_PARA_REVISAO/);
+    assert.match(dimensions, /Candidatos para revisão/);
+    assert.doesNotMatch(dimensions, /CANDIDATOS_PARA_REVISAO/);
     assert.doesNotMatch(dimensions, /DETECTED/);
     assert.match(text(outcomePanel("EVIDENCE_RECOVERED")), /não confirma origem viral nem espécie/);
   } finally { globalThis.document = previous; globalThis.Node = previousNode; }

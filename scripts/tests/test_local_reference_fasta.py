@@ -31,6 +31,7 @@ class LocalReferenceFastaTests(unittest.TestCase):
         self.assertIn("REF_FASTA", text)
         self.assertNotIn("não tem perfil conhecido", text)
         self.assertNotIn("DB_QUERY vazio e DB", text)
+        self.assertFalse((ROOT / "tmp" / "db-manager.lock").exists())
 
     def test_make_forwards_database_name_and_fasta_but_not_query_for_a_named_database(self):
         result = _run(

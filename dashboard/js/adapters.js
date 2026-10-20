@@ -19,10 +19,10 @@ export function jobLabel(value) {
 // Códigos contratuais DETECTED / EVIDENCE_RECOVERED permanecem no JSON.
 // A interface mostra o rótulo neutro.
 const PUBLIC_REVIEW_LABELS = {
-  DETECTED: "CANDIDATOS_PARA_REVISAO",
-  EVIDENCE_RECOVERED: "CANDIDATOS_PARA_REVISAO",
-  NO_SIGNAL: "SEM_CANDIDATOS_PARA_REVISAO",
-  NO_EVIDENCE_RECOVERED: "SEM_CANDIDATOS_PARA_REVISAO",
+  DETECTED: "Candidatos para revisão",
+  EVIDENCE_RECOVERED: "Candidatos para revisão",
+  NO_SIGNAL: "Sem candidatos para revisão",
+  NO_EVIDENCE_RECOVERED: "Sem candidatos para revisão",
   NOT_EVALUABLE: "Não avaliável",
 };
 

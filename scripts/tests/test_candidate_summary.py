@@ -162,7 +162,7 @@ def test_summary_fills_taxon_from_a_real_blast_database(tmp_path):
         prefix.parent.mkdir()
         _makeblastdb(fasta, prefix, parse_seqids)
         sseqid = _blastn_sseqid(query, prefix)
-        catalog = titles_from_blast_db(prefix)
+        catalog = titles_from_blast_db(prefix, [sseqid])
         assert sseqid in catalog, (name, sseqid, sorted(catalog))
         fragments = tmp_path / f"{name}.tsv"
         fragments.write_text(
@@ -221,3 +221,45 @@ def test_titles_from_fasta_survives_latin1_and_gzip(tmp_path, capsys):
     row = (out / "candidate_summary.tsv").read_text(encoding="utf-8").splitlines()[1].split("\t")
     assert row[0] == "q1"
     assert row[-3]
+
+
+def test_entry_batch_is_only_the_hit_accessions(monkeypatch, tmp_path):
+    import export_candidate_sequences as exporter
+    calls = []
+    batched = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append(list(cmd))
+        if "-entry_batch" in cmd:
+            names = Path(cmd[cmd.index("-entry_batch") + 1]).read_text(encoding="utf-8").split()
+            batched.append(names)
+            stdout = "".join(f"{name}\tTitle {name}\n" for name in names)
+            return subprocess.CompletedProcess(cmd, 0, stdout, "")
+        raise AssertionError(cmd)
+
+    monkeypatch.setattr(exporter.shutil, "which", lambda _name: "blastdbcmd")
+    monkeypatch.setattr(exporter.subprocess, "run", fake_run)
+    catalog = exporter.titles_from_blast_db(tmp_path / "db", ["PTV1", "NC_1"])
+    assert set(catalog) >= {"PTV1", "NC_1"}
+    assert calls and "-entry_batch" in calls[0]
+    assert "all" not in calls[0]
+    assert batched == [["PTV1", "NC_1"]]
+
+
+def test_entry_batch_falls_back_to_all_when_a_hit_is_missing(monkeypatch, tmp_path):
+    import export_candidate_sequences as exporter
+
+    def fake_run(cmd, **kwargs):
+        if "-entry_batch" in cmd:
+            return subprocess.CompletedProcess(cmd, 0, "OTHER\tOther virus, partial genome\n", "")
+        if "-entry" in cmd and "all" in cmd:
+            return subprocess.CompletedProcess(
+                cmd, 0, "BL_ORD_ID:0\tPTV1 Porcine teschovirus 1, complete genome\n", "",
+            )
+        raise AssertionError(cmd)
+
+    monkeypatch.setattr(exporter.shutil, "which", lambda _name: "blastdbcmd")
+    monkeypatch.setattr(exporter.subprocess, "run", fake_run)
+    catalog = exporter.titles_from_blast_db(tmp_path / "db", ["PTV1"])
+    assert "PTV1" in catalog
+    assert "Porcine teschovirus 1" in catalog["PTV1"][1]

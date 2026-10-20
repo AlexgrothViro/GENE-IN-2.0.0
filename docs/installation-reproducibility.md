@@ -48,6 +48,15 @@ Sem essa variável, o prefixo padrão é `~/.gene-in-bundle`. O lançador Window
 
 `GENEIN_WORK_ROOT` é um diretório absoluto existente para o FASTA padrão, o banco BLAST e o índice Bowtie2. Sem essa variável, esses padrões continuam dentro da fonte. Um caminho passado em `REF_FASTA`, `BLAST_DB` ou `BOWTIE2_INDEX` não muda de lugar. A CLI continua exigindo `--output-root` novo e fora da fonte. `GENEIN_OUTPUT_ROOT`, exportado antes do painel, faz o histórico listar os `execution.json` dessa pasta. A configuração persistente do painel fica em `$GENEIN_WORK_ROOT/config/picornavirus.env` quando esse diretório existe, ou em `~/.gene-in/config/picornavirus.env`. Ela não é gravada dentro da fonte.
 
+Na 2.0.0, Make, os scripts e o painel liam só o `config/picornavirus.env` da fonte (ou `config.env`) e o banco em `blastdb/<DB>` dentro da fonte. Na 2.0.1 os três usam a mesma procura:
+
+1. `GENEIN_CONFIG_FILE`, mesmo que o arquivo ainda não exista;
+2. `$GENEIN_WORK_ROOT/config/picornavirus.env`, quando o arquivo existe;
+3. `~/.gene-in/config/picornavirus.env`, quando o arquivo existe;
+4. `config/picornavirus.env` da fonte e, por último, `config.env`.
+
+`BLAST_DB` no arquivo escolhido prevalece. Sem essa chave, vale o primeiro banco já preparado (manifesto não vazio) em `$GENEIN_WORK_ROOT/blastdb/<DB>`, depois `~/.gene-in/blastdb/<DB>`, depois `blastdb/<DB>` na fonte. Se nenhum estiver preparado, o padrão é `$GENEIN_WORK_ROOT/blastdb/<DB>` quando o diretório de trabalho foi pedido, e `blastdb/<DB>` na fonte caso contrário. Um `picornavirus.env` do diretório de trabalho gravável pelo grupo ou por outros é recusado. Um perfil nomeado (`DB=ptv` e os demais) ignora `DB_QUERY`; só `DB=custom` usa a consulta e a grava no manifesto.
+
 ## Painel e hospedagem local
 
 O comando `bash run_linux.sh` abre o servidor em loopback (`127.0.0.1`), com porta inicial 8000. Se estiver ocupada, tenta as próximas portas dentro do limite documentado. Use sempre o endereço impresso no terminal; veja [portas do painel](dashboard-portas.md).

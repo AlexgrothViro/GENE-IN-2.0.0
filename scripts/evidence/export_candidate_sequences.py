@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from common import read_fasta, iter_tsv, sha256_text, write_json_atomic, write_text_atomic, write_tsv_atomic
@@ -52,7 +53,8 @@ def export(queries: Path, manifest_path: Path, fragments: Path, output: Path,
              **{key: row.get(key, "") for key in fields if key in row and key != "qseqid"}}
             for row in iter_tsv(fragments)]
     write_tsv_atomic(output / "candidate_sequences.tsv", rows, fields)
-    catalog = load_reference_catalog(reference_fasta, blast_db)
+    subjects = sorted({str(row.get("sseqid") or "") for row in rows if row.get("sseqid")})
+    catalog = load_reference_catalog(reference_fasta, blast_db, subjects)
     summary_fields = fields + ["reference_description", "min_evalue", "hit_row_count"]
     write_tsv_atomic(output / "candidate_summary.tsv", _best_hit_rows(rows, catalog), summary_fields)
     write_json_atomic(output / "candidate_queries.json", manifest)
@@ -135,21 +137,9 @@ def _titles_from_fasta_stream(path: Path) -> dict[str, tuple[str, str]]:
     return catalog
 
 
-def titles_from_blast_db(prefix: Path) -> dict[str, tuple[str, str]]:
-    """Read accession and title. ``%f`` is FASTA and ignores every other specifier."""
-    if shutil.which("blastdbcmd") is None:
-        return {}
-    try:
-        result = subprocess.run(
-            ["blastdbcmd", "-db", str(prefix), "-entry", "all", "-outfmt", "%a\t%t"],
-            capture_output=True, text=True, check=False, timeout=120,
-        )
-    except (OSError, subprocess.SubprocessError):
-        return {}
-    if result.returncode != 0:
-        return {}
+def _catalog_from_blastdbcmd(stdout: str) -> dict[str, tuple[str, str]]:
     catalog: dict[str, tuple[str, str]] = {}
-    for line in result.stdout.splitlines():
+    for line in stdout.splitlines():
         accession, separator, title = line.partition("\t")
         accession = accession.strip()
         title = title.strip()
@@ -165,12 +155,49 @@ def titles_from_blast_db(prefix: Path) -> dict[str, tuple[str, str]]:
     return catalog
 
 
-def load_reference_catalog(reference_fasta: Path | None, blast_db: Path | None) -> dict[str, tuple[str, str]]:
+def _blastdbcmd(prefix: Path, entry_args: list[str]) -> dict[str, tuple[str, str]] | None:
+    try:
+        result = subprocess.run(
+            ["blastdbcmd", "-db", str(prefix), *entry_args, "-outfmt", "%a\t%t"],
+            capture_output=True, text=True, check=False, timeout=120,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    return _catalog_from_blastdbcmd(result.stdout)
+
+
+def titles_from_blast_db(prefix: Path, subjects: list[str] | None = None) -> dict[str, tuple[str, str]]:
+    """Read accession and title. ``%f`` is FASTA and ignores every other specifier.
+
+    Hit accessions use ``-entry_batch``. A database built without
+    ``-parse_seqids`` does not resolve the FASTA id that way, so any missing
+    subject falls back to ``-entry all``.
+    """
+    if shutil.which("blastdbcmd") is None:
+        return {}
+    wanted = [subject for subject in (subjects or []) if subject]
+    if wanted:
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=True) as handle:
+            handle.write("\n".join(wanted) + "\n")
+            handle.flush()
+            batched = _blastdbcmd(prefix, ["-entry_batch", handle.name])
+        if batched is not None and all(_catalog_record(batched, subject)[0] for subject in wanted):
+            return batched
+    return _blastdbcmd(prefix, ["-entry", "all"]) or {}
+
+
+def load_reference_catalog(
+    reference_fasta: Path | None,
+    blast_db: Path | None,
+    subjects: list[str] | None = None,
+) -> dict[str, tuple[str, str]]:
     catalog: dict[str, tuple[str, str]] = {}
     if reference_fasta is not None and reference_fasta.is_file():
         catalog.update(titles_from_fasta(reference_fasta))
     if blast_db is not None:
-        for key, record in titles_from_blast_db(blast_db).items():
+        for key, record in titles_from_blast_db(blast_db, subjects).items():
             catalog.setdefault(key, record)
     return catalog
 
