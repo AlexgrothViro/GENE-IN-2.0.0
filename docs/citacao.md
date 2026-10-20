@@ -32,7 +32,7 @@ Cite separadamente as ferramentas e os dados de terceiros conforme suas própria
 
 ## Texto de método a adaptar
 
-> As sequências candidatas foram recuperadas e organizadas para triagem humana com Gene-In 2.0.1 (Groth, 2026), usando o commit e os parâmetros registrados na proveniência da execução. O fluxo empregou o contrato Evidence 2.0.0-alpha.2, a política fragment_recovery_20_100_v1 e a revisão scientific_review_20261005_v1. Bancos, controles, pré-processamento e montadores foram documentados por execução. Similaridade, disponibilidade de candidatos e bases alinhadas foram interpretadas separadamente de confirmação de origem viral e atribuição definitiva de espécie.
+> As sequências candidatas foram recuperadas e organizadas para triagem humana com Gene-In 2.0.1 (Groth, 2026), usando o commit e os parâmetros registrados na proveniência da execução. `provenance.json` e `execution.json` trazem `software_version` e `source_commit`. O campo `pipeline_version` continua sendo o contrato Evidence `2.0.0-alpha.2`, não a versão do programa. O fluxo empregou o contrato Evidence 2.0.0-alpha.2, a política fragment_recovery_20_100_v1 e a revisão scientific_review_20261005_v1. Bancos, controles, pré-processamento e montadores foram documentados por execução. Similaridade, disponibilidade de candidatos e bases alinhadas foram interpretadas separadamente de confirmação de origem viral e atribuição definitiva de espécie.
 
 Complete esse texto com os dados reais do experimento. Não declare etapas que não foram executadas, como filtro de hospedeiro, suporte por reads ou competição. A [validação científica](validacao.md) explica os limites das afirmações sustentadas pela entrega.
 

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from genein.identity import source_commit
+from genein.identity import software_version, source_commit
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,3 +26,9 @@ def test_package_without_git_reads_source_commit_file(tmp_path):
 
 def test_missing_identity_is_explicit(tmp_path):
     assert source_commit(tmp_path) == "unavailable"
+    assert software_version(tmp_path) == "unavailable"
+
+
+def test_distribution_version_is_not_the_evidence_contract():
+    assert software_version(ROOT) == "2.0.1"
+    assert (ROOT / "VERSION").read_text(encoding="utf-8").strip() == "2.0.0-alpha.2"

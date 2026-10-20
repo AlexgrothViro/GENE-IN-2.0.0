@@ -15,6 +15,7 @@ import subprocess
 import sys
 import uuid
 
+from genein.identity import source_commit, software_version
 from .sample import BatchCancelled, ProcessRunner
 
 
@@ -293,7 +294,13 @@ def run(args) -> int:
     except (OSError, ValueError) as exc:
         print(f"[FATAL] {exc}", file=sys.stderr)
         return 2
+    # GENEIN_REPO_ROOT can point at a stub used by tests. The version and the
+    # commit belong to the tree that contains this software, which carries
+    # RELEASE.json in a normal checkout or package.
+    identity_root = root if (root / "RELEASE.json").is_file() else Path(__file__).resolve().parents[3]
     receipt = {"schema_version": "1.0", "kind": "genein_launcher_receipt",
+               "software_version": software_version(identity_root),
+               "source_commit": source_commit(identity_root),
                "run_id": run_id, "source_root": str(root), "output_root": str(output),
                "command": command, "started_at": datetime.now(timezone.utc).isoformat(),
                "status": "running", "scientific_validation": "not_assessed"}
