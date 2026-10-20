@@ -63,16 +63,37 @@ if ((${#missing_system[@]})); then
 fi
 mkdir -p "$BIN_DIR" "$MAMBA_ROOT"
 
+# Micromamba 2.9.0 (etiqueta 2.9.0-0). O hash é do tar.bz2 linux-64
+# que contém bin/micromamba, não do binário ELF publicado à parte.
+MICROMAMBA_VERSION="2.9.0"
+MICROMAMBA_SHA256="8761c382127e6363bd9e0a2451aa3ef90d071a79133f736e2f759a3bf13040dd"
+MICROMAMBA_URL="https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSION}"
+
+verify_mamba_archive() {
+  local file="$1"
+  local got
+  got="$(sha256sum "$file" | awk '{print $1}')"
+  if [[ "$got" != "$MICROMAMBA_SHA256" ]]; then
+    echo "[ERRO] Hash do micromamba ${MICROMAMBA_VERSION} não confere: $file" >&2
+    echo "esperado ${MICROMAMBA_SHA256}" >&2
+    echo "obtido   ${got}" >&2
+    exit 2
+  fi
+}
+
 # Instala micromamba (preferindo bundle/cache local em modo offline)
 if [[ ! -x "$MICRO" ]]; then
   tmp="$(mktemp -d)"
+  archive="$tmp/micromamba.tar.bz2"
   if local_bundle="$(resolve_local_mamba)"; then
     echo "[INFO] Usando micromamba local: $local_bundle"
-    tar -xvjf "$local_bundle" -C "$tmp" bin/micromamba
+    cp "$local_bundle" "$archive"
   else
-    echo "[INFO] Bundle local não encontrado. Baixando micromamba..."
-    ( cd "$tmp" && curl --fail --location --silent --show-error https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba )
+    echo "[INFO] Bundle local não encontrado. Baixando micromamba ${MICROMAMBA_VERSION}..."
+    curl --fail --location --silent --show-error --output "$archive" "$MICROMAMBA_URL"
   fi
+  verify_mamba_archive "$archive"
+  tar -xvjf "$archive" -C "$tmp" bin/micromamba
   install -m 0755 "$tmp/bin/micromamba" "$MICRO"
   rm -rf "$tmp"
 else

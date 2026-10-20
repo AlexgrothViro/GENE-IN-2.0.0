@@ -120,20 +120,31 @@ MICRO="$BIN_DIR/micromamba"
 echo "[INFO] Configurando ambiente virtual micromamba em $BUNDLE_DIR..."
 mkdir -p "$BIN_DIR" "$MAMBA_ROOT"
 
+# Mesmo pin de bundle/install_wsl.sh: tar.bz2 linux-64 com bin/micromamba.
+MICROMAMBA_VERSION="2.9.0"
+MICROMAMBA_SHA256="8761c382127e6363bd9e0a2451aa3ef90d071a79133f736e2f759a3bf13040dd"
+MICROMAMBA_URL="https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSION}"
 LOCAL_MAMBA="$INSTALL_DIR/bundle/cache/micromamba.tar.bz2"
+tmp="$(mktemp -d)"
+archive="$tmp/micromamba.tar.bz2"
 if [[ -f "$LOCAL_MAMBA" ]]; then
-    echo "  [INFO] Instalando micromamba a partir de cache local..."
-    tmp="$(mktemp -d)"
-    tar -xjf "$LOCAL_MAMBA" -C "$tmp" bin/micromamba
-    install -m 0755 "$tmp/bin/micromamba" "$MICRO"
-    rm -rf "$tmp"
+    echo "  [INFO] Instalando micromamba ${MICROMAMBA_VERSION} a partir de cache local..."
+    cp "$LOCAL_MAMBA" "$archive"
 else
-    echo "  [INFO] Baixando micromamba..."
-    tmp="$(mktemp -d)"
-    curl --fail --location --silent --show-error https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xj -C "$tmp" bin/micromamba
-    install -m 0755 "$tmp/bin/micromamba" "$MICRO"
-    rm -rf "$tmp"
+    echo "  [INFO] Baixando micromamba ${MICROMAMBA_VERSION}..."
+    curl --fail --location --silent --show-error --output "$archive" "$MICROMAMBA_URL"
 fi
+got="$(sha256sum "$archive" | awk '{print $1}')"
+if [[ "$got" != "$MICROMAMBA_SHA256" ]]; then
+    echo "[ERRO] Hash do micromamba ${MICROMAMBA_VERSION} não confere: $archive" >&2
+    echo "esperado ${MICROMAMBA_SHA256}" >&2
+    echo "obtido   ${got}" >&2
+    rm -rf "$tmp"
+    exit 2
+fi
+tar -xjf "$archive" -C "$tmp" bin/micromamba
+install -m 0755 "$tmp/bin/micromamba" "$MICRO"
+rm -rf "$tmp"
 
 export MAMBA_ROOT_PREFIX="$MAMBA_ROOT"
 unset CONDA_PREFIX 2>/dev/null || true

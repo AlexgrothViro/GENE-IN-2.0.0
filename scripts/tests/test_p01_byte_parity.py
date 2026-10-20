@@ -25,5 +25,7 @@ def test_installer_checks_make_before_creating_environment(tmp_path):
 def test_environment_install_commands_unchanged_byte_for_byte():
     old = (ROOT / 'scripts/tests/fixtures/b1_reference/install_wsl.sh.txt').read_bytes()
     new = (ROOT / 'bundle/install_wsl.sh').read_bytes()
-    marker = '# Instala micromamba'.encode()
+    # The micromamba download is pinned separately. This lock covers the
+    # recorded environment install that follows that download.
+    marker = b'# Install exact recorded dependencies'
     assert old[old.index(marker):] == new[new.index(marker):]

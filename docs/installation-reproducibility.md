@@ -67,6 +67,8 @@ O servidor usa arquivos e ferramentas do computador local. Não há implantaçã
 | `environment.linux-64.explicit.txt` | URLs e checksums dos pacotes Conda da plataforma |
 | `requirements.lock.txt` | Versões e hashes das dependências Python adicionais |
 
+O instalador obtém o micromamba **2.9.0** (linux-64). O tar.bz2 conferido, o mesmo arquivo que contém `bin/micromamba`, tem sha256 `8761c382127e6363bd9e0a2451aa3ef90d071a79133f736e2f759a3bf13040dd`. Um cache em `bundle/cache/` só é aceito com esse hash. Esse pin é do instalador; os pacotes do ambiente continuam em `environment.lock.yml`, `environment.linux-64.explicit.txt` e `requirements.lock.txt`.
+
 O instalador usa o lock explícito, instala wheels com os hashes registrados e instala o Gene-In com `--no-build-isolation --no-deps`. Um ambiente existente é comparado aos registros Conda exigidos; divergências interrompem a preparação. A comparação lê `conda-meta`, não revalida byte a byte todos os binários, e admite pacotes adicionais. Para reproduzir o conjunto completo, use um prefixo novo.
 
 Preserve a versão da fonte, o commit, os locks, os hashes das entradas e dos bancos, os manifestos e a configuração resolvida de cada análise. A [citação](citacao.md) lista o conjunto mínimo a relatar.
