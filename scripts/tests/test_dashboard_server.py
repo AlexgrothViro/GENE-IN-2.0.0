@@ -16,7 +16,7 @@ class DashboardPortSelectionTests(unittest.TestCase):
         http.serve_forever.side_effect = KeyboardInterrupt
         with tempfile.TemporaryDirectory() as directory:
             receipt = Path(directory) / "ready.url"
-            with mock.patch.object(server, "_ensure_config_env"), mock.patch.object(server, "_bind_server", return_value=http):
+            with mock.patch.object(server, "ensure_dashboard_logging"), mock.patch.object(server, "_ensure_config_env"), mock.patch.object(server, "_bind_server", return_value=http):
                 server.run_server(["--port", "8000", "--ready-file", str(receipt)])
             self.assertEqual(receipt.read_text().strip(), "http://127.0.0.1:8001/")
             http.server_close.assert_called_once()
@@ -26,7 +26,7 @@ class DashboardPortSelectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             receipt = Path(directory) / "ready.url"
             receipt.write_text("old receipt")
-            with mock.patch.object(server, "_ensure_config_env"), mock.patch.object(server, "_bind_server", return_value=http):
+            with mock.patch.object(server, "ensure_dashboard_logging"), mock.patch.object(server, "_ensure_config_env"), mock.patch.object(server, "_bind_server", return_value=http):
                 with self.assertRaises(FileExistsError):
                     server.run_server(["--ready-file", str(receipt)])
             self.assertEqual(receipt.read_text(), "old receipt")
@@ -89,7 +89,7 @@ class DashboardPortSelectionTests(unittest.TestCase):
     def test_launcher_prints_actual_port_and_closes_server(self):
         http = mock.Mock(server_address=("127.0.0.1", 8001))
         http.serve_forever.side_effect = KeyboardInterrupt
-        with mock.patch.object(server, "_ensure_config_env"), mock.patch.object(server, "_bind_server", return_value=http), mock.patch("builtins.print") as output:
+        with mock.patch.object(server, "ensure_dashboard_logging"), mock.patch.object(server, "_ensure_config_env"), mock.patch.object(server, "_bind_server", return_value=http), mock.patch("builtins.print") as output:
             server.run_server(["--host", "127.0.0.1", "--port", "8000"])
             self.assertTrue(any("http://127.0.0.1:8001" in str(call) for call in output.call_args_list))
             http.server_close.assert_called_once()

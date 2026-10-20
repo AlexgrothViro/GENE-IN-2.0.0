@@ -86,6 +86,31 @@ class ExternalHistoryTests(unittest.TestCase):
             self.assertEqual(match[0]["output_root"], str(run))
             self.assertEqual(match[0]["status"], "done")
             self.assertEqual(match[0]["run_dir"], "")
+            self.assertEqual(match[0]["sample"], "")
+
+    def test_history_reads_the_sample_from_the_receipt_or_the_command(self):
+        with tempfile.TemporaryDirectory() as directory:
+            parent = Path(directory)
+            named = parent / "nomeada"
+            named.mkdir()
+            (named / "execution.json").write_text(json.dumps({
+                "run_id": "run-nomeada",
+                "sample": "amostra-1",
+                "status": "completed",
+                "command": ["bash", "run_sample.sh", "--sample", "outra"],
+                "finished_at": "2026-10-20T12:05:00+00:00",
+            }), encoding="utf-8")
+            legacy = parent / "legada"
+            legacy.mkdir()
+            (legacy / "execution.json").write_text(json.dumps({
+                "run_id": "run-legada",
+                "status": "completed",
+                "command": ["bash", "run_sample.sh", "--sample", "amostra-2", "--threads", "2"],
+                "finished_at": "2026-10-20T12:04:00+00:00",
+            }), encoding="utf-8")
+            history = {item["run_id"]: item for item in self._history(str(parent))}
+            self.assertEqual(history["run-nomeada"]["sample"], "amostra-1")
+            self.assertEqual(history["run-legada"]["sample"], "amostra-2")
 
     def test_history_stays_empty_when_the_variable_is_unset(self):
         self.assertEqual(self._history(None), [])

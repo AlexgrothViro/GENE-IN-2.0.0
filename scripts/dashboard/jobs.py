@@ -466,9 +466,11 @@ def find_log_path(metadata):
     run_id = metadata.get("run_id") or metadata.get("id")
     candidates = []
     if run_id:
+        candidates.append(LOG_DIR / f"ux_{run_id}.log")
         candidates.append(get_repo_root() / "logs" / f"ux_{run_id}.log")
     sample = metadata.get("sample")
     if sample:
+        candidates.append(LOG_DIR / f"{sample}_pipeline.log")
         candidates.append(get_repo_root() / "logs" / f"{sample}_pipeline.log")
     for candidate in candidates:
         if candidate.exists():
@@ -1076,6 +1078,7 @@ def run_job(job_id, action, params):
         return
 
     try:
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
         with open(log_file, "w", encoding="utf-8") as lf:
             for line in popener.stdout:
                 line_clean = line.rstrip("\r\n")
@@ -1373,6 +1376,21 @@ def list_run_history():
     return runs
 
 
+def _receipt_sample(receipt):
+    """CLI receipts name the sample. Older files only carry it in the command."""
+    sample = receipt.get("sample")
+    if isinstance(sample, str) and sample.strip():
+        return sample.strip()
+    command = receipt.get("command")
+    if isinstance(command, list):
+        for index, token in enumerate(command):
+            if token == "--sample" and index + 1 < len(command):
+                nxt = command[index + 1]
+                if isinstance(nxt, str) and nxt.strip() and not nxt.startswith("-"):
+                    return nxt.strip()
+    return ""
+
+
 def _external_output_runs(seen_ids):
     """List CLI receipts under GENEIN_OUTPUT_ROOT. Unset leaves history unchanged."""
     raw = os.environ.get("GENEIN_OUTPUT_ROOT", "").strip()
@@ -1410,7 +1428,7 @@ def _external_output_runs(seen_ids):
             "run_dir": "",
             "output_root": str(folder),
             "action": "genein_run",
-            "sample": "",
+            "sample": _receipt_sample(receipt),
             "start": receipt.get("started_at"),
             "end": finished,
             "end_epoch": _history_epoch(finished),

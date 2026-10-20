@@ -16,6 +16,8 @@ INCOMING_ASSEMBLER="${ASSEMBLER:-}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(cd "$SCRIPTS_ROOT/.." && pwd)"
+# shellcheck disable=SC1091
+source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
 
 # Quando o Gene-In foi instalado via bundle/micromamba, as ferramentas de
 # bioinformatica vivem em um ambiente isolado e nao necessariamente no PATH global.
@@ -529,7 +531,7 @@ if [[ $MISSING -ne 0 ]]; then
 fi
 
 # Registro de versões de software
-VERSIONS_DIR="logs"
+VERSIONS_DIR="$(genein_user_log_dir)"
 VERSIONS_FILE="${VERSIONS_DIR}/software_versions.txt"
 mkdir -p "$VERSIONS_DIR"
 {

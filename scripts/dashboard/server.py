@@ -23,7 +23,7 @@ from dashboard.config import (
     get_config_env_path,
     parse_env_file, is_loopback_host,
 )
-from dashboard.handler import DashboardHandler, logger
+from dashboard.handler import DashboardHandler, ensure_dashboard_logging, logger
 
 
 def _ensure_config_env():
@@ -115,6 +115,7 @@ def run_server(args_list=None):
         print("[ERRO] A porta deve estar entre 1 e 65535.")
         raise SystemExit(2)
 
+    ensure_dashboard_logging()
     _ensure_config_env()
 
     ThreadingHTTPServer.allow_reuse_address = True

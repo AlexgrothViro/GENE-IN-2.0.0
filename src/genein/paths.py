@@ -23,3 +23,20 @@ def user_config_env_path(env: dict[str, str] | None = None, home: Path | None = 
             return candidate / "config" / "picornavirus.env"
     base = home if home is not None else Path.home()
     return base / ".gene-in" / "config" / "picornavirus.env"
+
+
+def user_log_dir(env: dict[str, str] | None = None, home: Path | None = None) -> Path:
+    """Where panel and diagnostic logs are written.
+
+    An existing absolute ``GENEIN_WORK_ROOT`` holds ``logs/``. Otherwise the
+    directory is ``~/.gene-in/logs``. This function does not create it, and it
+    never points at the source tree.
+    """
+    values = os.environ if env is None else env
+    work = str(values.get("GENEIN_WORK_ROOT") or "").strip()
+    if work:
+        candidate = Path(work).expanduser()
+        if candidate.is_absolute() and candidate.is_dir():
+            return candidate / "logs"
+    base = home if home is not None else Path.home()
+    return base / ".gene-in" / "logs"

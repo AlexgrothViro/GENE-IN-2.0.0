@@ -65,18 +65,24 @@ from dashboard.jobs import (
     read_evidence_job_state,
 )
 
-LOG_DIR.mkdir(parents=True, exist_ok=True)
 logger = logging.getLogger("genein_dashboard")
 logger.setLevel(logging.INFO)
-if not logger.handlers:
-    rfh = RotatingFileHandler(
-        LOG_DIR / "ux_dashboard.log",
+
+
+def ensure_dashboard_logging():
+    """Open the panel log in the work directory. Importing this module does not create it."""
+    from dashboard.config import LOG_DIR as configured_log_dir
+    configured_log_dir.mkdir(parents=True, exist_ok=True)
+    if logger.handlers:
+        return
+    file_handler = RotatingFileHandler(
+        configured_log_dir / "ux_dashboard.log",
         maxBytes=5 * 1024 * 1024,
         backupCount=3,
         encoding="utf-8",
     )
-    rfh.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s %(message)s"))
-    logger.addHandler(rfh)
+    file_handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s %(message)s"))
+    logger.addHandler(file_handler)
 
 CACHE_BYPASS_CONTENT_TYPES = {"text/html", "application/javascript", "text/css"}
 MAX_UPLOAD_BYTES = 500 * 1024 * 1024

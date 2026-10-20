@@ -154,6 +154,7 @@ def test_successful_run_writes_receipt_and_propagates_env(cli_repo, tmp_path, mo
     assert receipt["software_version"] == "2.0.1"
     assert receipt["source_commit"]
     assert receipt["output_root"] == str(output_root)
+    assert receipt["sample"] == "sample-1"
     assert receipt["source_root"] == str(cli_repo)
     assert not (cli_repo / "results").exists()
     assert not (cli_repo / "data").exists()

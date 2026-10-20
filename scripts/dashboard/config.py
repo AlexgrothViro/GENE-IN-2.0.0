@@ -23,12 +23,14 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "experimental" / "contig_comparis
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from genein.paths import user_config_env_path
+from genein.paths import user_config_env_path, user_log_dir
 from input_validation import validate_sample_id
 from analysis_profiles import load_profiles, resolve_profile
 
 DASHBOARD_DIR = REPO_ROOT / "dashboard"
-LOG_DIR = REPO_ROOT / "logs"
+# Resolved at import from the environment already set for this process.
+# Tests patch the name. Do not create the directory here.
+LOG_DIR = user_log_dir()
 RUNS_DIR = REPO_ROOT / "results" / "runs"
 TARGETS_FILE = REPO_ROOT / "config" / "targets.json"
 REPO_CONFIG_ENV = REPO_ROOT / "config" / "picornavirus.env"

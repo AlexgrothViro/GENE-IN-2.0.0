@@ -290,6 +290,14 @@ def prepare(args, root: Path) -> tuple[Path, list[str], dict[str, str], str]:
     return output, command, env, run_id
 
 
+def _command_sample(command: list) -> str:
+    """Sample already validated in the launcher command. Batch runs have none."""
+    for index, token in enumerate(command):
+        if token == "--sample" and index + 1 < len(command):
+            return str(command[index + 1])
+    return ""
+
+
 def run(args) -> int:
     try:
         root = source_root()
@@ -305,7 +313,8 @@ def run(args) -> int:
     receipt = {"schema_version": "1.0", "kind": "genein_launcher_receipt",
                "software_version": software_version(identity_root),
                "source_commit": source_commit(identity_root),
-               "run_id": run_id, "source_root": str(root), "output_root": str(output),
+               "run_id": run_id, "sample": _command_sample(command),
+               "source_root": str(root), "output_root": str(output),
                "command": command, "started_at": datetime.now(timezone.utc).isoformat(),
                "status": "running", "scientific_validation": "not_assessed"}
     receipt_path = output / "execution.json"

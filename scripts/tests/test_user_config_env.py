@@ -1,5 +1,6 @@
 """The panel stores picornavirus.env outside the source tree."""
 import os
+import sys
 from pathlib import Path
 import subprocess
 
@@ -91,3 +92,57 @@ def test_dashboard_job_keeps_the_user_config_when_the_work_root_becomes_per_run(
     )
     assert env["GENEIN_CONFIG_FILE"] == str(work / "config" / "picornavirus.env")
     assert Path(env["GENEIN_WORK_ROOT"]) != work
+
+
+def test_shell_and_python_choose_the_same_log_directory(tmp_path, monkeypatch):
+    work = tmp_path / "work"
+    work.mkdir()
+    monkeypatch.delenv("GENEIN_WORK_ROOT", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    from genein.paths import user_log_dir
+    result = subprocess.run(
+        ["bash", "-c", 'source "$1"; genein_user_log_dir', "test",
+         str(ROOT / "scripts/lib/genein_config_path.sh")],
+        env=os.environ.copy(), text=True, capture_output=True, check=True,
+    )
+    assert result.stdout.strip() == str(user_log_dir())
+    assert result.stdout.strip() == str(tmp_path / "home" / ".gene-in" / "logs")
+    monkeypatch.setenv("GENEIN_WORK_ROOT", str(work))
+    result = subprocess.run(
+        ["bash", "-c", 'source "$1"; genein_user_log_dir', "test",
+         str(ROOT / "scripts/lib/genein_config_path.sh")],
+        env=os.environ.copy(), text=True, capture_output=True, check=True,
+    )
+    assert result.stdout.strip() == str(work / "logs")
+    assert result.stdout.strip() == str(user_log_dir())
+
+
+def test_check_env_records_versions_outside_the_source():
+    text = (ROOT / "scripts/ops/check_env.sh").read_text(encoding="utf-8")
+    assert 'VERSIONS_DIR="$(genein_user_log_dir)"' in text
+    assert 'VERSIONS_DIR="logs"' not in text
+
+
+def test_dashboard_import_does_not_create_logs_in_the_source(tmp_path):
+    env = os.environ.copy()
+    env.pop("GENEIN_WORK_ROOT", None)
+    env["HOME"] = str(tmp_path / "home")
+    env["GENEIN_SOURCE"] = str(ROOT)
+    env["PYTHONPATH"] = os.pathsep.join([str(ROOT), str(ROOT / "src"), str(ROOT / "scripts")])
+    code = r"""
+import os
+from pathlib import Path
+root = Path(os.environ["GENEIN_SOURCE"])
+home = Path(os.environ["HOME"])
+logs = root / "logs"
+before = sorted(path.relative_to(logs).as_posix() for path in logs.rglob("*")) if logs.exists() else None
+import dashboard.handler
+import dashboard.config as config
+expected = home / ".gene-in" / "logs"
+assert config.LOG_DIR == expected, config.LOG_DIR
+assert not expected.exists()
+after = sorted(path.relative_to(logs).as_posix() for path in logs.rglob("*")) if logs.exists() else None
+assert before == after
+"""
+    result = subprocess.run([sys.executable, "-c", code], env=env, text=True, capture_output=True)
+    assert result.returncode == 0, result.stdout + result.stderr

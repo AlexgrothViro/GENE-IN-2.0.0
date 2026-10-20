@@ -18,6 +18,18 @@ genein_user_config_file() {
   printf '%s\n' "${REPO_ROOT}/config/picornavirus.env"
 }
 
+genein_user_log_dir() {
+  if [[ -n "${GENEIN_WORK_ROOT:-}" && "${GENEIN_WORK_ROOT}" == /* && -d "${GENEIN_WORK_ROOT}" ]]; then
+    printf '%s\n' "${GENEIN_WORK_ROOT}/logs"
+    return 0
+  fi
+  if [[ -n "${HOME:-}" ]]; then
+    printf '%s\n' "${HOME}/.gene-in/logs"
+    return 0
+  fi
+  printf '%s\n' "${TMPDIR:-/tmp}/gene-in-logs"
+}
+
 genein_resolve_config_file() {
   local user_file repo_file legacy
   user_file="$(genein_user_config_file)"
