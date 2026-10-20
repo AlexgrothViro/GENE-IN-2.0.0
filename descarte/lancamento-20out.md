@@ -15,7 +15,7 @@
 | Plataforma do ambiente fixado | Linux x86_64; Windows x86_64 via WSL2 |
 | Finalidade | Recuperação e apresentação de sequências candidatas para pesquisa e triagem humana |
 
-A versão 2.0.0 parte da rc1 preservada no commit `fb2f57a`. A consolidação anterior incorporou a base b3 `d963dfc` e as correções executáveis registradas em `ec84845`, seguidas da organização da distribuição. Os recibos da entrega final identificam o commit completo efetivamente empacotado; esses identificadores históricos não substituem o identificador do pacote 2.0.0.
+A versão 2.0.0 parte da rc1. O commit dessa candidata ficou na cópia local do autor e não está neste repositório público. A consolidação anterior incorporou a base b3 `d963dfc` e as correções executáveis registradas em `ec84845`, seguidas da organização da distribuição. Os recibos da entrega final identificam o commit completo efetivamente empacotado; esses identificadores históricos não substituem o identificador do pacote 2.0.0.
 
 **Gene-In Builder permanece um desenvolvimento separado**, conforme instrução do autor. Ele não faz parte da instalação, dos perfis, dos exemplos ou da verificação desta distribuição. O fluxo de montagem mantém Velvet, SPAdes, metaSPAdes e MULTI.
 

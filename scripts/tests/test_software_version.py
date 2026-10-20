@@ -22,6 +22,12 @@ class SoftwareVersionTests(unittest.TestCase):
         self.assertEqual(release["closure_commit"], "42a2c135666337b025b9cd1cdde5b8ae208831f6")
         self.assertNotIn("53af26ba", json.dumps(release))
         self.assertNotIn("53af26ba", (ROOT / "docs/citacao.md").read_text(encoding="utf-8"))
+        self.assertNotIn("fb2f57a", json.dumps(release))
+        self.assertNotIn("base_commit", json.dumps(release))
+        citation_guide = (ROOT / "docs/citacao.md").read_text(encoding="utf-8")
+        self.assertNotIn("fb2f57a", citation_guide)
+        self.assertIn("não está neste repositório público", citation_guide)
+        self.assertIn("não está neste repositório público", release["candidate_version_note"])
         self.assertIn("version: 2.0.1\n", citation)
 
 
