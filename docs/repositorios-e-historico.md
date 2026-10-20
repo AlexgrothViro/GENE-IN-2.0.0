@@ -16,18 +16,18 @@ Uma proposta ou branch histórica não integra automaticamente a versão atual. 
 
 ## Repositórios históricos
 
-Os endereços abaixo preservam linhas anteriores do projeto. O acesso depende das permissões do titular no GitHub. Conteúdo antigo deve ser lido com sua própria versão, sem substituir os guias e perfis desta entrega.
+Os nomes abaixo preservam linhas anteriores do projeto. Esses endereços não estão publicados. Conteúdo antigo, quando existir na cópia local do autor, deve ser lido com sua própria versão, sem substituir os guias e perfis desta entrega.
 
 | Repositório | Contexto histórico |
 |---|---|
-| [GENE_IN-ALPHA](https://github.com/AlexgrothViro/GENE_IN-ALPHA) | Linha Alpha anterior |
-| [Gene-in-Alpha-pre-release](https://github.com/AlexgrothViro/Gene-in-Alpha-pre-release) | Preparação e congelamento técnico anteriores |
-| [Gene-in-Alpha-2](https://github.com/AlexgrothViro/Gene-in-Alpha-2) | Desenvolvimento da Alpha.2 |
-| [Gene-In-Limitado](https://github.com/AlexgrothViro/Gene-In-Limitado) | Etapas anteriores de instalação, integridade e hospedeiro |
-| [Gene-in-private](https://github.com/AlexgrothViro/Gene-in-private) | Revisões, empacotamento e lançadores anteriores |
-| [Gene-In](https://github.com/AlexgrothViro/Gene-In) | Linha 1.0 |
-| [Gene-In_1.1](https://github.com/AlexgrothViro/Gene-In_1.1) | Linha 1.1 |
-| [Gene-In_1.0](https://github.com/AlexgrothViro/Gene-In_1.0) | Desenvolvimento inicial |
+| `GENE_IN-ALPHA` | Linha Alpha anterior |
+| `Gene-in-Alpha-pre-release` | Preparação e congelamento técnico anteriores |
+| `Gene-in-Alpha-2` | Desenvolvimento da Alpha.2 |
+| `Gene-In-Limitado` | Etapas anteriores de instalação, integridade e hospedeiro |
+| `Gene-in-private` | Revisões, empacotamento e lançadores anteriores |
+| `Gene-In` | Linha 1.0 |
+| `Gene-In_1.1` | Linha 1.1 |
+| `Gene-In_1.0` | Desenvolvimento inicial |
 
 O registro de organização de 06/10 foi associado ao nome anterior `gene-in-estabilizado`. Esse nome não aponta para este repositório. Ele não substitui a identificação e as verificações do pacote 2.0.0.
 

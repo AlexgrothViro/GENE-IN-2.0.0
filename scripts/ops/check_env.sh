@@ -364,10 +364,11 @@ for cmd in "${EXTRA_UTILS[@]}"; do
     ver=$(get_version "$cmd")
     printf "  [OK] %-12s encontrado em %s%s\n" "$cmd" "$path" "$ver"
   else
-    if [[ "$cmd" == "rsync" && -n "${GENEIN_WORK_ROOT:-}" ]]; then
-      continue
+    if [[ "$cmd" == "rsync" ]]; then
+      echo "  [AVISO] rsync ausente. Ele só entra na cópia para /opt feita por install_linux.sh e no fallback de genoma de hospedeiro quando datasets não está disponível. A análise, o upload do painel e bundle/install_wsl.sh não usam rsync."
+    else
+      echo "  [AVISO] Utilitário $cmd ausente. (Pode causar limitações em uploads/downloads)"
     fi
-    echo "  [AVISO] Utilitário $cmd ausente. (Pode causar limitações em uploads/downloads)"
   fi
 done
 

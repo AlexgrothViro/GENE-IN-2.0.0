@@ -15,6 +15,22 @@ class RepositoryLinkTests(unittest.TestCase):
             self.assertIn(URL, text, relative)
             self.assertNotIn(OLD, text, relative)
 
+    def test_historical_repository_names_are_not_published_as_links(self):
+        names = (
+            "GENE_IN-ALPHA", "Gene-in-Alpha-pre-release", "Gene-in-Alpha-2",
+            "Gene-In-Limitado", "Gene-in-private", "Gene-In", "Gene-In_1.1", "Gene-In_1.0",
+        )
+        history = (ROOT / "docs/repositorios-e-historico.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8") + (ROOT / "README.en.md").read_text(encoding="utf-8")
+        for name in names:
+            self.assertIn(f"`{name}`", history)
+            self.assertNotIn(f"https://github.com/AlexgrothViro/{name}", history)
+            self.assertNotIn(f"https://github.com/AlexgrothViro/{name}", readme)
+        warning = (ROOT / "scripts/ops/check_env.sh").read_text(encoding="utf-8")
+        self.assertIn("install_linux.sh", warning)
+        self.assertIn("bundle/install_wsl.sh não usam rsync", warning)
+        self.assertNotIn('[[ "$cmd" == "rsync" && -n "${GENEIN_WORK_ROOT:-}" ]]', warning)
+
 
 if __name__ == "__main__":
     unittest.main()
