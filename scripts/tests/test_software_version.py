@@ -19,6 +19,9 @@ class SoftwareVersionTests(unittest.TestCase):
         self.assertEqual(project["project"]["version"], "2.0.1")
         self.assertEqual(release["software_version"], "2.0.1")
         self.assertEqual(release["evidence_contract"], "2.0.0-alpha.2")
+        self.assertEqual(release["closure_commit"], "42a2c135666337b025b9cd1cdde5b8ae208831f6")
+        self.assertNotIn("53af26ba", json.dumps(release))
+        self.assertNotIn("53af26ba", (ROOT / "docs/citacao.md").read_text(encoding="utf-8"))
         self.assertIn("version: 2.0.1\n", citation)
 
 

@@ -20,8 +20,8 @@ def test_checkout_reports_head():
 
 
 def test_package_without_git_reads_source_commit_file(tmp_path):
-    (tmp_path / "SOURCE_COMMIT").write_text("53af26ba439ab29bff013bde131eb5ae9eca3cb6\n", encoding="utf-8")
-    assert source_commit(tmp_path) == "53af26ba439ab29bff013bde131eb5ae9eca3cb6"
+    (tmp_path / "SOURCE_COMMIT").write_text("42a2c135666337b025b9cd1cdde5b8ae208831f6\n", encoding="utf-8")
+    assert source_commit(tmp_path) == "42a2c135666337b025b9cd1cdde5b8ae208831f6"
 
 
 def test_missing_identity_is_explicit(tmp_path):
