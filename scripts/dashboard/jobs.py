@@ -45,9 +45,9 @@ from dashboard.config import (
     LOG_DIR, RUNS_DIR, REPO_ROOT, iso_now, _DB_ALIAS, host_env_from_params,
     runtime_environment,
     load_config_env, validate_config_updates, save_config_env,
-    get_repo_root, get_runs_dir, user_config_env_path, parse_env_file,
+    get_repo_root, get_runs_dir, user_config_env_path,
 )
-from genein.paths import resolve_blast_db, resolve_config_file
+from genein.paths import resolve_blast_db
 
 EVIDENCE_SERVICE = EvidenceDashboardService(REPO_ROOT, background_inspection=True)
 EVIDENCE_ANALYTICS = EvidenceAnalyticsService(EVIDENCE_SERVICE)
@@ -839,15 +839,15 @@ def build_command(action, params):
         if "GENEIN_CONFIG_FILE" not in os.environ:
             env["GENEIN_CONFIG_FILE"] = str(user_config_env_path())
         # The per-run directory below is only the output root. The database is
-        # resolved from the user's work directory and config before that swap.
+        # resolved before that swap. DB came from the panel, so BLAST_DB in
+        # picornavirus.env (the example ships blastdb/custom) is ignored, the
+        # same way Make drops a file path when DB comes from outside the file.
         if "BLAST_DB" not in env and not os.environ.get("BLAST_DB"):
-            configured = ""
-            config_path = resolve_config_file(os.environ, Path.home(), REPO_ROOT)
-            if config_path.is_file():
-                configured = str(parse_env_file(config_path).get("BLAST_DB") or "")
-            env["BLAST_DB"] = resolve_blast_db(
-                env["DB"], os.environ, Path.home(), REPO_ROOT, configured=configured,
-            )
+            chosen = resolve_blast_db(env["DB"], os.environ, Path.home(), REPO_ROOT)
+            blast_path = Path(chosen)
+            if not blast_path.is_absolute():
+                blast_path = REPO_ROOT / blast_path
+            env["BLAST_DB"] = str(blast_path)
         env["GENEIN_WORK_ROOT"] = str(REPO_ROOT / "results" / "dashboard-work" / run_id)
         raw_dir = REPO_ROOT / "data/raw"
         suffix = ".fastq.gz"

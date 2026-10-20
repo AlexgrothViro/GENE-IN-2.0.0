@@ -107,6 +107,56 @@ class ExternalWorkRootTests(unittest.TestCase):
             self.assertEqual(built["BLAST_DB"], str(prefix))
             self.assertNotEqual(built["BLAST_DB"], str(ROOT / "blastdb" / "ptv"))
 
+    def test_panel_db_selection_ignores_blast_db_from_the_example(self):
+        example = (ROOT / "config" / "picornavirus.env.example").read_bytes()
+        source = ROOT / "config" / "picornavirus.env"
+        self.assertFalse(source.exists(), "a fonte não deve ter picornavirus.env antes do teste")
+        params = {"sample": "SAMPLE", "db": "ptv", "assembler": "consensus",
+                  "host_filter_mode": "none", "run_id": "panel-ptv-00001"}
+
+        def chosen(env):
+            with patch.dict(os.environ, env, clear=True):
+                _cmd, built = jobs.build_command("evidence_pipeline", params)
+            path = built["BLAST_DB"]
+            self.assertTrue(path.endswith("/blastdb/ptv"), path)
+            self.assertNotIn("custom", path)
+            return path
+
+        def base_env(directory):
+            env = os.environ.copy()
+            env["HOME"] = str(Path(directory) / "home")
+            env.pop("GENEIN_WORK_ROOT", None)
+            env.pop("GENEIN_CONFIG_FILE", None)
+            env.pop("BLAST_DB", None)
+            env.pop("DB", None)
+            Path(env["HOME"]).mkdir()
+            return env
+
+        try:
+            source.write_bytes(example)
+            source.chmod(0o644)
+            with tempfile.TemporaryDirectory() as directory:
+                self.assertEqual(chosen(base_env(directory)), str(ROOT / "blastdb" / "ptv"))
+        finally:
+            source.unlink(missing_ok=True)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            env = base_env(directory)
+            home_file = root / "home" / ".gene-in" / "config" / "picornavirus.env"
+            home_file.parent.mkdir(parents=True)
+            home_file.write_bytes(example)
+            home_file.chmod(0o644)
+            self.assertEqual(chosen(env), str(ROOT / "blastdb" / "ptv"))
+
+            work = root / "work"
+            work_file = work / "config" / "picornavirus.env"
+            work_file.parent.mkdir(parents=True)
+            work_file.write_bytes(example)
+            work_file.chmod(0o644)
+            env["GENEIN_WORK_ROOT"] = str(work)
+            self.assertEqual(chosen(env), str(work / "blastdb" / "ptv"))
+
     def test_profile_download_uses_the_work_root_without_a_local_fasta(self):
         with tempfile.TemporaryDirectory() as directory:
             result = _run(["make", "db", "DB=ptv"], {"GENEIN_WORK_ROOT": directory})
