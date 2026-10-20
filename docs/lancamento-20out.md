@@ -7,7 +7,9 @@
 | Dimensão | Identificador |
 |---|---|
 | Versão de software | `2.0.0` |
-| Contrato Evidence / `VERSION` | `2.0.0-alpha.2` |
+| Versão de software | `2.0.0` (`pyproject.toml`, `RELEASE.json`) |
+| Contrato Evidence / arquivo `VERSION` | `2.0.0-alpha.2` (identificador congelado do contrato, não a versão do programa) |
+| Commit do pacote sem `.git` | primeira linha de `SOURCE_COMMIT`, também em `genein --version` |
 | Recuperação | `fragment_recovery_20_100_v1` |
 | Revisão científica | `scientific_review_20261005_v1` |
 | Plataforma do ambiente fixado | Linux x86_64; Windows x86_64 via WSL2 |

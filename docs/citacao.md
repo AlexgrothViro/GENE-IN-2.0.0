@@ -8,7 +8,9 @@ Para esta distribuição, use:
 
 > Groth, Alexsander. *Gene-In: recuperação e triagem de sequências candidatas*. Versão 2.0.0. 2026. Repositório: https://github.com/AlexgrothViro/gene-in-estabilizado.
 
-Acrescente o commit exato e a data de acesso usados na análise. O arquivo [CITATION.cff](../CITATION.cff) contém os metadados estruturados. A versão `2.0.0` identifica a distribuição final do software para pesquisa e triagem humana; não representa aprovação científica, confirmação biológica ou reprodução independente. Cite a versão realmente usada: análises feitas na rc1 continuam identificadas como `2.0.0rc1`.
+Acrescente o commit exato e a data de acesso usados na análise. Em um checkout Git, o commit é `git rev-parse HEAD`. Em um pacote sem a pasta `.git`, o mesmo valor está na primeira linha de `SOURCE_COMMIT` e em `genein --version`. O arquivo [CITATION.cff](../CITATION.cff) contém os metadados estruturados.
+
+A versão de software é `2.0.0`. O arquivo `VERSION` continua `2.0.0-alpha.2` porque identifica o contrato Evidence, não o programa; esse conteúdo está congelado no contrato científico. `candidate_version` `2.0.0rc1` em `RELEASE.json` é a candidata histórica (`base_commit` `fb2f57a8…`). O fechamento local do autor está em `closure_commit` (`53af26ba…`). Cite a versão realmente usada: análises feitas na rc1 continuam identificadas como `2.0.0rc1`. A versão `2.0.0` não representa aprovação científica nem reprodução independente.
 
 Não há DOI, ORCID, afiliação ou referência bibliográfica acadêmica confirmados nos metadados desta entrega. Esses identificadores não foram inventados. Se o autor fornecer um trabalho associado, cite-o além do software e confira a referência na fonte original.
 

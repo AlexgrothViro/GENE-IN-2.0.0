@@ -11,4 +11,4 @@ O pacote não inclui bancos biológicos, índices de hospedeiro ou dados de pesq
 
 A [licença](LICENSE) permite avaliação acadêmica, ensino e pesquisa não comercial; redistribuição, modificação e outros usos restritos exigem autorização prévia por escrito do titular. Consulte também os [avisos de terceiros](THIRD_PARTY_NOTICES.md).
 
-O [índice da documentação](docs/README.md) reúne instalação, solução de problemas, testes e registros históricos. A versão de software é `2.0.0`; o contrato Evidence e `VERSION` continuam `2.0.0-alpha.2`.
+O [índice da documentação](docs/README.md) reúne instalação, solução de problemas, testes e registros históricos. A versão de software é `2.0.0` (`pyproject.toml` e `RELEASE.json`). O arquivo `VERSION` continua `2.0.0-alpha.2`: é o contrato Evidence, não uma versão alfa do programa. Sem a pasta `.git`, o commit do pacote está em `SOURCE_COMMIT`.
