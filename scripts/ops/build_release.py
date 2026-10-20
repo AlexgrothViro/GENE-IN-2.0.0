@@ -56,9 +56,10 @@ def build_release(root: Path, output: Path, name: str | None = None) -> dict:
         path = root / rel
         if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root):
             raise ValueError(f'not a regular source file: {rel}')
-        if rel == MANIFEST or rel.startswith('docs/desenvolvimento/'):
+        if rel == MANIFEST or rel.startswith('docs/desenvolvimento/') or rel.startswith('descarte/'):
             # A tracked snapshot of an earlier package is not the manifest of
             # this archive. The archive writes a fresh manifest below.
+            # descarte/ keeps internal notes in Git without shipping them.
             continue
         data = path.read_bytes()
         # Zip extraction on Windows can lose execute bits. Preserve all nested

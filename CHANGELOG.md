@@ -9,6 +9,7 @@
 - O pacote grava `SOURCE_COMMIT` para leitura sem a pasta `.git`.
 - O micromamba do instalador fica em 2.9.0, com hash do tar.bz2.
 - Registros internos de reteste ficam em `docs/desenvolvimento/` e fora do pacote.
+- A nota interna de bastidor fica em `descarte/` e não entra no pacote.
 
 ## 2026-10-20 — 2.0.0, distribuição final de pesquisa
 
@@ -16,7 +17,7 @@
 - Atualiza os guias em português/inglês, apresentação, exemplos de instalação e citação para a versão 2.0.0. Originais documentais da rc1 preservados com SHA-256 antes das alterações.
 - Mantém autoria, licença, contrato Evidence `2.0.0-alpha.2`, recuperação `fragment_recovery_20_100_v1`, revisão `scientific_review_20261005_v1`, parâmetros e conclusões científicas anteriores.
 - Distingue as verificações aprovadas da rc1 dos recibos que identificarão os novos pacotes 2.0.0; não anuncia nova validação biológica ou reprodução independente.
-- Registros e alcance na [nota da versão 2.0.0](docs/lancamento-20out.md). A entrega é local, sem publicação remota de tag ou release nesta preparação.
+- Registros e alcance neste histórico. A entrega é local, sem publicação remota de tag ou release nesta preparação.
 
 ## 2026-10-20 — 2.0.0rc1, candidata ao lançamento
 
@@ -29,7 +30,7 @@
 - Acrescenta preparação de ZIP/tar.gz a partir da fonte rastreada, com recusa de sobrescrita, manifesto de arquivos, hashes dos pacotes e conferência de membros; preserva o wrapper de empacotamento anterior.
 - Organiza nomes internos de verificação e retira orientações e registros de desenvolvimento da distribuição; originais preservados separadamente. Parâmetros experimentais preservados, com identificadores de metadados atualizados.
 - Preserva contrato Evidence `2.0.0-alpha.2`, recuperação `fragment_recovery_20_100_v1`, revisão `scientific_review_20261005_v1`, parâmetros científicos e resultados anteriores.
-- Estado das verificações e do fechamento do pacote em [nota da rc1](docs/lancamento-20out.md). A preparação local não implica publicação remota ou nova validação biológica.
+- Estado das verificações e do fechamento do pacote neste histórico. A preparação local não implica publicação remota ou nova validação biológica.
 
 ## 2026-10-09 — 2.0.0b3, reteste de engenharia
 

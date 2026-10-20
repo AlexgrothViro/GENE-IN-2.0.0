@@ -1,6 +1,6 @@
 # Documentação do Gene-In
 
-**Versão de software 2.0.1, correção de distribuição sobre a fonte 2.0.0.** Comece pelo [README](../README.md). A [nota da versão 2.0.0](lancamento-20out.md) registra o fechamento anterior. O contrato Evidence não muda.
+**Versão de software 2.0.1, correção de distribuição sobre a fonte 2.0.0.** Comece pelo [README](../README.md). O [histórico](../CHANGELOG.md) registra o fechamento anterior. O contrato Evidence não muda.
 
 ## Usar o programa
 
@@ -19,7 +19,7 @@
 
 | Necessidade | Documento |
 |---|---|
-| Identidade, escopo e verificações da distribuição | [Lançamento de 20/10](lancamento-20out.md) |
+| Identidade, escopo e verificações da distribuição | [Citação](citacao.md), [validação](validacao.md) e [CHANGELOG](../CHANGELOG.md) |
 | Entender o alcance científico demonstrado | [Estado da validação](validacao.md) |
 | Entender componentes e diretórios | [Arquitetura](arquitetura.md) |
 | Instalar a fonte editável e executar testes | [Desenvolvimento e testes](guia-de-desenvolvimento.md) |
@@ -34,4 +34,4 @@ Os retestes, as auditorias internas e `PROBLEMAS_GENEIN.md` estão em `docs/dese
 
 | Entrega ainda neste pacote | Registro |
 |---|---|
-| rc1, 20/10 | [Verificações preservadas](lancamento-20out.md#verificações-preservadas-da-rc1) e [histórico de mudanças](../CHANGELOG.md) |
+| rc1, 20/10 | [Histórico de mudanças](../CHANGELOG.md) |

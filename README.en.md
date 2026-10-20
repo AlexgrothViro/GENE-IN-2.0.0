@@ -4,7 +4,7 @@
 
 Gene-In recovers and organizes candidate sequences from fragmented sequencing data for human review. The program is general: the host and the reference database are choices of the person running the analysis. Swine and picornavirus are only the model case used in validation, not a limit of the program. It combines quality control, optional host filtering, assembly, similarity search, provenance and export. Candidate sequences of **20–100 bases and longer** are retained. A sequence alignment does not establish origin, species, infection or diagnosis.
 
-**2.0.1 — distribution patch on the 2.0.0 source closed on 2026-10-20.** The Evidence contract remains `2.0.0-alpha.2`, with recovery policy `fragment_recovery_20_100_v1` and scientific revision `scientific_review_20261005_v1`. The [2.0.0 release note](docs/lancamento-20out.md) records that earlier closure. This patch does not change scientific parameters, profiles or locks.
+**2.0.1 — distribution patch on the 2.0.0 source closed on 2026-10-20.** The Evidence contract remains `2.0.0-alpha.2`, with recovery policy `fragment_recovery_20_100_v1` and scientific revision `scientific_review_20261005_v1`. That earlier closure is recorded in the [changelog](CHANGELOG.md) and in `RELEASE.json`. This patch does not change scientific parameters, profiles or locks.
 
 This is the [repository](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Published packages belong in [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). Previous names are listed in the [history index](docs/repositorios-e-historico.md).
 

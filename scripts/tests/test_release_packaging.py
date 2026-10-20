@@ -73,8 +73,11 @@ class ReleasePackagingTests(unittest.TestCase):
         notes = self.root / 'docs' / 'desenvolvimento'
         notes.mkdir(parents=True)
         (notes / 'PROBLEMAS_GENEIN.md').write_text('registro interno\n', encoding='utf-8')
+        aside = self.root / 'descarte'
+        aside.mkdir()
+        (aside / 'lancamento-20out.md').write_text('nota interna\n', encoding='utf-8')
         (self.root / 'docs' / 'guia-de-desenvolvimento.md').write_text('guia\n', encoding='utf-8')
-        self.git('add', 'docs')
+        self.git('add', 'docs', 'descarte')
         self.git('-c', 'user.name=Release Test', '-c', 'user.email=release@example.invalid', 'commit', '-qm', 'notes')
         out = Path(self.tmp.name) / 'without-notes'
         record = build_release(self.root, out)
@@ -82,6 +85,7 @@ class ReleasePackagingTests(unittest.TestCase):
             names = archive.namelist()
         self.assertTrue(any(name.endswith('guia-de-desenvolvimento.md') for name in names))
         self.assertFalse(any('desenvolvimento/' in name for name in names))
+        self.assertFalse(any('descarte/' in name for name in names))
 
     def test_zip_timestamps_use_the_commit_utc(self):
         previous = os.environ.get("TZ")

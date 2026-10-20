@@ -40,6 +40,6 @@ Código de saída 77 significa ferramenta operacional ausente e teste não execu
 
 Na preparação desta distribuição, use somente `all-safe` ou suas trilhas de engenharia, sintética, competitiva e operacional. O arquivo excluído importa módulos de otimização científica e não faz parte dessa verificação. Não execute essas trilhas experimentais como etapa de instalação ou lançamento.
 
-Para gerar uma distribuição da fonte, registre as mudanças em commit e execute `python3 scripts/ops/build_release.py --output-dir /caminho/pasta_nova`. O comando usa somente arquivos rastreados, recusa sobrescrita e verifica cada membro de ZIP/tar.gz. Bancos, dados, configurações locais e caches não entram no pacote. Confira o arquivo fechado e os recibos da execução extraída conforme a [nota da versão 2.0.0](lancamento-20out.md).
+Para gerar uma distribuição da fonte, registre as mudanças em commit e execute `python3 scripts/ops/build_release.py --output-dir /caminho/pasta_nova`. O comando usa somente arquivos rastreados, recusa sobrescrita e verifica cada membro de ZIP/tar.gz. Bancos, dados, configurações locais e caches não entram no pacote. Confira o arquivo fechado e os recibos da execução extraída conforme o [guia de citação](citacao.md) e o `SOURCE_COMMIT` do pacote.
 
 Mudanças devem identificar produtores e consumidores dos contratos, preservar saídas anteriores e usar verificações que cubram os modos de falha envolvidos. Evite alterar parâmetros científicos para fazer os testes ou um benchmark produzir resultado favorável.

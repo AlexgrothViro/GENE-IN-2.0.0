@@ -1,6 +1,6 @@
 # Instalação e reprodução
 
-Guia da **2.0.1**, correção de distribuição sobre a fonte 2.0.0. O [guia inicial](../README.md) apresenta o programa; a [nota da versão 2.0.0](lancamento-20out.md) identifica o fechamento anterior. A instalação prepara a fonte e as ferramentas; bancos, índices de hospedeiro e dados de pesquisa são preparados separadamente.
+Guia da **2.0.1**, correção de distribuição sobre a fonte 2.0.0. O [guia inicial](../README.md) apresenta o programa; o [histórico](../CHANGELOG.md) identifica o fechamento anterior. A instalação prepara a fonte e as ferramentas; bancos, índices de hospedeiro e dados de pesquisa são preparados separadamente.
 
 ## Plataformas e pré-requisitos
 
@@ -106,4 +106,4 @@ O teste cria seus próprios dados e conserva evidências, incluindo falhas. O su
 
 ## Registros de instalação
 
-Os testes de instalação anteriores estão nos registros de 06/10, b1 e b3, em `docs/desenvolvimento/` no repositório Git. Eles pertencem às versões e ambientes ali identificados. A [nota da versão 2.0.0](lancamento-20out.md) informa a verificação desta consolidação. Instalação editável num ambiente já disponível não demonstra preparação do WSL do zero, máquina nova sem cache ou reprodução independente.
+Os testes de instalação anteriores estão nos registros de 06/10, b1 e b3, em `docs/desenvolvimento/` no repositório Git. Eles pertencem às versões e ambientes ali identificados. O [histórico de mudanças](../CHANGELOG.md) informa a verificação desta consolidação. Instalação editável num ambiente já disponível não demonstra preparação do WSL do zero, máquina nova sem cache ou reprodução independente.
