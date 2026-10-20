@@ -239,6 +239,7 @@ def test_entry_batch_is_only_the_hit_accessions(monkeypatch, tmp_path):
 
     monkeypatch.setattr(exporter.shutil, "which", lambda _name: "blastdbcmd")
     monkeypatch.setattr(exporter.subprocess, "run", fake_run)
+    (tmp_path / "db.nog").write_bytes(b"index")
     catalog = exporter.titles_from_blast_db(tmp_path / "db", ["PTV1", "NC_1"])
     assert set(catalog) >= {"PTV1", "NC_1"}
     assert calls and "-entry_batch" in calls[0]
@@ -260,6 +261,33 @@ def test_entry_batch_falls_back_to_all_when_a_hit_is_missing(monkeypatch, tmp_pa
 
     monkeypatch.setattr(exporter.shutil, "which", lambda _name: "blastdbcmd")
     monkeypatch.setattr(exporter.subprocess, "run", fake_run)
+    (tmp_path / "db.nog").write_bytes(b"index")
     catalog = exporter.titles_from_blast_db(tmp_path / "db", ["PTV1"])
     assert "PTV1" in catalog
     assert "Porcine teschovirus 1" in catalog["PTV1"][1]
+
+
+def test_unparsed_database_skips_entry_batch_and_value_error_is_empty(monkeypatch, tmp_path):
+    import export_candidate_sequences as exporter
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append(list(cmd))
+        if "-entry" in cmd and "all" in cmd:
+            return subprocess.CompletedProcess(
+                cmd, 0, "BL_ORD_ID:0\tPTV1 Porcine teschovirus 1, complete genome\n", "",
+            )
+        raise AssertionError(cmd)
+
+    monkeypatch.setattr(exporter.shutil, "which", lambda _name: "blastdbcmd")
+    monkeypatch.setattr(exporter.subprocess, "run", fake_run)
+    catalog = exporter.titles_from_blast_db(tmp_path / "db", ["PTV1"])
+    assert "PTV1" in catalog
+    assert all("-entry_batch" not in cmd for cmd in calls)
+
+    def raise_value_error(*_args, **_kwargs):
+        raise ValueError("argumento invalido")
+
+    monkeypatch.setattr(exporter.subprocess, "run", raise_value_error)
+    (tmp_path / "db.nog").write_bytes(b"index")
+    assert exporter.titles_from_blast_db(tmp_path / "db", ["PTV1"]) == {}

@@ -146,6 +146,51 @@ class LocalReferenceFastaTests(unittest.TestCase):
             self.assertIn('DB_QUERY="Orbivirus"[Organism]', custom_text)
             self.assertIn('"Orbivirus"[Organism]', seen.read_text(encoding="utf-8"))
 
+    def test_file_query_stays_in_the_file_and_custom_still_reads_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            work = base / "work"
+            config = work / "config"
+            config.mkdir(parents=True)
+            env_file = config / "picornavirus.env"
+            env_file.write_text('DB=custom\nDB_QUERY=\'"Orbivirus"[Organism]\'\n', encoding="utf-8")
+            env_file.chmod(0o644)
+            home = base / "home"
+            home.mkdir()
+            dry = _run(
+                ["make", "-n", "db"],
+                {"GENEIN_WORK_ROOT": str(work), "HOME": str(home)},
+            )
+            self.assertEqual(dry.returncode, 0, dry.stderr)
+            self.assertNotIn("DB_QUERY=", dry.stdout)
+            self.assertNotIn("Orbivirus", dry.stdout)
+
+            bin_dir = base / "bin"
+            bin_dir.mkdir()
+            seen = base / "esearch.args"
+            for name in ("esearch", "efetch"):
+                tool = bin_dir / name
+                tool.write_text(
+                    "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$GENEIN_FAKE_ESEARCH_ARGS\"\nexit 1\n",
+                    encoding="utf-8",
+                )
+                tool.chmod(0o755)
+            result = _run(
+                ["bash", "scripts/ops/db_manager.sh", "setup"],
+                {
+                    "PATH": f"{bin_dir}:{os.environ.get('PATH', '')}",
+                    "GENEIN_FAKE_ESEARCH_ARGS": str(seen),
+                    "GENEIN_WORK_ROOT": str(work),
+                    "HOME": str(home),
+                    "EDIRECT_RETRIES": "1",
+                    "EDIRECT_RETRY_DELAY": "0",
+                    "DB": "custom",
+                },
+            )
+            text = result.stdout + result.stderr
+            self.assertIn('DB_QUERY="Orbivirus"[Organism]', text)
+            self.assertIn('"Orbivirus"[Organism]', seen.read_text(encoding="utf-8"))
+
 
 if __name__ == "__main__":
     unittest.main()

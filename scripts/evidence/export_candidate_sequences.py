@@ -161,24 +161,34 @@ def _blastdbcmd(prefix: Path, entry_args: list[str]) -> dict[str, tuple[str, str
             ["blastdbcmd", "-db", str(prefix), *entry_args, "-outfmt", "%a\t%t"],
             capture_output=True, text=True, check=False, timeout=120,
         )
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, subprocess.SubprocessError, ValueError):
         return None
-    if result.returncode != 0:
+    if result.returncode != 0 or result.stdout is None:
         return None
     return _catalog_from_blastdbcmd(result.stdout)
+
+
+def _blast_db_has_seqid_index(prefix: Path) -> bool:
+    """True when makeblastdb -parse_seqids built an accession index.
+
+    BLAST 2.12 writes ``.nog`` for that index. Older releases used ``.nsi``
+    and ``.nsd``. Without it, ``-entry_batch`` cannot resolve a FASTA id.
+    """
+    return any(Path(f"{prefix}{suffix}").is_file() for suffix in (".nog", ".nsi", ".nsd"))
 
 
 def titles_from_blast_db(prefix: Path, subjects: list[str] | None = None) -> dict[str, tuple[str, str]]:
     """Read accession and title. ``%f`` is FASTA and ignores every other specifier.
 
-    Hit accessions use ``-entry_batch``. A database built without
-    ``-parse_seqids`` does not resolve the FASTA id that way, so any missing
-    subject falls back to ``-entry all``.
+    Hit accessions use ``-entry_batch`` only when the database has an id
+    index. Without ``-parse_seqids`` that call cannot resolve the FASTA id,
+    so the reader goes straight to ``-entry all``. A missing subject also
+    falls back to ``-entry all``.
     """
     if shutil.which("blastdbcmd") is None:
         return {}
     wanted = [subject for subject in (subjects or []) if subject]
-    if wanted:
+    if wanted and _blast_db_has_seqid_index(prefix):
         with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=True) as handle:
             handle.write("\n".join(wanted) + "\n")
             handle.flush()

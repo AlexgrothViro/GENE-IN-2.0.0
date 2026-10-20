@@ -10,6 +10,7 @@ WORK_PREFIX := $(if $(strip $(GENEIN_WORK_ROOT)),$(GENEIN_WORK_ROOT)/,)
 ENV_DB := $(if $(filter environment environment\ override,$(origin DB)),$(DB),)
 CMD_DB := $(if $(filter command line,$(origin DB)),$(DB),)
 ENV_DB_QUERY := $(if $(filter environment environment\ override,$(origin DB_QUERY)),$(DB_QUERY),)
+CMD_DB_QUERY := $(if $(filter command line,$(origin DB_QUERY)),$(DB_QUERY),)
 ENV_REF_FASTA := $(if $(filter environment environment\ override,$(origin REF_FASTA)),$(REF_FASTA),)
 ENV_BLAST_DB := $(if $(filter environment environment\ override,$(origin BLAST_DB)),$(BLAST_DB),)
 ENV_BOWTIE2_INDEX := $(if $(filter environment environment\ override,$(origin BOWTIE2_INDEX)),$(BOWTIE2_INDEX),)
@@ -133,12 +134,12 @@ endif
 # makes a missing profile FASTA look like a local file.
 PASS_REF_FASTA := $(if $(filter command line,$(origin REF_FASTA)),REF_FASTA="$(REF_FASTA)",$(if $(strip $(ENV_REF_FASTA)),REF_FASTA="$(ENV_REF_FASTA)",))
 
-# Só custom recebe DB_QUERY. Um perfil nomeado (make db DB=ptv) ignora a
-# consulta que veio do ambiente ou de picornavirus.env. As aspas da consulta
-# NCBI ficam intactas: o Makefile não as remove.
+# Só custom recebe DB_QUERY, e só quando a consulta veio da linha de comando
+# ou do ambiente. A consulta que está só no arquivo fica para o db_manager.
+# As aspas NCBI não são removidas.
 PASS_DB_QUERY :=
 ifeq ($(DB),custom)
-ifneq ($(strip $(DB_QUERY)),)
+ifneq ($(strip $(CMD_DB_QUERY)$(ENV_DB_QUERY)),)
 PASS_DB_QUERY := DB_QUERY='$(subst ','"'"',$(DB_QUERY))'
 endif
 endif

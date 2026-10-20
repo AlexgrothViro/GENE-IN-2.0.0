@@ -39,9 +39,8 @@ if [[ -n "$INCOMING_DB" && "$INCOMING_DB" != "custom" ]]; then
   unset DB_QUERY
 elif [[ -n "$INCOMING_DB_QUERY" ]]; then
   DB_QUERY="$INCOMING_DB_QUERY"
-elif [[ -n "$INCOMING_DB" && -z "$INCOMING_REF_FASTA" ]]; then
-  unset DB_QUERY
 fi
+# custom sem consulta do chamador conserva o DB_QUERY lido do arquivo.
 if [[ -n "$INCOMING_REF_FASTA" ]]; then
   REF_FASTA="$INCOMING_REF_FASTA"
 elif [[ -n "$INCOMING_DB" || -n "$INCOMING_DB_QUERY" ]]; then
