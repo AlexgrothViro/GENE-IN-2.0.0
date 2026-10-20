@@ -527,8 +527,16 @@ python3 "$EVIDENCE_DIR/classify_sample.py" "${CLASSIFY_ARGS[@]}"
 state_stage evidence_classification "done"
 state_stage report_export running
 if [[ -n "$QUERY_MANIFEST" ]]; then
+  EXPORT_REFERENCE=()
+  if [[ -n "${REF_FASTA:-}" && -s "${REF_FASTA}" ]]; then
+    EXPORT_REFERENCE+=(--reference-fasta "$REF_FASTA")
+  fi
+  if [[ -n "${BLAST_DB:-}" ]]; then
+    EXPORT_REFERENCE+=(--blast-db "$BLAST_DB")
+  fi
   python3 "$EVIDENCE_DIR/export_candidate_sequences.py" --queries "$QUERIES" \
-    --manifest "$QUERY_MANIFEST" --fragments "$OUTDIR/fragment_evidence.tsv" --out-dir "$OUTDIR"
+    --manifest "$QUERY_MANIFEST" --fragments "$OUTDIR/fragment_evidence.tsv" --out-dir "$OUTDIR" \
+    "${EXPORT_REFERENCE[@]}"
 fi
 # Astra: um único caminho técnico de conclusão para experimentos e para o
 # público — export/validate/finalize sempre executam; a identidade

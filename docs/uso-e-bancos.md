@@ -161,7 +161,7 @@ Na execução individual pela CLI, o recibo fica em `<output-root>/execution.jso
 |---|---|
 | `candidate_sequences.fa` | Sequências com alinhamento, disponíveis para revisão; não necessariamente de origem viral confirmada |
 | `candidate_sequences.tsv` | Tabela completa: uma linha por alinhamento (query, referência e tarefa) |
-| `candidate_summary.tsv` | Uma linha por candidato. O melhor hit usa o maior bitscore, depois o menor e-value e, em seguida, a maior identidade. `hit_row_count` diz quantas linhas desse candidato existem na tabela completa |
+| `candidate_summary.tsv` | Uma linha por candidato. O melhor hit é o de maior bitscore; no empate, o menor e-value e, em seguida, a maior identidade. `min_evalue` é o menor e-value entre todos os hits desse candidato e pode pertencer a outro subject. `reference_description` é o título da referência. `taxon` usa o rótulo do sujeito quando ele existe; sem rótulo, usa o organismo lido nesse título. `category` continua sendo o rótulo e fica `UNLABELED` quando não há arquivo de rótulos. `hit_row_count` é o número de linhas desse candidato na tabela completa |
 | `candidate_queries.json` | Queries consultadas e hashes; pode incluir sequências sem candidato alinhado |
 | `evidence_report.md` / `sample_evidence.json` | Evidência, estados, avisos e medidas da amostra |
 | `run_state.json` / `artifact_manifest.json` | Estado final e integridade dos artefatos Evidence |

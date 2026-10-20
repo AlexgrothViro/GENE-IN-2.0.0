@@ -59,7 +59,7 @@ For single-end input, replace `--r1/--r2` with `--single /data/reads.fastq.gz`; 
 
 ## Results and interpretation
 
-Results include `candidate_sequences.fa`, `candidate_sequences.tsv`, `candidate_queries.json` and Evidence reports. The query manifest may include queries without aligned candidates. Preserve the complete output directory, logs, resolved configuration and database manifests. `execution.json` is a technical launcher receipt.
+Results include `candidate_sequences.fa`, `candidate_sequences.tsv`, `candidate_summary.tsv`, `candidate_queries.json` and Evidence reports. The summary has one row per candidate. The best hit is the highest bitscore; ties break on the lower e-value, then the higher identity. `min_evalue` also records the smallest e-value, which may belong to another subject. Taxon and the reference description come from the subject label or, when the label is absent, from the reference title. The query manifest may include queries without aligned candidates. Preserve the complete output directory, logs, resolved configuration and database manifests. `execution.json` is a technical launcher receipt.
 
 Read length, emitted sequence length and HSP length are separate measurements. Repeated sequence observations do not establish independent molecules. Reference coverage is the union of aligned positions per reference/segment; do not add different references as coverage of one genome.
 

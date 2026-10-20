@@ -421,6 +421,12 @@ def _validate_candidate_summary(path: Path, rows: list[dict]) -> None:
         raise ValueError("candidate summary must contain one best hit per candidate")
     for got, want in zip(actual, expected):
         for field, value in want.items():
+            # The summary may fill an empty taxon and the reference title from
+            # the FASTA or the BLAST database. The chosen hit itself does not change.
+            if field == "reference_description":
+                continue
+            if field == "taxon" and not str(value):
+                continue
             if str(got.get(field, "")) != str(value):
                 raise ValueError(f"candidate summary mismatch for {want['qseqid']}: {field}")
 

@@ -70,7 +70,7 @@ O Evidence integra contigs, fragmentos montados e reads curtos após QC/filtro; 
 |---|---|
 | `candidate_sequences.fa` | Sequências candidatas alinhadas, para revisão e análises posteriores |
 | `candidate_sequences.tsv` | Tabela completa: uma linha por alinhamento (query, referência e tarefa) |
-| `candidate_summary.tsv` | Uma linha por candidato, com o melhor hit e a contagem de linhas na tabela completa |
+| `candidate_summary.tsv` | Uma linha por candidato. O melhor hit é o maior bitscore; `min_evalue` guarda também o menor e-value. Táxon e descrição vêm do rótulo ou do título da referência |
 | `candidate_queries.json` | Proveniência e hashes das queries, incluindo as sem candidato alinhado |
 | Relatórios Evidence | Estado da execução, suporte, competição, referências e avisos |
 | `execution.json` | Recibo técnico da execução iniciada pela CLI |
