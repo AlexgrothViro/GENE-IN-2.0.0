@@ -1,5 +1,15 @@
 # Histórico de entregas
 
+## 2026-10-20 — 2.0.1, correção de distribuição
+
+- A versão de software passa a 2.0.1. O arquivo `VERSION` e o contrato Evidence permanecem `2.0.0-alpha.2`. Parâmetros, perfis e locks científicos não mudam.
+- O gerenciador de banco aceita um FASTA local com nome escolhido, e os padrões podem ir para `GENEIN_WORK_ROOT`.
+- O relatório e o painel mostram `CANDIDATOS_PARA_REVISAO`. Os JSON conservam os códigos do contrato.
+- Há `candidate_summary.tsv`, com um melhor hit por candidato, além da tabela completa.
+- O pacote grava `SOURCE_COMMIT` para leitura sem a pasta `.git`.
+- O micromamba do instalador fica em 2.9.0, com hash do tar.bz2.
+- Registros internos de reteste ficam em `docs/desenvolvimento/` e fora do pacote.
+
 ## 2026-10-20 — 2.0.0, distribuição final de pesquisa
 
 - Fecha a versão de software 2.0.0 para recuperação de sequências candidatas e triagem humana, preservando integralmente a rc1, seus pacotes, evidências e histórico Git.

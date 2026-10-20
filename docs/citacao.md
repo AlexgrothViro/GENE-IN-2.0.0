@@ -6,11 +6,11 @@ O titular e desenvolvedor identificado na [licença](../LICENSE) é **Alexsander
 
 Para esta distribuição, use:
 
-> Groth, Alexsander. *Gene-In: recuperação e triagem de sequências candidatas*. Versão 2.0.0. 2026. Repositório: https://github.com/AlexgrothViro/GENE-IN-2.0.0.
+> Groth, Alexsander. *Gene-In: recuperação e triagem de sequências candidatas*. Versão 2.0.1. 2026. Repositório: https://github.com/AlexgrothViro/GENE-IN-2.0.0.
 
 Acrescente o commit exato e a data de acesso usados na análise. Em um checkout Git, o commit é `git rev-parse HEAD`. Em um pacote sem a pasta `.git`, o mesmo valor está na primeira linha de `SOURCE_COMMIT` e em `genein --version`. O arquivo [CITATION.cff](../CITATION.cff) contém os metadados estruturados.
 
-A versão de software é `2.0.0`. O arquivo `VERSION` continua `2.0.0-alpha.2` porque identifica o contrato Evidence, não o programa; esse conteúdo está congelado no contrato científico. `candidate_version` `2.0.0rc1` em `RELEASE.json` é a candidata histórica (`base_commit` `fb2f57a8…`). O fechamento local do autor está em `closure_commit` (`53af26ba…`). Cite a versão realmente usada: análises feitas na rc1 continuam identificadas como `2.0.0rc1`. A versão `2.0.0` não representa aprovação científica nem reprodução independente.
+A versão de software desta distribuição é `2.0.1`. O arquivo `VERSION` continua `2.0.0-alpha.2` porque identifica o contrato Evidence, não o programa; esse conteúdo está congelado no contrato científico. `candidate_version` `2.0.0rc1` em `RELEASE.json` é a candidata histórica (`base_commit` `fb2f57a8…`). O fechamento local da fonte 2.0.0 está em `closure_commit` (`53af26ba…`). Cite a versão realmente usada: análises feitas na rc1 continuam identificadas como `2.0.0rc1`, e as feitas no pacote fechado de 20/10/2026 como `2.0.0`. Esta correção 2.0.1 não representa aprovação científica nem reprodução independente.
 
 Não há DOI, ORCID, afiliação ou referência bibliográfica acadêmica confirmados nos metadados desta entrega. Esses identificadores não foram inventados. Se o autor fornecer um trabalho associado, cite-o além do software e confira a referência na fonte original.
 
@@ -18,7 +18,7 @@ Não há DOI, ORCID, afiliação ou referência bibliográfica acadêmica confir
 
 | Item | Registro necessário |
 |---|---|
-| Software | Gene-In `2.0.0`, commit exato e origem da fonte/pacote |
+| Software | Gene-In `2.0.1`, commit exato e origem da fonte/pacote |
 | Contrato de resultado | Evidence `2.0.0-alpha.2` |
 | Políticas | `fragment_recovery_20_100_v1` e `scientific_review_20261005_v1` |
 | Ambiente | Plataforma, locks e versões das ferramentas efetivamente usadas |
@@ -32,7 +32,7 @@ Cite separadamente as ferramentas e os dados de terceiros conforme suas própria
 
 ## Texto de método a adaptar
 
-> As sequências candidatas foram recuperadas e organizadas para triagem humana com Gene-In 2.0.0 (Groth, 2026), usando o commit e os parâmetros registrados na proveniência da execução. O fluxo empregou o contrato Evidence 2.0.0-alpha.2, a política fragment_recovery_20_100_v1 e a revisão scientific_review_20261005_v1. Bancos, controles, pré-processamento e montadores foram documentados por execução. Similaridade, disponibilidade de candidatos e bases alinhadas foram interpretadas separadamente de confirmação de origem viral e atribuição definitiva de espécie.
+> As sequências candidatas foram recuperadas e organizadas para triagem humana com Gene-In 2.0.1 (Groth, 2026), usando o commit e os parâmetros registrados na proveniência da execução. O fluxo empregou o contrato Evidence 2.0.0-alpha.2, a política fragment_recovery_20_100_v1 e a revisão scientific_review_20261005_v1. Bancos, controles, pré-processamento e montadores foram documentados por execução. Similaridade, disponibilidade de candidatos e bases alinhadas foram interpretadas separadamente de confirmação de origem viral e atribuição definitiva de espécie.
 
 Complete esse texto com os dados reais do experimento. Não declare etapas que não foram executadas, como filtro de hospedeiro, suporte por reads ou competição. A [validação científica](validacao.md) explica os limites das afirmações sustentadas pela entrega.
 

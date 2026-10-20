@@ -1,6 +1,6 @@
 # Documentação do Gene-In
 
-**Versão de software 2.0.0, distribuição final de pesquisa preparada em 20/10/2026.** Comece pelo [README](../README.md). A [nota da versão 2.0.0](lancamento-20out.md) distingue o escopo consolidado, as verificações da rc1 preservada e os recibos do novo pacote.
+**Versão de software 2.0.1, correção de distribuição sobre a fonte 2.0.0.** Comece pelo [README](../README.md). A [nota da versão 2.0.0](lancamento-20out.md) registra o fechamento anterior. O contrato Evidence não muda.
 
 ## Usar o programa
 

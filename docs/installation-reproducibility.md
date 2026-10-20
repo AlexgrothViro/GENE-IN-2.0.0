@@ -1,6 +1,6 @@
 # Instalação e reprodução
 
-Guia da **2.0.0**, distribuição final de software para pesquisa e triagem humana. O [guia inicial](../README.md) apresenta o programa; a [nota da versão 2.0.0](lancamento-20out.md) identifica o alcance das verificações e os recibos do pacote. A instalação prepara a fonte e as ferramentas; bancos, índices de hospedeiro e dados de pesquisa são preparados separadamente.
+Guia da **2.0.1**, correção de distribuição sobre a fonte 2.0.0. O [guia inicial](../README.md) apresenta o programa; a [nota da versão 2.0.0](lancamento-20out.md) identifica o fechamento anterior. A instalação prepara a fonte e as ferramentas; bancos, índices de hospedeiro e dados de pesquisa são preparados separadamente.
 
 ## Plataformas e pré-requisitos
 
@@ -36,7 +36,7 @@ bash run_linux.sh
 Para uma instalação separada, defina um prefixo novo **antes de todas as chamadas** de instalação, abertura e análise:
 
 ```bash
-export GENEIN_BUNDLE_DIR="$HOME/.gene-in-2.0.0"
+export GENEIN_BUNDLE_DIR="$HOME/.gene-in-2.0.1"
 bash bundle/install_wsl.sh
 bash bundle/run.sh test-env
 bash run_linux.sh

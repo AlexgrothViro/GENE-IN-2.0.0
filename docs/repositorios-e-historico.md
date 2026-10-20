@@ -1,6 +1,6 @@
 # Gene-In: repositório principal e histórico
 
-O desenvolvimento desta entrega está em [AlexgrothViro/GENE-IN-2.0.0](https://github.com/AlexgrothViro/GENE-IN-2.0.0). O nome anterior `gene-in-estabilizado` não é este repositório. Esta árvore identifica a versão de software **2.0.0**, distribuição final para pesquisa e triagem humana; consulte a [nota da versão](lancamento-20out.md), o [guia de uso](../README.md) e os [limites científicos](validacao.md). A rc1 e seus registros permanecem preservados como etapa anterior.
+O desenvolvimento desta entrega está em [AlexgrothViro/GENE-IN-2.0.0](https://github.com/AlexgrothViro/GENE-IN-2.0.0). O nome anterior `gene-in-estabilizado` não é este repositório. Esta árvore identifica a versão de software **2.0.1**, correção de distribuição sobre a fonte 2.0.0; consulte a [nota da versão 2.0.0](lancamento-20out.md), o [guia de uso](../README.md) e os [limites científicos](validacao.md). A rc1 e seus registros permanecem preservados como etapa anterior.
 
 ## Endereços atuais
 

@@ -2,7 +2,7 @@
 
 O Gene-In não está preso a um hospedeiro nem a uma família viral. Quem analisa escolhe o índice do hospedeiro e o FASTA ou o perfil do banco. Os perfis de picornavírus e o exemplo de Sus scrofa documentam o caso-modelo de validação; outro organismo e outro banco usam os mesmos comandos, com os arquivos correspondentes.
 
-Instale o [ambiente científico](installation-reproducibility.md) e abra `ABRIR_GENEIN.bat` no Windows ou `bash run_linux.sh` no Linux. Os exemplos abaixo usam a CLI da 2.0.0, caminhos Linux e arquivos que devem ser substituídos pelos da sua análise.
+Instale o [ambiente científico](installation-reproducibility.md) e abra `ABRIR_GENEIN.bat` no Windows ou `bash run_linux.sh` no Linux. Os exemplos abaixo usam a CLI da 2.0.1, caminhos Linux e arquivos que devem ser substituídos pelos da sua análise.
 
 ## Utilidades e escolha de entrada
 

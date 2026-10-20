@@ -4,7 +4,7 @@
 
 O Gene-In recupera e organiza sequências candidatas de dados de sequenciamento fragmentados para revisão humana. O programa é geral: o hospedeiro e o banco de referência são escolhas de quem analisa. Suíno e picornavírus são apenas o caso-modelo usado na validação, não um limite do programa. Integra controle de qualidade, filtro opcional do hospedeiro, montadores, busca por similaridade, proveniência e exportação. Preserva candidatos de **20–100 pb e maiores**. O resultado depende das entradas, dos adaptadores e das referências; um alinhamento não atribui origem, espécie ou diagnóstico.
 
-**2.0.0 — distribuição final de software para pesquisa e triagem humana, preparada em 20/10/2026.** A versão consolida a base verificada na rc1 e a documentação de uso. Confira o alcance das verificações e os recibos que identificam o pacote na [nota da versão 2.0.0](docs/lancamento-20out.md). O contrato Evidence continua `2.0.0-alpha.2`, com recuperação `fragment_recovery_20_100_v1` e revisão `scientific_review_20261005_v1`.
+**2.0.1 — correção de distribuição sobre a fonte 2.0.0 fechada em 20/10/2026.** O contrato Evidence continua `2.0.0-alpha.2`, com recuperação `fragment_recovery_20_100_v1` e revisão `scientific_review_20261005_v1`. A [nota da versão 2.0.0](docs/lancamento-20out.md) registra o fechamento anterior. Esta correção não altera parâmetros, perfis nem locks científicos.
 
 Este é o [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Entregas publicadas ficam em [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). O [índice de repositórios e histórico](docs/repositorios-e-historico.md) guarda os nomes anteriores.
 
