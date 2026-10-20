@@ -14,6 +14,21 @@ from .sample import BatchCancelled, ProcessRunner, execute_sample
 from .state_api import RunStateApi
 
 
+def metrics_root(repo_root: Path, work_root: str | None, sample_id: str) -> Path:
+    """Directory that holds measured post-QC reports for this batch.
+
+    The CLI sets ``GENEIN_WORK_ROOT`` to the output directory, and the pipeline
+    writes ``results/qc`` there. The same variable, when exported only to keep
+    reference FASTA and indexes outside the source, does not contain those
+    reports. In that case the batch repository remains the metrics root.
+    """
+    if work_root and sample_id:
+        candidate = Path(work_root)
+        if (candidate / "results" / "qc" / f"{sample_id}_fastp.json").is_file():
+            return candidate
+    return repo_root
+
+
 class Batch:
     def __init__(self, args, repo_root: Path, runner: ProcessRunner):
         self.args = args
@@ -149,7 +164,10 @@ class Batch:
                          "locus_building", "competitive_search", "read_remapping", "coverage"):
             self.stage(stage_id, "done", "Concluído nos runs-filhos transacionais.")
         metrics = self.staging / "work/metrics.tsv"
-        self.command("collect_batch_metrics.py", "--manifest", self.normalized, "--repo-root", self.runner.env.get("GENEIN_WORK_ROOT") or self.repo_root,
+        measured = metrics_root(
+            self.repo_root, self.runner.env.get("GENEIN_WORK_ROOT"), self.rows[0]["sample_id"],
+        )
+        self.command("collect_batch_metrics.py", "--manifest", self.normalized, "--repo-root", measured,
                      "--evidence-root", self.root, "--run-map", run_map, "--out", metrics)
         ratio = self.command("config_value.py", "--activation-policy", self.policy, "--profiles", self.profiles,
                              "--key", "controls.provisional_sample_to_negative_ratio", capture=True)
