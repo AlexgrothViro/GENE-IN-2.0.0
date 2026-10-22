@@ -1,6 +1,6 @@
 # Gene-In: repositório principal e histórico
 
-O desenvolvimento desta entrega está em [AlexgrothViro/GENE-IN-2.0.0](https://github.com/AlexgrothViro/GENE-IN-2.0.0). O nome anterior `gene-in-estabilizado` não é este repositório. Esta árvore identifica a versão de software **2.0.1**, correção de distribuição sobre a fonte 2.0.0; consulte o [histórico](../CHANGELOG.md), o [guia de uso](../README.md) e os [limites científicos](validacao.md). A rc1 e seus registros permanecem preservados como etapa anterior.
+O desenvolvimento desta entrega está em [AlexgrothViro/GENE-IN-2.0.0](https://github.com/AlexgrothViro/GENE-IN-2.0.0). O nome anterior `gene-in-estabilizado` não é este repositório. Esta árvore identifica a versão de software **2.0.2**, proposta de integração de memória sobre a distribuição 2.0.1; consulte a [nota da integração](integracao-memoria-22out.md), o [histórico](../CHANGELOG.md), o [guia de uso](../README.md) e os [limites científicos](validacao.md). A rc1 e seus registros permanecem preservados como etapa anterior.
 
 ## Endereços atuais
 
@@ -12,7 +12,7 @@ O desenvolvimento desta entrega está em [AlexgrothViro/GENE-IN-2.0.0](https://g
 | Relatar ou consultar problemas | [Issues](https://github.com/AlexgrothViro/GENE-IN-2.0.0/issues) |
 | Instalar e usar esta cópia | [Documentação](README.md) |
 
-Uma proposta ou branch histórica não integra automaticamente a versão atual. Mudanças aproveitadas precisam ser verificadas contra a arquitetura, os contratos e os testes da fonte distribuída. A existência de uma release identifica software e não aprova resultados científicos.
+A atualização 2.0.2 é preparada em branch própria sobre a 2.0.1. Seu ZIP local, a publicação de uma branch, a abertura de PR, o merge na main e uma release no GitHub são estados distintos; confira o commit de cada um antes de atribuir a integração à main. O Builder permanece separado. Uma proposta ou branch histórica não integra automaticamente a versão atual. Mudanças aproveitadas precisam ser verificadas contra a arquitetura, os contratos e os testes da fonte distribuída. A existência de uma release identifica software e não aprova resultados científicos.
 
 ## Repositórios históricos
 

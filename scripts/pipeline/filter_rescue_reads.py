@@ -17,6 +17,23 @@ MIN_ALN_LEN = 80
 MIN_ALN_FRAC = 0.8
 
 
+class _RescueReadError(Exception):
+    """Leitura do raw BLAST falhou depois da guarda de arquivo ausente."""
+
+
+class _RescueWriteError(Exception):
+    """Gravação do ledger falhou; não é erro de leitura."""
+
+
+def _discard_temporary(path):
+    if path is None:
+        return
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        pass
+
+
 def sha256_streaming(path):
     """sha256 of a file without loading it (the decision ledger can be several GB)."""
     digest = hashlib.sha256()
@@ -52,9 +69,9 @@ def main():
         """Yield (decision, hit_or_None) per raw BLAST row, streaming.
 
         The raw read-level report can hold tens of millions of rows; keeping
-        one dict per row in memory (as before) needs tens of GB.  The file is
-        therefore read twice: pass 1 selects the best hit per read, pass 2
-        writes the decision ledger.  Rules and outputs are unchanged.
+        one dict per row in memory needs tens of GB. The file is read twice:
+        pass 1 selects the best hit per read, pass 2 writes the decision ledger.
+        Rules and outputs are unchanged.
         """
         with raw_path.open("r", encoding="utf-8", errors="strict") as fh:
             reader = csv.reader(fh, delimiter="\t")
@@ -115,43 +132,72 @@ def main():
     input_alignment_rows = 0
     unique_query_ids = set()
     counts_by_disposition = {}
+    # Preserve the distribution contract: missing input is a failure;
+    # an existing empty report is valid and produces header-only outputs.
     try:
-        # Pass 1: best hit per read (highest bitscore; first one wins ties).
-        for _decision, hit in iter_rows():
-            if hit is None:
-                continue
-            qseqid = hit["qseqid"]
-            if qseqid not in best_hits or hit["bitscore"] > best_hits[qseqid]["bitscore"]:
-                best_hits[qseqid] = hit
+        should_read = raw_path.stat().st_size > 0
+        if should_read:
+            for _decision, hit in iter_rows():
+                if hit is None:
+                    continue
+                qseqid = hit["qseqid"]
+                if qseqid not in best_hits or hit["bitscore"] > best_hits[qseqid]["bitscore"]:
+                    best_hits[qseqid] = hit
+    except FileNotFoundError:
+        log_fatal(f"Arquivo de entrada raw BLAST nao encontrado: {raw_path}", "Verifique a execucao do alinhamento BLAST no modo de resgate.")
+    except Exception as exc:
+        log_fatal(f"Erro ao ler arquivo raw BLAST {raw_path}: {exc}", "Inspecione o log do pipeline.")
 
-        # Pass 2: stream the decision ledger with the final dispositions.
-        selected_keys = {(qid, hit["sseqid"], hit["bitscore"], hit["length"], float(hit["pident"])) for qid, hit in best_hits.items()}
+    selected_keys = {(qid, hit["sseqid"], hit["bitscore"], hit["length"], float(hit["pident"])) for qid, hit in best_hits.items()}
+    temporary_decisions = None
+    try:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         temporary_decisions = decisions_path.with_name(f".{decisions_path.name}.tmp.{os.getpid()}")
         with temporary_decisions.open("w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=decision_fields, delimiter="\t", lineterminator="\n", extrasaction="ignore")
             writer.writeheader()
-            for row, _hit in iter_rows():
-                if row["disposition"] == "ACCEPTED_PENDING_BEST_HIT_SELECTION":
-                    key = (row["qseqid"], row["sseqid"], row["bitscore"], row["length"], row["pident"])
-                    if key in selected_keys:
-                        row["disposition"] = "SELECTED_BEST_HIT"
-                        row["decision_rule"] = "HIGHEST-BITSCORE-PER-QNAME"
-                        selected_keys.remove(key)
-                    else:
-                        row["disposition"] = "ACCEPTED_ALTERNATIVE_NOT_SELECTED"
-                        row["decision_rule"] = "LOWER-BITSCORE-THAN-SELECTED-QNAME-HIT"
-                input_alignment_rows += 1
-                if row.get("qseqid"):
-                    unique_query_ids.add(row["qseqid"])
-                status = row.get("disposition", "")
-                counts_by_disposition[status] = counts_by_disposition.get(status, 0) + 1
-                writer.writerow(row)
+            if should_read:
+                try:
+                    for row, _hit in iter_rows():
+                        if row["disposition"] == "ACCEPTED_PENDING_BEST_HIT_SELECTION":
+                            key = (row["qseqid"], row["sseqid"], row["bitscore"], row["length"], row["pident"])
+                            if key in selected_keys:
+                                row["disposition"] = "SELECTED_BEST_HIT"
+                                row["decision_rule"] = "HIGHEST-BITSCORE-PER-QNAME"
+                                selected_keys.remove(key)
+                            else:
+                                row["disposition"] = "ACCEPTED_ALTERNATIVE_NOT_SELECTED"
+                                row["decision_rule"] = "LOWER-BITSCORE-THAN-SELECTED-QNAME-HIT"
+                        input_alignment_rows += 1
+                        if row.get("qseqid"):
+                            unique_query_ids.add(row["qseqid"])
+                        status = row.get("disposition", "")
+                        counts_by_disposition[status] = counts_by_disposition.get(status, 0) + 1
+                        try:
+                            writer.writerow(row)
+                        except Exception as exc:
+                            raise _RescueWriteError(exc) from exc
+                except _RescueWriteError:
+                    raise
+                except FileNotFoundError as exc:
+                    raise _RescueReadError(exc) from exc
+                except Exception as exc:
+                    raise _RescueReadError(exc) from exc
         os.replace(temporary_decisions, decisions_path)
-    except FileNotFoundError:
-        log_fatal(f"Arquivo de entrada raw BLAST nao encontrado: {raw_path}", "Verifique a execucao do alinhamento BLAST no modo de resgate.")
+        temporary_decisions = None
+    except _RescueReadError as exc:
+        _discard_temporary(temporary_decisions)
+        cause = exc.__cause__ or exc
+        if isinstance(cause, FileNotFoundError):
+            log_fatal(f"Arquivo de entrada raw BLAST nao encontrado: {raw_path}", "Verifique a execucao do alinhamento BLAST no modo de resgate.")
+        log_fatal(f"Erro ao ler arquivo raw BLAST {raw_path}: {cause}", "Inspecione o log do pipeline.")
     except Exception as exc:
-        log_fatal(f"Erro ao ler arquivo raw BLAST {raw_path}: {exc}", "Inspecione o log do pipeline.")
+        _discard_temporary(temporary_decisions)
+        cause = exc.__cause__ or exc
+        log_fatal(
+            f"Erro ao gravar ledger de decisoes do resgate {decisions_path}: {cause}",
+            "Verifique o espaco em disco e as permissoes de escrita.",
+        )
 
     # Gravar saída
     try:

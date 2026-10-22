@@ -25,7 +25,6 @@ INCOMING_BOWTIE2_INDEX="${BOWTIE2_INDEX:-}"
 # shellcheck disable=SC1091
 source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
 CONFIG_FILE="$(genein_resolve_config_file)"
-LEGACY_CONFIG="${REPO_ROOT}/config.env"
 if [[ -f "${CONFIG_FILE}" ]]; then
   # shellcheck disable=SC1090
   source "${CONFIG_FILE}"

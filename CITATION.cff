@@ -5,7 +5,7 @@ title: "Gene-In: recuperação e triagem de sequências candidatas"
 authors:
   - family-names: Groth
     given-names: Alexsander
-version: 2.0.1
+version: 2.0.2
 repository-code: "https://github.com/AlexgrothViro/GENE-IN-2.0.0"
 url: "https://github.com/AlexgrothViro/GENE-IN-2.0.0"
 license-url: "https://github.com/AlexgrothViro/GENE-IN-2.0.0/blob/main/LICENSE"

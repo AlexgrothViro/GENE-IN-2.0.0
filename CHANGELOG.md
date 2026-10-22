@@ -1,5 +1,15 @@
 # Histórico de entregas
 
+## 2026-10-22 — 2.0.2, integração de memória
+
+- Integra o processamento em disco do resgate à distribuição 2.0.1, mantendo suas saídas, identidade, configuração e leitura de metadados de referência.
+- Deduplica o BLAST do resgate em SQLite, sem fallback para carregar a tabela inteira em memória. Preserva o filtro em duas passagens e os hashes em fluxo já presentes na 2.0.1; melhora o tratamento de falhas, mantendo ledger/proveniência e o contrato da entrada: raw ausente encerra com erro; arquivo existente vazio produz somente cabeçalhos.
+- Exporta a tabela completa e `candidate_summary.tsv` em fluxo; mantém um melhor hit por candidato, ordem/desempate, catálogo FASTA/BLAST, descrições, táxon e validação correspondente do resumo.
+- Preserva byte a byte os quatro módulos de disco da b3: `aggregate_hsps.py`, `build_loci.py`, `build_hsp_evidence.py` e `competitive_hits.py`.
+- Retira atribuições de configuração sem uso e documenta os globais consumidos pelos helpers, sem mudar a resolução da configuração.
+- Mantém autoria/licença, VERSION/contrato Evidence `2.0.0-alpha.2`, parâmetros, perfis, locks e resultados históricos. Builder continua separado.
+- A identificação 2.0.2 distingue o novo pacote e a proposta de PR; não anuncia merge na main, teto universal de RAM, solução geral de disco ou nova avaliação biológica. Verificações e limites em [integração de memória](docs/integracao-memoria-22out.md).
+
 ## 2026-10-20 — 2.0.1, correção de distribuição
 
 - A versão de software passa a 2.0.1. O arquivo `VERSION` e o contrato Evidence permanecem `2.0.0-alpha.2`. Parâmetros, perfis e locks científicos não mudam.

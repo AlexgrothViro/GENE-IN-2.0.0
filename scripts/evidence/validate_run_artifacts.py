@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Iterable
 import csv
 import json
 import shutil
@@ -410,7 +411,7 @@ def validate_commit_metadata(
     return errors
 
 
-def _validate_candidate_summary(path: Path, rows: list[dict]) -> None:
+def _validate_candidate_summary(path: Path, rows: Iterable[dict]) -> None:
     try:
         from .export_candidate_sequences import _best_hit_rows
     except ImportError:
@@ -472,7 +473,7 @@ def validate_candidate_exports(directory: Path) -> list[str]:
                     raise ValueError(f"candidate alignment mismatch for {query}: {field}")
         summary_path = directory / "candidate_summary.tsv"
         if summary_path.is_file():
-            _validate_candidate_summary(summary_path, list(iter_tsv(directory / names[1])))
+            _validate_candidate_summary(summary_path, iter_tsv(directory / names[1]))
         return []
     except (OSError, ValueError, KeyError, TypeError, csv.Error) as exc:
         return [f"invalid candidate recovery exports: {exc}"]

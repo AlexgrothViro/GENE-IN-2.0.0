@@ -4,7 +4,7 @@
 
 O Gene-In recupera e organiza sequências candidatas de dados de sequenciamento fragmentados para revisão humana. O programa é geral: o hospedeiro e o banco de referência são escolhas de quem analisa. Suíno e picornavírus são apenas o caso-modelo usado na validação, não um limite do programa. Integra controle de qualidade, filtro opcional do hospedeiro, montadores, busca por similaridade, proveniência e exportação. Preserva candidatos de **20–100 pb e maiores**. O resultado depende das entradas, dos adaptadores e das referências; um alinhamento não atribui origem, espécie ou diagnóstico.
 
-**2.0.1 — correção de distribuição sobre a fonte 2.0.0 fechada em 20/10/2026.** O contrato Evidence continua `2.0.0-alpha.2`, com recuperação `fragment_recovery_20_100_v1` e revisão `scientific_review_20261005_v1`. O fechamento anterior está no [histórico](CHANGELOG.md) e em `RELEASE.json`. Esta correção não altera parâmetros, perfis nem locks científicos.
+**2.0.2 — integração de memória sobre a distribuição 2.0.1, preparada em 22/10/2026.** O contrato Evidence continua `2.0.0-alpha.2`, com recuperação `fragment_recovery_20_100_v1` e revisão `scientific_review_20261005_v1`. A [nota da integração](docs/integracao-memoria-22out.md) explica o processamento em disco, as saídas preservadas e o alcance das verificações. Parâmetros, perfis e locks científicos permanecem os mesmos. A atualização é proposta em branch própria; publicar um PR não significa incorporá-la à main.
 
 Este é o [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Entregas publicadas ficam em [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). O [índice de repositórios e histórico](docs/repositorios-e-historico.md) guarda os nomes anteriores.
 
@@ -32,6 +32,8 @@ Na interface:
 2. Escolha os FASTQ da mesma amostra, o diretório de saída e o montador. **MULTI** reúne Velvet, SPAdes e metaSPAdes; preserva também sequências encontradas por apenas um deles.
 3. Informe os adaptadores reais da biblioteca quando houver read-through. Configure o filtro de hospedeiro somente com um índice correspondente e identidade documentada.
 4. Confira o estado técnico, os avisos, o suporte e as referências antes de interpretar os candidatos. Exporte as sequências e a proveniência.
+
+O resgate usa SQLite para deduplicar o BLAST em disco, e exportação e validação do resumo são feitas em fluxo. O filtro preserva as duas passagens e os hashes em fluxo que já existiam na 2.0.1, com melhorias no tratamento de falhas e o mesmo contrato: raw ausente é erro; arquivo existente vazio produz somente cabeçalhos. O programa preserva a tabela completa e um melhor hit por candidato, com descrições, táxon e proveniência. Essas mudanças não impõem um teto universal de RAM nem resolvem todo custo de disco. O Gene-In Builder continua separado.
 
 Não mova a fonte após instalar: o pacote usa instalação editável e os adaptadores da mesma pasta. Para dados no porte de 300.000 pares e cerca de 30 milhões de HSPs, o diagnóstico usa **45 GB livres** como aviso de espaço. RAM, tempo e disco variam com biblioteca, banco e montador; consulte [recursos e limites](docs/installation-reproducibility.md#recursos-e-limites).
 

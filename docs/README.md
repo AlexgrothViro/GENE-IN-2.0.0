@@ -1,6 +1,6 @@
 # Documentação do Gene-In
 
-**Versão de software 2.0.1, correção de distribuição sobre a fonte 2.0.0.** Comece pelo [README](../README.md). O [histórico](../CHANGELOG.md) registra o fechamento anterior. O contrato Evidence não muda.
+**Versão de software 2.0.2, integração de memória sobre a distribuição 2.0.1.** Comece pelo [README](../README.md). A [nota da integração](integracao-memoria-22out.md) apresenta as mudanças e seus limites; o [histórico](../CHANGELOG.md) preserva as versões anteriores. O contrato Evidence não muda.
 
 ## Usar o programa
 
@@ -23,6 +23,7 @@
 | Entender o alcance científico demonstrado | [Estado da validação](validacao.md) |
 | Entender componentes e diretórios | [Arquitetura](arquitetura.md) |
 | Instalar a fonte editável e executar testes | [Desenvolvimento e testes](guia-de-desenvolvimento.md) |
+| Processamento em disco, resumo e limites da 2.0.2 | [Integração de memória](integracao-memoria-22out.md) |
 | Consultar mudanças | [CHANGELOG](../CHANGELOG.md) |
 | Localizar repositórios e contribuições anteriores | [Repositórios e histórico](repositorios-e-historico.md) |
 

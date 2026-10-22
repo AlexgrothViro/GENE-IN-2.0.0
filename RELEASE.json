@@ -1,9 +1,9 @@
 {
-  "delivery_id": "genein-release-20261020",
-  "delivery_date": "2026-10-20",
+  "delivery_id": "genein-memory-integration-20261022",
+  "delivery_date": "2026-10-22",
   "repository": "https://github.com/AlexgrothViro/GENE-IN-2.0.0",
-  "software_version": "2.0.1",
-  "distribution_note": "2.0.1 corrige distribuição, rótulos, caminhos e empacotamento sobre a fonte 2.0.0. Não altera parâmetros, perfis, locks nem o contrato Evidence.",
+  "software_version": "2.0.2",
+  "distribution_note": "Integra processamento em disco sobre 2.0.1; preserva resumo, identidade, melhorias b3, parâmetros e contrato científico. Proposta em PR sem merge.",
   "distribution_channel": "research-release",
   "candidate_version": "2.0.0rc1",
   "candidate_version_note": "Nome histórico da rc1. O commit em que essa candidata foi preparada ficou na cópia local do autor e não está neste repositório público. Não é a versão de software. A versão de software é software_version.",
@@ -19,5 +19,6 @@
   "scientific_validation": "Additional biological validation pending; historical G0.8 remains failed",
   "source_baseline_note": "A rc1 não tem commit publicado neste repositório. O fechamento público da fonte 2.0.0 é closure_commit.",
   "source_archive_sha256": "pending",
-  "source_archive_sha256_note": "Este campo permanece pending na fonte. scripts/ops/build_release.py calcula os hashes após fechar e verificar ZIP/tar.gz e grava SHA256SUMS, <arquivo>.sha256 e archive-release.json no diretório de entrega. O hash do arquivo completo permanece fora dele."
+  "source_archive_sha256_note": "Este campo permanece pending na fonte. scripts/ops/build_release.py calcula os hashes após fechar e verificar ZIP/tar.gz e grava SHA256SUMS, <arquivo>.sha256 e archive-release.json no diretório de entrega. O hash do arquivo completo permanece fora dele.",
+  "integration_base_commit": "96f0932884ae2e8ebe6b580b0c33fbaffc048266"
 }

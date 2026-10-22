@@ -29,12 +29,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Used by sourced genein_config_path.sh/common.sh for config and path resolution.
+# shellcheck disable=SC2034
 REPO_ROOT="$(cd "$SCRIPTS_ROOT/.." && pwd)"
 
 # shellcheck disable=SC1091
 source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
 CONFIG_FILE="$(genein_resolve_config_file)"
-LEGACY_CONFIG="${REPO_ROOT}/config.env"
 
 if [[ "${PIPELINE_CONFIG_LOADED:-0}" != "1" ]]; then
   if [[ -f "${CONFIG_FILE}" ]]; then

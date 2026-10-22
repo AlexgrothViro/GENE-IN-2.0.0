@@ -151,7 +151,7 @@ def test_successful_run_writes_receipt_and_propagates_env(cli_repo, tmp_path, mo
     receipt = json.loads((output_root / "execution.json").read_text(encoding="utf-8"))
     assert receipt["status"] == "completed"
     assert receipt["exit_code"] == 0
-    assert receipt["software_version"] == "2.0.1"
+    assert receipt["software_version"] == "2.0.2"
     assert receipt["source_commit"]
     assert receipt["output_root"] == str(output_root)
     assert receipt["sample"] == "sample-1"

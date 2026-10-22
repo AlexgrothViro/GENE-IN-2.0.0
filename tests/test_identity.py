@@ -30,7 +30,7 @@ def test_missing_identity_is_explicit(tmp_path):
 
 
 def test_distribution_version_is_not_the_evidence_contract():
-    assert software_version(ROOT) == "2.0.1"
+    assert software_version(ROOT) == "2.0.2"
     assert (ROOT / "VERSION").read_text(encoding="utf-8").strip() == "2.0.0-alpha.2"
 
 
@@ -40,6 +40,6 @@ def test_provenance_writer_records_distribution_identity():
     from write_provenance import distribution_identity
 
     identity = distribution_identity()
-    assert identity == {"software_version": "2.0.1", "source_commit": source_commit(ROOT)}
+    assert identity == {"software_version": "2.0.2", "source_commit": source_commit(ROOT)}
     writer = (ROOT / "scripts" / "evidence" / "write_provenance.py").read_text(encoding="utf-8")
     assert '"pipeline_version": "2.0.0-alpha.2"' in writer

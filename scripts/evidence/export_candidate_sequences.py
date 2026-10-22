@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Iterable
 import gzip
 import json
 import math
@@ -27,9 +28,12 @@ def export(queries: Path, manifest_path: Path, fragments: Path, output: Path,
     sequences = read_fasta(queries) if queries.stat().st_size else {}
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     reference_lengths = {}
+    subjects = set()
     for row in iter_tsv(fragments):
         query = row["qseqid"]
         reference_lengths[query] = max(reference_lengths.get(query, 0), int(row.get("slen") or 0))
+        if row.get("sseqid"):
+            subjects.add(str(row["sseqid"]))
     selected = sorted(reference_lengths)
     metadata = manifest["queries"]
     for query in selected:
@@ -46,17 +50,22 @@ def export(queries: Path, manifest_path: Path, fragments: Path, output: Path,
     fields = ["qseqid", "sequence_length_bp", "sequence_sha256", "query_origins",
               "sseqid", "category", "taxon", "task", "aligned_query_bp", "query_coverage",
               "weighted_pident", "best_bitscore", "best_evalue", "assembly_method"]
-    rows = [{"qseqid": row["qseqid"], "sequence_length_bp": len(sequences[row["qseqid"]]),
-             "sequence_sha256": metadata[row["qseqid"]]["sequence_sha256"],
-             "query_origins": ";".join(sorted(metadata[row["qseqid"]]["source_counts"])),
-             "aligned_query_bp": row["query_covered_bp"],
-             **{key: row.get(key, "") for key in fields if key in row and key != "qseqid"}}
-            for row in iter_tsv(fragments)]
-    write_tsv_atomic(output / "candidate_sequences.tsv", rows, fields)
-    subjects = sorted({str(row.get("sseqid") or "") for row in rows if row.get("sseqid")})
-    catalog = load_reference_catalog(reference_fasta, blast_db, subjects)
+    grouped = {}
+
+    def rows():
+        for row in iter_tsv(fragments):
+            candidate = {"qseqid": row["qseqid"], "sequence_length_bp": len(sequences[row["qseqid"]]),
+                         "sequence_sha256": metadata[row["qseqid"]]["sequence_sha256"],
+                         "query_origins": ";".join(sorted(metadata[row["qseqid"]]["source_counts"])),
+                         "aligned_query_bp": row["query_covered_bp"],
+                         **{key: row.get(key, "") for key in fields if key in row and key != "qseqid"}}
+            _accumulate_summary(grouped, candidate)
+            yield candidate
+
+    write_tsv_atomic(output / "candidate_sequences.tsv", rows(), fields)
+    catalog = load_reference_catalog(reference_fasta, blast_db, sorted(subjects))
     summary_fields = fields + ["reference_description", "min_evalue", "hit_row_count"]
-    write_tsv_atomic(output / "candidate_summary.tsv", _best_hit_rows(rows, catalog), summary_fields)
+    write_tsv_atomic(output / "candidate_summary.tsv", _summary_rows(grouped, catalog), summary_fields)
     write_json_atomic(output / "candidate_queries.json", manifest)
 
 
@@ -221,43 +230,39 @@ def _catalog_record(catalog: dict[str, tuple[str, str]], subject: str) -> tuple[
     return "", ""
 
 
-def _min_evalue(group: list[dict]) -> str:
-    best_number = None
-    best_text = ""
-    for row in group:
-        number = _rank_number(row, "best_evalue", float("inf"))
-        if not math.isfinite(number):
-            continue
-        if best_number is None or number < best_number:
-            best_number = number
-            best_text = str(row.get("best_evalue", ""))
-    return best_text
+def _accumulate_summary(grouped: dict, row: dict) -> None:
+    query = row["qseqid"]
+    rank = _best_rank(row)
+    number = _rank_number(row, "best_evalue", float("inf"))
+    state = grouped.get(query)
+    if state is None:
+        state = {"best": row, "rank": rank, "count": 0,
+                 "min_number": None, "min_text": ""}
+        grouped[query] = state
+    elif rank < state["rank"]:
+        state["best"], state["rank"] = row, rank
+    state["count"] += 1
+    if math.isfinite(number) and (state["min_number"] is None or number < state["min_number"]):
+        state["min_number"] = number
+        state["min_text"] = str(row.get("best_evalue", ""))
 
 
-def _best_hit_rows(rows: list[dict], catalog: dict[str, tuple[str, str]] | None = None) -> list[dict]:
-    catalog = catalog or {}
-    grouped: dict[str, list[dict]] = {}
-    order: list[str] = []
-    for row in rows:
-        query = row["qseqid"]
-        if query not in grouped:
-            order.append(query)
-            grouped[query] = []
-        grouped[query].append(row)
-    summary = []
-    for query in order:
-        group = grouped[query]
-        best = dict(min(group, key=_best_rank))
+def _summary_rows(grouped: dict, catalog: dict[str, tuple[str, str]]):
+    for state in grouped.values():
+        best = dict(state["best"])
         description, hinted_taxon = _catalog_record(catalog, str(best.get("sseqid", "")))
         if not str(best.get("taxon") or "") and hinted_taxon:
             best["taxon"] = hinted_taxon
-        summary.append({
-            **best,
-            "reference_description": description,
-            "min_evalue": _min_evalue(group),
-            "hit_row_count": str(len(group)),
-        })
-    return summary
+        yield {**best, "reference_description": description,
+               "min_evalue": state["min_text"], "hit_row_count": str(state["count"])}
+
+
+def _best_hit_rows(rows: Iterable[dict], catalog: dict[str, tuple[str, str]] | None = None) -> list[dict]:
+    """Same best hit, ties and first-query order; memory scales with candidates."""
+    grouped = {}
+    for row in rows:
+        _accumulate_summary(grouped, row)
+    return list(_summary_rows(grouped, catalog or {}))
 
 
 def main():

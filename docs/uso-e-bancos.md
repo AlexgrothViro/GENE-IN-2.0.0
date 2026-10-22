@@ -2,7 +2,7 @@
 
 O Gene-In não está preso a um hospedeiro nem a uma família viral. Quem analisa escolhe o índice do hospedeiro e o FASTA ou o perfil do banco. Os perfis de picornavírus e o exemplo de Sus scrofa documentam o caso-modelo de validação; outro organismo e outro banco usam os mesmos comandos, com os arquivos correspondentes.
 
-Instale o [ambiente científico](installation-reproducibility.md) e abra `ABRIR_GENEIN.bat` no Windows ou `bash run_linux.sh` no Linux. Os exemplos abaixo usam a CLI da 2.0.1, caminhos Linux e arquivos que devem ser substituídos pelos da sua análise.
+Instale o [ambiente científico](installation-reproducibility.md) e abra `ABRIR_GENEIN.bat` no Windows ou `bash run_linux.sh` no Linux. Os exemplos abaixo usam a CLI da 2.0.2, caminhos Linux e arquivos que devem ser substituídos pelos da sua análise.
 
 ## Utilidades e escolha de entrada
 
@@ -167,6 +167,8 @@ Na execução individual pela CLI, o recibo fica em `<output-root>/execution.jso
 | `evidence_report.md` / `sample_evidence.json` | Evidência, estados, avisos e medidas da amostra |
 | `run_state.json` / `artifact_manifest.json` | Estado final e integridade dos artefatos Evidence |
 | `execution.json` | Recibo do lançador da CLI; `completed` indica término técnico |
+
+Na 2.0.2, a tabela completa é gravada em fluxo e o resumo acumula somente o melhor hit e os contadores por candidato. A validação do resumo também percorre a tabela em fluxo. A ordenação dos candidatos e a ordem da tabela completa permanecem as anteriores; o desempate do resumo usa maior bitscore, menor e-value, maior identidade, identificador da referência e tarefa. Um empate completo conserva a primeira linha correspondente. O catálogo procura descrições no FASTA informado e no banco BLAST quando disponível. Cabeçalhos sem descrição ou organismo não permitem inventar esses metadados. Esses campos auxiliam a leitura, sem transformar o resumo em identificação taxonômica definitiva. Veja a [integração de memória](integracao-memoria-22out.md).
 
 `SUCCESS.json` é um marcador de finalização. No caminho legado `results/runs/<id>/SUCCESS.json`, o contrato histórico permite `status=failed`: leia os campos e os logs, não deduza sucesso pelo nome do arquivo. Resultado incompleto ou falha técnica não é ausência biológica.
 

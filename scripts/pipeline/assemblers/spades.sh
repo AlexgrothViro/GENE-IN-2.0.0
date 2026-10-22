@@ -8,7 +8,6 @@ REPO_ROOT="$(cd "$SCRIPTS_ROOT/.." && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
 CONFIG_FILE="$(genein_resolve_config_file)"
-LEGACY_CONFIG="${REPO_ROOT}/config.env"
 
 # Se chamado pelo pipeline principal, não recarregar config.env.
 INCOMING_SPADES_PARAMS="${SPADES_PARAMS:-}"
