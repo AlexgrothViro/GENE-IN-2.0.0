@@ -9,6 +9,7 @@
 | WSL ausente ou acesso negado | Confira a instalação do WSL/Ubuntu e as permissões Windows. Execute o instalador com uma conta autorizada para configurar os requisitos. |
 | Banco BLAST rejeitado | Confira prefixo, arquivos do índice e manifesto `.db-manifest.json`. Use o gerenciador de bancos ou a preparação documentada. |
 | Resultado já existe | Escolha um diretório de saída novo para a execução; os resultados são preservados. |
+| Falta de espaço, erro de SQLite ou de escrita temporária no resgate | Confira espaço, cota e permissões no sistema de arquivos da saída e no diretório temporário efetivo, incluindo `TMPDIR` quando definido. Libere recursos ou escolha um caminho apropriado antes de repetir em uma saída nova. A deduplicação não recorre à tabela inteira em RAM quando SQLite falha. Preserve o log; falha técnica não é ausência de candidatos. |
 | MULTI rejeita `--assembler` | Use `--analysis-profile assembly-consensus` sozinho. Para um montador individual, use `--analysis-profile default --assembler spades`. |
 | Reads com adaptador não representam o comprimento da molécula | Informe os adaptadores reais da biblioteca em `QC_ADAPTER_R1` e `QC_ADAPTER_R2`, ou pelos ajustes da interface, e confira o FASTQ pós-QC. |
 | Candidato alinhado ao hospedeiro ou atribuição ambígua | Confira competição, suporte e avisos. Revise as sequências com evidência independente adequada ao objetivo. |

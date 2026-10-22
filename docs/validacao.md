@@ -10,4 +10,6 @@ As correções de 05/10 separaram disponibilidade e qualificação, corrigiram a
 
 Permanecem pendentes uma avaliação científica da recuperação por comprimento, carga, divergência, erros e fundo; a quantificação dos falsos candidatos e da carga de triagem; a comparação pareada dos componentes; e reprodução independente em ambiente novo. O desenho e os critérios devem ser definidos antes da avaliação final.
 
+A [integração 2.0.2](integracao-memoria-22out.md) altera como determinadas etapas guardam e percorrem os dados. Equivalência de saídas, testes de falha, medições sintéticas de recursos e execução do pacote são verificações de engenharia. Não são uma repetição do piloto, não acrescentam métricas de sensibilidade/especificidade e não reclassificam G0.8 ou SAT4–6. O Gene-In Builder é um trabalho separado e seus resultados não são transferidos para esta distribuição.
+
 Publicar esta fonte no GitHub registra a entrega de software. Esse ato não representa aprovação dos portões históricos, confirmação biológica ou aceitação acadêmica da dissertação.

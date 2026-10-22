@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import argparse
-import itertools
 import json
 import os
 import re
 import shutil
 import signal
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -122,32 +122,6 @@ def database_report_limit(database: str, blastdbcmd: str | None = None,
     return max(50, sequence_count)
 
 
-def deduplicate_combined_hits(chunks: list[str]) -> str:
-    """Keep the strongest exact-coordinate hit emitted by dual BLAST profiles."""
-    order = []
-    best: dict[tuple[object, ...], tuple[tuple[object, ...], str]] = {}
-    for line in "".join(chunks).splitlines():
-        fields = line.split("\t")
-        if len(fields) != 16:
-            raise ValueError("BLAST output does not match the configured 16-column outfmt")
-        qstart, qend, sstart, send = map(int, (fields[6], fields[7], fields[8], fields[9]))
-        bitscore, evalue, pident = float(fields[11]), float(fields[10]), float(fields[2])
-        key = (
-            fields[0], fields[1],
-            "+" if (qend - qstart) * (send - sstart) >= 0 else "-",
-            min(qstart, qend), max(qstart, qend),
-            min(sstart, send), max(sstart, send),
-        )
-        rank = (-bitscore, evalue, -pident, line)
-        if key not in best:
-            order.append(key)
-            best[key] = (rank, line)
-        elif rank < best[key][0]:
-            best[key] = (rank, line)
-    output = [best[key][1] for key in order]
-    return "\n".join(output) + ("\n" if output else "")
-
-
 def _hit_key_rank(line: str) -> tuple[tuple[object, ...], tuple[object, ...]]:
     """Same key/rank as deduplicate_combined_hits, for one 16-column line."""
     fields = line.split("\t")
@@ -164,30 +138,130 @@ def _hit_key_rank(line: str) -> tuple[tuple[object, ...], tuple[object, ...]]:
     return key, (-bitscore, evalue, -pident, line)
 
 
-class _StreamOrderError(ValueError):
-    """BLAST query ids/order could not be matched to the query FASTA."""
+def _rank_is_better(new_bitscore, new_evalue, new_pident, new_line,
+                    old_bitscore, old_evalue, old_pident, old_line) -> bool:
+    """True when the new rank is strictly smaller, matching tuple order."""
+    return (
+        (-float(new_bitscore), float(new_evalue), -float(new_pident), new_line)
+        < (-float(old_bitscore), float(old_evalue), -float(old_pident), old_line)
+    )
 
 
-def _query_blocks(path: Path, order_index: dict[str, int]):
-    """Yield (query_index, lines) for each run of lines of one query.
+def _iter_hit_lines(paths: list[Path]):
+    """Yield BLAST lines in file order, without a trailing break.
 
-    blastn writes tabular hits grouped by query, in query input order.  That
-    order is verified here (never assumed) so the streaming merge below can
-    hold only one query's hits in memory at a time.
+    Universal newlines match str.splitlines() for the breaks BLAST writes
+    (\\n, \\r and \\r\\n), including a blank line and a final line without a break.
     """
-    last = -1
-    with Path(path).open("r", encoding="utf-8", errors="strict") as handle:
-        for qid, group in itertools.groupby(handle, key=lambda raw: raw.split("\t", 1)[0]):
-            lines = [raw.rstrip("\n") for raw in group]
-            index = order_index.get(qid)
-            if index is None:
-                if any(not line for line in lines):
-                    raise ValueError("BLAST output does not match the configured 16-column outfmt")
-                raise _StreamOrderError(f"BLAST query id absent from the query FASTA: {qid!r}")
-            if index <= last:
-                raise _StreamOrderError("BLAST output is not grouped in query input order")
-            last = index
-            yield index, lines
+    for path in paths:
+        with Path(path).open("r", encoding="utf-8", errors="strict") as handle:
+            for raw in handle:
+                if raw.endswith("\n"):
+                    raw = raw[:-1]
+                if raw.endswith("\r"):
+                    raw = raw[:-1]
+                yield raw
+
+
+_DEDUP_INSERT = """
+INSERT INTO hits (
+    qseqid, sseqid, strand, qmin, qmax, smin, smax,
+    bitscore, evalue, pident, line, first_ordinal
+) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+ON CONFLICT (qseqid, sseqid, strand, qmin, qmax, smin, smax) DO UPDATE SET
+    bitscore = excluded.bitscore,
+    evalue = excluded.evalue,
+    pident = excluded.pident,
+    line = excluded.line
+WHERE rank_is_better(
+    excluded.bitscore, excluded.evalue, excluded.pident, excluded.line,
+    hits.bitscore, hits.evalue, hits.pident, hits.line
+)
+"""
+
+
+def _write_deduped_lines(lines, handle) -> None:
+    """Keep the best line per coordinate key; emit keys in first-seen order.
+
+    The table lives on disk. Only one input line and a small insert batch
+    are in memory. first_ordinal is the position of the key's first line and
+    is never replaced, so a later stronger hit keeps the original slot.
+    """
+    with tempfile.TemporaryDirectory(prefix="genein-blast-dedup-") as tmp_name:
+        db = sqlite3.connect(str(Path(tmp_name) / "hits.sqlite"))
+        try:
+            db.execute("PRAGMA journal_mode=OFF")
+            db.execute("PRAGMA synchronous=OFF")
+            db.execute("PRAGMA temp_store=FILE")
+            db.execute("PRAGMA cache_size=-32768")
+            db.create_function("rank_is_better", 8, _rank_is_better)
+            db.execute(
+                """
+                CREATE TABLE hits (
+                    qseqid TEXT NOT NULL,
+                    sseqid TEXT NOT NULL,
+                    strand TEXT NOT NULL,
+                    qmin INTEGER NOT NULL,
+                    qmax INTEGER NOT NULL,
+                    smin INTEGER NOT NULL,
+                    smax INTEGER NOT NULL,
+                    bitscore REAL NOT NULL,
+                    evalue REAL NOT NULL,
+                    pident REAL NOT NULL,
+                    line TEXT NOT NULL,
+                    first_ordinal INTEGER NOT NULL,
+                    PRIMARY KEY (qseqid, sseqid, strand, qmin, qmax, smin, smax)
+                ) WITHOUT ROWID
+                """
+            )
+            batch = []
+            for ordinal, line in enumerate(lines):
+                key, rank = _hit_key_rank(line)
+                batch.append((*key, -rank[0], rank[1], -rank[2], line, ordinal))
+                if len(batch) >= 5000:
+                    db.executemany(_DEDUP_INSERT, batch)
+                    batch.clear()
+            if batch:
+                db.executemany(_DEDUP_INSERT, batch)
+            db.commit()
+            for (line,) in db.execute("SELECT line FROM hits ORDER BY first_ordinal"):
+                handle.write(line)
+                handle.write("\n")
+        finally:
+            db.close()
+
+
+def deduplicate_hit_files(paths: list[Path], combined_out: Path) -> None:
+    """Stream profile TSVs into one deduplicated report."""
+    combined_out = Path(combined_out)
+    combined_out.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=f".{combined_out.name}.", suffix=".tmp", dir=combined_out.parent,
+    )
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
+            _write_deduped_lines(_iter_hit_lines(paths), handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        replace_atomic(tmp_path, combined_out)
+        fsync_directory(combined_out.parent)
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
+
+
+def deduplicate_combined_hits(chunks: list[str]) -> str:
+    """Keep the strongest exact-coordinate hit emitted by dual BLAST profiles."""
+    with tempfile.TemporaryDirectory(prefix="genein-blast-dedup-") as tmp_name:
+        tmp = Path(tmp_name)
+        spool = tmp / "joined.tsv"
+        with spool.open("w", encoding="utf-8", newline="") as handle:
+            for chunk in chunks:
+                handle.write(chunk)
+        out = tmp / "dedup.tsv"
+        deduplicate_hit_files([spool], out)
+        return out.read_text(encoding="utf-8")
 
 
 def _atomic_text_handle(target: Path):
@@ -219,62 +293,13 @@ def copy_text_atomic(source: Path, target: Path) -> None:
 
 
 def deduplicate_combined_files(paths: list[Path], query_order: list[str], combined_out: Path) -> None:
-    """Streaming, byte-identical equivalent of
-    write_text_atomic(combined_out, deduplicate_combined_hits([p.read_text() for p in paths])).
+    """Keep the existing file API, with disk dedup independent of query order.
 
-    Output order of deduplicate_combined_hits is: every key in order of first
-    appearance in paths[0], then keys first seen in paths[1], and so on, each
-    carrying the best-ranked line among all duplicates.  Duplicates can only
-    share a query id, so the files are merged one query at a time and each
-    key is written to the section of the file where it first appeared.
-    Peak memory is bounded by the hits of a single query instead of the
-    whole BLAST output (which reached many GB for read-level rescue).
+    query_order remains accepted by current callers; SQLite preserves the
+    first-seen coordinate-key order even for interleaved/rewritten query ids.
+    No raw report or single-query hit group is materialized in memory.
     """
-    order_index = {name: index for index, name in enumerate(query_order)}
-    combined_out = Path(combined_out)
-    tmp, final = _atomic_text_handle(combined_out)
-    section_paths: list[Path] = []
-    sections = [final]
-    try:
-        for number in range(1, len(paths)):
-            section_tmp, section_handle = _atomic_text_handle(
-                combined_out.with_name(f"{combined_out.name}.section{number}")
-            )
-            section_paths.append(section_tmp)
-            sections.append(section_handle)
-        iterators = [_query_blocks(path, order_index) for path in paths]
-        heads = [next(iterator, None) for iterator in iterators]
-        while any(head is not None for head in heads):
-            current = min(head[0] for head in heads if head is not None)
-            best: dict[tuple[object, ...], tuple[tuple[object, ...], str]] = {}
-            first_section: dict[tuple[object, ...], int] = {}
-            order: list[tuple[object, ...]] = []
-            for number, head in enumerate(heads):
-                if head is None or head[0] != current:
-                    continue
-                for line in head[1]:
-                    key, rank = _hit_key_rank(line)
-                    if key not in best:
-                        order.append(key)
-                        first_section[key] = number
-                        best[key] = (rank, line)
-                    elif rank < best[key][0]:
-                        best[key] = (rank, line)
-                heads[number] = next(iterators[number], None)
-            for key in order:
-                sections[first_section[key]].write(best[key][1] + "\n")
-        for section_tmp, section_handle in zip(section_paths, sections[1:]):
-            section_handle.close()
-            with section_tmp.open("r", encoding="utf-8", errors="strict") as reader:
-                shutil.copyfileobj(reader, final, 1 << 20)
-        _commit_atomic(tmp, final, combined_out)
-    finally:
-        for handle in sections:
-            if not handle.closed:
-                handle.close()
-        for path in [tmp, *section_paths]:
-            if path.exists():
-                path.unlink()
+    deduplicate_hit_files(paths, combined_out)
 
 
 def run_router(query: str, database: str, config: dict, threads: int,
@@ -350,16 +375,7 @@ def run_router(query: str, database: str, config: dict, threads: int,
             if target and not grouped[profile]:
                 write_text_atomic(target, "")
         if combined_out:
-            try:
-                deduplicate_combined_files(combined_paths, list(sequences), combined_out)
-            except _StreamOrderError as exc:
-                # Defensive fallback (e.g. BLAST rewrote a structured query id):
-                # keep the historical in-memory behaviour rather than fail.
-                print(f"[AVISO] blast_router: fusao em streaming indisponivel ({exc}); "
-                      "usando fusao em memoria.", file=sys.stderr)
-                write_text_atomic(combined_out, deduplicate_combined_hits([
-                    path.read_text(encoding="utf-8", errors="strict") for path in combined_paths
-                ]))
+            deduplicate_combined_files(combined_paths, list(sequences), combined_out)
     database_path = Path(database)
     database_files = sorted(
         path for path in database_path.parent.glob(database_path.name + ".*") if path.is_file()

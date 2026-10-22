@@ -1,6 +1,6 @@
 # Instalação e reprodução
 
-Guia da **2.0.1**, correção de distribuição sobre a fonte 2.0.0. O [guia inicial](../README.md) apresenta o programa; o [histórico](../CHANGELOG.md) identifica o fechamento anterior. A instalação prepara a fonte e as ferramentas; bancos, índices de hospedeiro e dados de pesquisa são preparados separadamente.
+Guia da **2.0.2**, integração de memória sobre a distribuição 2.0.1. O [guia inicial](../README.md) apresenta o programa; a [nota da integração](integracao-memoria-22out.md) explica o processamento em disco, e o [histórico](../CHANGELOG.md) conserva os fechamentos anteriores. A instalação prepara a fonte e as ferramentas; bancos, índices de hospedeiro e dados de pesquisa são preparados separadamente.
 
 ## Plataformas e pré-requisitos
 
@@ -36,7 +36,7 @@ bash run_linux.sh
 Para uma instalação separada, defina um prefixo novo **antes de todas as chamadas** de instalação, abertura e análise:
 
 ```bash
-export GENEIN_BUNDLE_DIR="$HOME/.gene-in-2.0.1"
+export GENEIN_BUNDLE_DIR="$HOME/.gene-in-2.0.2"
 bash bundle/install_wsl.sh
 bash bundle/run.sh test-env
 bash run_linux.sh
@@ -90,6 +90,8 @@ Não há um requisito universal de RAM, tempo ou disco validado para toda biblio
 
 Uma amostra de 300.000 pares produziu cerca de 30 milhões de HSPs. O diagnóstico usa **45 GB livres no mesmo sistema de arquivos** como aviso para dados desse porte. As etapas pesadas também conferem suas estimativas de espaço antes de iniciar e durante a escrita. Esse valor vem de medições de engenharia guardadas em `docs/desenvolvimento/` no repositório Git; não é garantia de capacidade para qualquer amostra.
 
+Na 2.0.2, a deduplicação do BLAST do resgate usa SQLite em disco, e exportação e validação do resumo percorrem as linhas sem manter uma lista de todos os hits. O filtro preserva as duas passagens e os hashes em fluxo da 2.0.1; suas alterações melhoram o tratamento de falhas, sem atribuir a ele uma nova redução de RAM. O contrato da entrada permanece: raw ausente encerra com erro; arquivo existente vazio produz somente cabeçalhos. Ainda ficam em memória sequências, metadados, identificadores e o melhor hit de cada candidato. Garanta espaço e permissão de escrita tanto para a saída quanto para o diretório temporário efetivo (`TMPDIR`, quando definido). Falha no banco temporário não aciona uma cópia integral da tabela em memória. O custo de disco e a RAM total continuam dependendo da entrada e das demais ferramentas; veja a [nota da integração](integracao-memoria-22out.md).
+
 O metaSPAdes preserva o parâmetro `-m 64`; quando ele excede a memória disponível, o programa avisa. A redução automática não foi implementada. O BLAST convencional continua sem divisão em blocos; o bloco de 256 queries pertence à busca curta. O Velvet pode produzir montagens diferentes com as mesmas entradas e configuração. Os limites preservados estão em `docs/desenvolvimento/` no repositório Git.
 
 Falhas de memória, espaço ou ferramentas precisam ser resolvidas antes de repetir a análise em uma pasta nova. SIGTERM permite tratamento e limpeza; SIGKILL e desligamento abrupto não podem ser tratados pelo próprio processo.
@@ -104,7 +106,7 @@ Para repetir a verificação sintética de fragmentos com ferramentas reais, use
 export GENEIN_BUNDLE_DIR="${GENEIN_BUNDLE_DIR:-$HOME/.gene-in-bundle}"
 "$GENEIN_BUNDLE_DIR/bin/micromamba" run -p "$GENEIN_BUNDLE_DIR/env" \
   python scripts/tests/verify_fragment_recovery_real.py \
-  --artifact-root "$HOME/genein-verificacao-2.0.0"
+  --artifact-root "$HOME/genein-verificacao-2.0.2"
 ```
 
 O teste cria seus próprios dados e conserva evidências, incluindo falhas. O sucesso esperado é `PASS functional fragment recovery`. Ele usa sequências sintéticas com origem conhecida; não estima sensibilidade, precisão ou utilidade em amostras reais. Veja [validação científica](validacao.md) e [desenvolvimento](guia-de-desenvolvimento.md) para outras verificações.

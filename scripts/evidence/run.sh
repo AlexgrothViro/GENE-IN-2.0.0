@@ -240,6 +240,53 @@ python3 "$EVIDENCE_DIR/run_state.py" --state "$STATE_FILE" status --value runnin
 
 CURRENT_STAGE="input_validation"
 EVIDENCE_FAILURE_TYPE="UNKNOWN"
+RESOURCE_SHORTAGE=0
+EVIDENCE_FAILED_COMMAND=""
+# BEGIN resource_shortage
+# Classifica ENOSPC e a mensagem do sqlite "database or disk is full" como
+# falta de recurso e mostra TMPDIR. O stderr capturado fica em OUTDIR; se o
+# mktemp falhar, o estágio segue sem captura e não é chamado de disco cheio.
+# O estado grava EVIDENCE_FAILURE_TYPE, que começa como UNKNOWN.
+# O comando gravado é "$*" do estágio, não o return interno do invólucro.
+run_recording_stderr() {
+  local err_file="" rc=0 errexit=0 stderr_fd="" tee_pid=""
+  case $- in
+    *e*) errexit=1 ;;
+  esac
+  set +e
+  if [[ -n "${OUTDIR:-}" ]]; then
+    err_file="$(mktemp "${OUTDIR}/.genein-cmd-err.XXXXXX" 2>/dev/null)" || err_file=""
+  fi
+  if [[ -n "$err_file" && -f "$err_file" ]]; then
+    exec {stderr_fd}> >(tee "$err_file" >&2)
+    tee_pid=$!
+    "$@" 2>&${stderr_fd}
+    rc=$?
+    exec {stderr_fd}>&-
+    # O tee ainda pode não ter gravado quando o comando volta. Sem este wait,
+    # o grep abaixo perde ENOSPC em uma fração das corridas.
+    wait "$tee_pid" || true
+  else
+    err_file=""
+    "$@"
+    rc=$?
+  fi
+  if [[ "$errexit" -eq 1 ]]; then
+    set -e
+  fi
+  if [[ "$rc" -ne 0 ]]; then
+    EVIDENCE_FAILED_COMMAND="$*"
+    if [[ -n "$err_file" ]] && grep -Eq 'No space left on device|database or disk is full|ENOSPC|Errno 28' "$err_file"; then
+      RESOURCE_SHORTAGE=1
+      echo "[FATAL] falta de recurso: disco cheio (ENOSPC ou 'database or disk is full'). TMPDIR=${TMPDIR:-/tmp}" >&2
+    fi
+  fi
+  if [[ -n "$err_file" ]]; then
+    rm -f "$err_file"
+  fi
+  return "$rc"
+}
+# END resource_shortage
 state_stage() {
   CURRENT_STAGE="$1"
   local args=(--state "$STATE_FILE" stage --id "$1" --status "$2")
@@ -261,16 +308,21 @@ cancel_run() {
 }
 fail_run_v2() {
   local rc=$?
+  local message="Evidence V2 stage failed"
+  local failed_command="${EVIDENCE_FAILED_COMMAND:-${BASH_COMMAND:-}}"
   trap - ERR INT TERM
+  if [[ "${RESOURCE_SHORTAGE:-0}" == "1" ]]; then
+    message="falta de recurso: disco cheio (ENOSPC ou database or disk is full). TMPDIR=${TMPDIR:-/tmp}"
+  fi
   python3 "$EVIDENCE_DIR/run_state.py" --state "$STATE_FILE" write-failure-evidence \
-    --root "$OUTDIR" --reason "Evidence V2 stage failed: $CURRENT_STAGE" \
+    --root "$OUTDIR" --reason "$message: $CURRENT_STAGE" \
     "${STATE_POLICY_ARGS[@]}" 2>/dev/null || true
   python3 "$EVIDENCE_DIR/run_state.py" --state "$STATE_FILE" stage --id "$CURRENT_STAGE" \
-    --status failed --message "Evidence V2 stage failed" --failure-type "${EVIDENCE_FAILURE_TYPE:-TOOL_FAILURE}" \
-    --failed-command "${BASH_COMMAND:-}" 2>/dev/null || true
+    --status failed --message "$message" --failure-type "${EVIDENCE_FAILURE_TYPE:-TOOL_FAILURE}" \
+    --failed-command "$failed_command" 2>/dev/null || true
   python3 "$EVIDENCE_DIR/run_state.py" --state "$STATE_FILE" status --value failed \
     --failure-type "${EVIDENCE_FAILURE_TYPE:-TOOL_FAILURE}" --failed-stage "$CURRENT_STAGE" \
-    --failure-message "Evidence V2 stage failed" --failed-command "${BASH_COMMAND:-}" 2>/dev/null || true
+    --failure-message "$message" --failed-command "$failed_command" 2>/dev/null || true
   exit "$rc"
 }
 cancel_run_v2() {
@@ -370,7 +422,7 @@ if [[ -n "$COMPOSITE_DB" ]]; then
   if [[ "$QUERIES_HAS_SEQUENCES" == "true" ]]; then
     BLAST_ROUTER_ARGS=(--query "$QUERIES" --db "$COMPOSITE_DB" --activation-policy "$ACTIVATION_POLICY" --profiles "$PROFILES")
     [[ -z "$QUERY_MANIFEST" ]] || BLAST_ROUTER_ARGS+=(--recover-short-fragments)
-    python3 "$EVIDENCE_DIR/blast_router.py" "${BLAST_ROUTER_ARGS[@]}" \
+    run_recording_stderr python3 "$EVIDENCE_DIR/blast_router.py" "${BLAST_ROUTER_ARGS[@]}" \
       --threads "$THREADS" --out-short "$SHORT_RAW" --out-conventional "$BLASTN_RAW" \
       --provenance "$OUTDIR/blast_routing.json"
     BLAST_SEARCH_COMPLETE=true
@@ -397,14 +449,14 @@ AGG_ARGS=(); for spec in "${BLAST_SPECS[@]}"; do AGG_ARGS+=(--blast "$spec"); do
 [[ -z "$ASSEMBLER_USED" ]] || AGG_ARGS+=(--assembly-method "$ASSEMBLER_USED")
 [[ -z "$QUERY_MANIFEST" ]] || AGG_ARGS+=(--query-manifest "$QUERY_MANIFEST")
 state_stage hsp_aggregation running
-python3 "$EVIDENCE_DIR/aggregate_hsps.py" "${AGG_ARGS[@]}" --query-fasta "$QUERIES" --work-dir "$TMPDIR_RUN" --out "$OUTDIR/fragment_evidence.tsv"
+run_recording_stderr python3 "$EVIDENCE_DIR/aggregate_hsps.py" "${AGG_ARGS[@]}" --query-fasta "$QUERIES" --work-dir "$TMPDIR_RUN" --out "$OUTDIR/fragment_evidence.tsv"
 state_stage hsp_aggregation "done"
 state_stage locus_building running
-python3 "$EVIDENCE_DIR/build_loci.py" --fragments "$OUTDIR/fragment_evidence.tsv" --gap-bp "$GAP_BP" --work-dir "$TMPDIR_RUN" --out "$OUTDIR/locus_evidence.tsv"
+run_recording_stderr python3 "$EVIDENCE_DIR/build_loci.py" --fragments "$OUTDIR/fragment_evidence.tsv" --gap-bp "$GAP_BP" --work-dir "$TMPDIR_RUN" --out "$OUTDIR/locus_evidence.tsv"
 HSP_ARGS=(); for spec in "${BLAST_SPECS[@]}"; do HSP_ARGS+=(--blast "$spec"); done
-python3 "$EVIDENCE_DIR/build_hsp_evidence.py" "${HSP_ARGS[@]}" --loci "$OUTDIR/locus_evidence.tsv" --work-dir "$TMPDIR_RUN" --out "$OUTDIR/hsp_evidence.tsv"
+run_recording_stderr python3 "$EVIDENCE_DIR/build_hsp_evidence.py" "${HSP_ARGS[@]}" --loci "$OUTDIR/locus_evidence.tsv" --work-dir "$TMPDIR_RUN" --out "$OUTDIR/hsp_evidence.tsv"
 if [[ -n "$ASSEMBLY_MANIFEST" ]]; then
-  python3 "$EVIDENCE_DIR/assembly_consensus.py" loci \
+  run_recording_stderr python3 "$EVIDENCE_DIR/assembly_consensus.py" loci \
     --loci "$OUTDIR/locus_evidence.tsv" --manifest "$ASSEMBLY_MANIFEST" \
     --out-tsv "$OUTDIR/assembly_concordance.tsv" \
     --out-json "$OUTDIR/assembly_concordance.json"
@@ -416,7 +468,7 @@ COMPETITIVE_ARGS=(--fragments "$OUTDIR/fragment_evidence.tsv" \
   --work-dir "$TMPDIR_RUN" \
   --out "$OUTDIR/competitive_hits.tsv")
 [[ "$BLAST_SEARCH_COMPLETE" == "true" ]] && COMPETITIVE_ARGS+=(--search-complete)
-python3 "$EVIDENCE_DIR/competitive_hits.py" "${COMPETITIVE_ARGS[@]}"
+run_recording_stderr python3 "$EVIDENCE_DIR/competitive_hits.py" "${COMPETITIVE_ARGS[@]}"
 state_stage competitive_search "done"
 
 READ_SUPPORT="$OUTDIR/read_support.tsv"; COVERAGE="$OUTDIR/coverage.tsv"
@@ -526,7 +578,7 @@ CLASSIFY_ARGS=(
   --provenance "$OUTDIR/provenance.json" --run-id "$RUN_ID" --out "$OUTDIR/sample_evidence.json"
 )
 [[ ! -f "$OUTDIR/assembly_concordance.json" ]] || CLASSIFY_ARGS+=(--assembly-concordance "$OUTDIR/assembly_concordance.json")
-python3 "$EVIDENCE_DIR/classify_sample.py" "${CLASSIFY_ARGS[@]}"
+run_recording_stderr python3 "$EVIDENCE_DIR/classify_sample.py" "${CLASSIFY_ARGS[@]}"
 state_stage evidence_classification "done"
 state_stage report_export running
 if [[ -n "$QUERY_MANIFEST" ]]; then
@@ -537,7 +589,7 @@ if [[ -n "$QUERY_MANIFEST" ]]; then
   if [[ -n "${BLAST_DB:-}" ]]; then
     EXPORT_REFERENCE+=(--blast-db "$BLAST_DB")
   fi
-  python3 "$EVIDENCE_DIR/export_candidate_sequences.py" --queries "$QUERIES" \
+  run_recording_stderr python3 "$EVIDENCE_DIR/export_candidate_sequences.py" --queries "$QUERIES" \
     --manifest "$QUERY_MANIFEST" --fragments "$OUTDIR/fragment_evidence.tsv" --out-dir "$OUTDIR" \
     "${EXPORT_REFERENCE[@]}"
 fi

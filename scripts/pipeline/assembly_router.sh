@@ -7,7 +7,6 @@ REPO_ROOT="$(cd "$SCRIPTS_ROOT/.." && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
 CONFIG_FILE="$(genein_resolve_config_file)"
-LEGACY_CONFIG="${REPO_ROOT}/config.env"
 
 # The main pipeline has already resolved CLI/config precedence.
 if [[ "${PIPELINE_CONFIG_LOADED:-0}" != "1" ]]; then

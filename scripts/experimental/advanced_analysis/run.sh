@@ -75,7 +75,6 @@ fi
 # shellcheck disable=SC1091
 source "${SCRIPTS_ROOT}/lib/genein_config_path.sh"
 CONFIG_FILE="$(genein_resolve_config_file)"
-LEGACY_CONFIG="${REPO_ROOT}/config.env"
 if [[ -f "${CONFIG_FILE}" ]]; then
   # User config/generated metadata is resolved at runtime.
   # shellcheck disable=SC1090
