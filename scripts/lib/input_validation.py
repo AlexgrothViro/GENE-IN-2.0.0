@@ -13,6 +13,7 @@ import gzip
 import json
 import re
 import sys
+import zlib
 from pathlib import Path
 from typing import Iterator, TextIO
 
@@ -101,7 +102,7 @@ def iter_fastq(path: Path) -> Iterator[tuple[str, str]]:
                     return
                 yield record
                 record_no += 1
-    except (UnicodeDecodeError, EOFError, OSError) as exc:
+    except (UnicodeDecodeError, EOFError, OSError, zlib.error) as exc:
         raise _corrupt_fastq(path) from exc
 
 
@@ -137,7 +138,7 @@ def validate_fastq(path: Path, mate: Path | None = None) -> int:
             finally:
                 if second is not None:
                     second.close()
-    except (UnicodeDecodeError, EOFError, OSError) as exc:
+    except (UnicodeDecodeError, EOFError, OSError, zlib.error) as exc:
         raise _corrupt_fastq(path) from exc
     if count == 0:
         raise ValueError(f"FASTQ sem registros: {path}")
