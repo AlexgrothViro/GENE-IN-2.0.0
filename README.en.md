@@ -20,7 +20,7 @@ bash bundle/run.sh test-env
 bash run_linux.sh
 ```
 
-Open the URL printed in the terminal. The dashboard binds to `127.0.0.1`; keep its terminal open and stop the server with Ctrl+C when finished. Keep the source tree in place because the editable installation also uses its shell adapters. See the [installation guide](docs/installation-reproducibility.md).
+Open the URL printed in the terminal. The dashboard binds to `127.0.0.1`; keep its terminal open and stop the server with Ctrl+C when finished. Keep the source tree in place because the editable installation also uses its shell adapters. If tools such as `make` or `bzip2` are missing and `apt-get` fails, installation stops without creating the environment: install them and run the command again. See the [installation guide](docs/installation-reproducibility.md).
 
 The scientific environment lives outside the source tree. The default prefix is `~/.gene-in-bundle`. Set `GENEIN_BUNDLE_DIR` before installing, opening the dashboard and running analyses when another directory is wanted. The Windows launcher uses the default.
 

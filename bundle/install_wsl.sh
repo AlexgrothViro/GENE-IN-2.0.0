@@ -42,23 +42,33 @@ missing_system=()
 for required in make python3 curl tar bzip2 install find chmod; do
   need_cmd "$required" || missing_system+=("$required")
 done
+stop_install() {
+  echo >&2
+  echo "[ERRO] Instalação interrompida; ${1} Instale ${missing_system[*]} e rode de novo: bash bundle/install_wsl.sh" >&2
+  echo "[ERROR] Installation stopped; ${2} Install ${missing_system[*]} and run again: bash bundle/install_wsl.sh" >&2
+  exit 2
+}
 if ((${#missing_system[@]})); then
   echo "[AVISO] Pré-requisitos do sistema ausentes: ${missing_system[*]}" >&2
+  echo "[WARN] Missing system prerequisites: ${missing_system[*]}" >&2
   echo "Instale: make python3 curl tar bzip2 ca-certificates coreutils findutils." >&2
-  command -v apt-get >/dev/null 2>&1 || {
-    echo "[ERRO] Instale esses pacotes pelo gerenciador do sistema e execute novamente." >&2; exit 2;
-  }
+  echo "Install: make python3 curl tar bzip2 ca-certificates coreutils findutils." >&2
+  command -v apt-get >/dev/null 2>&1 || stop_install "não há apt-get neste sistema." "apt-get is not available on this system."
   apt_prefix=()
   if [[ "$EUID" -ne 0 ]]; then
-    command -v sudo >/dev/null 2>&1 || {
-      echo "[ERRO] Sem sudo: peça a instalação dos pré-requisitos ao administrador." >&2; exit 2;
-    }
+    command -v sudo >/dev/null 2>&1 || stop_install "sem sudo, peça a instalação ao administrador." "without sudo, ask an administrator to install them."
     apt_prefix=(sudo)
   fi
-  "${apt_prefix[@]}" apt-get update
-  "${apt_prefix[@]}" apt-get install -y make python3 curl tar bzip2 ca-certificates coreutils findutils
+  # apt-get keeps its own output (including a sudo password prompt). A failure
+  # still ends here, before any environment directory is created.
+  if ! "${apt_prefix[@]}" apt-get update; then
+    stop_install "o apt-get falhou." "apt-get failed."
+  fi
+  if ! "${apt_prefix[@]}" apt-get install -y make python3 curl tar bzip2 ca-certificates coreutils findutils; then
+    stop_install "o apt-get falhou." "apt-get failed."
+  fi
   for required in "${missing_system[@]}"; do
-    need_cmd "$required" || { echo "[ERRO] Pré-requisito ainda ausente: $required" >&2; exit 2; }
+    need_cmd "$required" || stop_install "pré-requisito ainda ausente: ${required}." "prerequisite still missing: ${required}."
   done
 fi
 mkdir -p "$BIN_DIR" "$MAMBA_ROOT"
