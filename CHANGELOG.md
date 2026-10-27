@@ -3,7 +3,7 @@
 ## 2026-10-27 — correções de primeira execução (QA)
 
 - O diagnóstico de ambiente não anuncia sucesso quando `blastdbcmd` falha, aborta ou o manifesto JSON é inválido/corrompido; encerra com mensagem PT/EN e código diferente de zero.
-- Ctrl+C / SIGINT no wrapper e na CLI encerra a árvore de processos, imprime cancelamento e não trata a execução como concluída.
+- Ctrl+C / SIGINT no wrapper e na CLI encerra a árvore de processos, imprime cancelamento e não trata a execução como concluída. O wrapper conserva o stdin do chamador no filho em background e espera o PID (até 120 s) escrever o recibo `cancelled` antes de um SIGKILL de último recurso.
 - FASTQ gzip ou binário ilegível deixa de expor `utf-8 codec can't decode`; a mensagem pede reimportar o arquivo original.
 - Documentação alinhada à main (PR #2 memória, PR #3 instalador). O ZIP não inclui banco BLAST nem FASTQ. `SOURCE_COMMIT` continua sendo gravado pelo empacotador para `genein --version` sem `.git`.
 

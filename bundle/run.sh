@@ -61,22 +61,39 @@ shift || true
 
 # Run without exec so this waiter can stop the child tree on Ctrl+C / SIGINT.
 # micromamba and make do not always reap grandchildren (SPAdes, python).
+# Background jobs normally get stdin from /dev/null; keep the caller's fd 0.
+genein_child_running() {
+  local state
+  state="$(ps -o state= -p "$1" 2>/dev/null)" || return 1
+  [[ "$state" != *Z* ]]
+}
+
 genein_run_tree() {
   local child status
   if command -v setsid >/dev/null 2>&1; then
-    setsid "$@" &
+    setsid "$@" <&0 &
   else
-    "$@" &
+    "$@" <&0 &
   fi
   child=$!
   genein_stop_tree() {
+    local waited=0
+    local limit="${GENEIN_CANCEL_WAIT:-120}"
     echo "[CANCELADO] Execução interrompida (Ctrl+C / SIGINT). Processos filhos encerrados. / Cancelled; child processes were stopped." >&2
     trap '' INT TERM
+    [[ "$limit" =~ ^[1-9][0-9]*$ ]] || limit=120
     kill -INT "$child" 2>/dev/null || true
     kill -INT -"$child" 2>/dev/null || true
-    sleep 2
-    kill -KILL "$child" 2>/dev/null || true
-    kill -KILL -"$child" 2>/dev/null || true
+    # Wait for python to stop the pipeline tree and write cancelled/130.
+    # SIGKILL only if the child is still alive after the timeout.
+    while genein_child_running "$child" && (( waited < limit )); do
+      sleep 1
+      waited=$((waited + 1))
+    done
+    if genein_child_running "$child"; then
+      kill -KILL "$child" 2>/dev/null || true
+      kill -KILL -"$child" 2>/dev/null || true
+    fi
     wait "$child" 2>/dev/null || true
     exit 130
   }
