@@ -17,8 +17,15 @@ def test_installer_checks_make_before_creating_environment(tmp_path):
         (tmp_path / name).write_text(data)
         (tmp_path / name).chmod(0o755)
     result = subprocess.run(['/bin/bash', str(ROOT / 'bundle/install_wsl.sh')], env=dict(os.environ, PATH=str(tmp_path), GENEIN_BUNDLE_DIR=str(tmp_path / 'bundle')), capture_output=True)
-    assert result.returncode == 42
+    assert result.returncode == 2
     assert b'ausentes: make' in result.stderr
+    assert b'Missing system prerequisites: make' in result.stderr
+    assert b'Instala\xc3\xa7\xc3\xa3o interrompida; o apt-get falhou.' in result.stderr
+    assert b'Installation stopped; apt-get failed.' in result.stderr
+    assert b'Instale make e rode de novo: bash bundle/install_wsl.sh' in result.stderr
+    assert b'APT_ATTEMPT:update' in result.stderr
+    assert result.stderr.count(b'APT_ATTEMPT:') == 1
+    assert b'[OK]' not in result.stdout + result.stderr
     assert not (tmp_path / 'bundle').exists()
 
 
