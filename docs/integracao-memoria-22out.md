@@ -1,6 +1,6 @@
 # Integração de memória — Gene-In 2.0.2
 
-A 2.0.2 adapta o processamento em disco à distribuição pública 2.0.1, preservando seus resultados, metadados de referência e identidade. A base é o commit `96f0932884ae2e8ebe6b580b0c33fbaffc048266`; a proposta é preparada na branch `fix/memoria-distribuicao-20261022`. Essa identificação distingue o novo software e seu pacote local. Branch publicada, PR aberto, merge na main e release no GitHub são estados distintos; confira o commit em cada caso no [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0) e nos [pull requests](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pulls).
+A 2.0.2 adapta o processamento em disco à distribuição pública 2.0.1, preservando seus resultados, metadados de referência e identidade. A base é o commit `96f0932884ae2e8ebe6b580b0c33fbaffc048266`. A integração está na main desde o PR #2 (`572a827`); o instalador (PR #3) também já está na main. Cite o commit realmente usado no [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0).
 
 O objetivo permanece recuperar e organizar sequências candidatas para pesquisa e revisão humana. Esta integração não acrescenta uma avaliação biológica, não repete o piloto e não incorpora o Gene-In Builder, que continua em desenvolvimento separado.
 

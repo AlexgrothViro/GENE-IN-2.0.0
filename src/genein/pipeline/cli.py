@@ -326,6 +326,11 @@ def run(args) -> int:
             runner.run(command)
         except BatchCancelled:
             code = 130
+            print(
+                "[CANCELADO] Execução interrompida (Ctrl+C / SIGINT). "
+                "Processos filhos encerrados. / Cancelled; child processes were stopped.",
+                file=sys.stderr,
+            )
         except subprocess.CalledProcessError as exc:
             code = exc.returncode if exc.returncode > 0 else 128 - exc.returncode
         except OSError as exc:
@@ -342,6 +347,12 @@ def run(args) -> int:
             receipt["failed_stage"] = failed_stage
         if failure_message:
             receipt["failure_message"] = failure_message
+        if code != 130:
+            print(
+                f"[AVISO] Diretório de saída criado e preservado (não reutilizado): {output} / "
+                f"Output directory was created and kept: {output}",
+                file=sys.stderr,
+            )
     _receipt(receipt_path, receipt)
     print(f"[RUN_ID] {run_id}")
     print(f"[OUTPUT_ROOT] {output}")

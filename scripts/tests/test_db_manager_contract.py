@@ -44,7 +44,8 @@ class DbManagerContractTests(unittest.TestCase):
         self.assertIn('blastdbcmd -db "$(blast_db_arg "$database")" -info', common)
         self.assertIn('validate_blast_database "$BLAST_DB"', pipeline)
         self.assertIn('check_blast_database "$DB"', legacy_blast)
-        self.assertIn('validate_blast_database "$DIAG_BLAST_DB"', environment)
+        self.assertIn('inspect_blast_database "$DIAG_BLAST_DB"', environment)
+        self.assertIn('validate_blast_database "$database"', environment)
         self.assertNotIn('${BLAST_DB}.nhr', pipeline)
         self.assertNotIn('${DB}.nhr', legacy_blast)
 

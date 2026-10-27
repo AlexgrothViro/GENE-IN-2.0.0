@@ -4,13 +4,13 @@
 
 O Gene-In recupera e organiza sequências candidatas de dados de sequenciamento fragmentados para revisão humana. O programa é geral: o hospedeiro e o banco de referência são escolhas de quem analisa. Suíno e picornavírus são apenas o caso-modelo usado na validação, não um limite do programa. Integra controle de qualidade, filtro opcional do hospedeiro, montadores, busca por similaridade, proveniência e exportação. Preserva candidatos de **20–100 pb e maiores**. O resultado depende das entradas, dos adaptadores e das referências; um alinhamento não atribui origem, espécie ou diagnóstico.
 
-**2.0.2 — integração de memória sobre a distribuição 2.0.1, preparada em 22/10/2026.** O contrato Evidence continua `2.0.0-alpha.2`, com recuperação `fragment_recovery_20_100_v1` e revisão `scientific_review_20261005_v1`. A [nota da integração](docs/integracao-memoria-22out.md) explica o processamento em disco, as saídas preservadas e o alcance das verificações. Parâmetros, perfis e locks científicos permanecem os mesmos. A atualização é proposta em branch própria; publicar um PR não significa incorporá-la à main.
+**2.0.2 — integração de memória sobre a distribuição 2.0.1, na main desde o PR #2 (`572a827`); o instalador (PR #3) também já está na main.** O contrato Evidence continua `2.0.0-alpha.2`, com recuperação `fragment_recovery_20_100_v1` e revisão `scientific_review_20261005_v1`. A [nota da integração](docs/integracao-memoria-22out.md) explica o processamento em disco, as saídas preservadas e o alcance das verificações. Parâmetros, perfis e locks científicos permanecem os mesmos.
 
 Este é o [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Entregas publicadas ficam em [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). O [índice de repositórios e histórico](docs/repositorios-e-historico.md) guarda os nomes anteriores.
 
 ## Começo rápido
 
-Plataforma: **Linux x86_64 ou Windows x86_64 com WSL2/Ubuntu**. O ambiente científico fixado não atende macOS, ARM ou Windows sem WSL. A primeira instalação precisa de internet; bancos e amostras não acompanham o programa.
+Plataforma: **Linux x86_64 ou Windows x86_64 com WSL2/Ubuntu**. O ambiente científico fixado não atende macOS, ARM ou Windows sem WSL. A primeira instalação precisa de internet. O ZIP/fonte não inclui banco BLAST nem FASTQ de exemplo: prepare um banco e forneça as leituras (veja [uso e bancos](docs/uso-e-bancos.md)).
 
 No Windows, extraia o pacote inteiro em uma pasta permanente, execute `INSTALAR_GENEIN.bat` e depois `ABRIR_GENEIN.bat`. No Linux, na raiz da fonte:
 

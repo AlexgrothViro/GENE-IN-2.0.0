@@ -1,5 +1,12 @@
 # Histórico de entregas
 
+## 2026-10-27 — correções de primeira execução (QA)
+
+- O diagnóstico de ambiente não anuncia sucesso quando `blastdbcmd` falha, aborta ou o manifesto JSON é inválido/corrompido; encerra com mensagem PT/EN e código diferente de zero.
+- Ctrl+C / SIGINT no wrapper e na CLI encerra a árvore de processos, imprime cancelamento e não trata a execução como concluída. O wrapper conserva o stdin do chamador no filho em background e espera o PID (até 120 s) escrever o recibo `cancelled` antes de um SIGKILL de último recurso.
+- FASTQ gzip ou binário ilegível deixa de expor `utf-8 codec can't decode`; a mensagem pede reimportar o arquivo original.
+- Documentação alinhada à main (PR #2 memória, PR #3 instalador). O ZIP não inclui banco BLAST nem FASTQ. `SOURCE_COMMIT` continua sendo gravado pelo empacotador para `genein --version` sem `.git`.
+
 ## 2026-10-22 — 2.0.2, integração de memória
 
 - Integra o processamento em disco do resgate à distribuição 2.0.1, mantendo suas saídas, identidade, configuração e leitura de metadados de referência.
@@ -8,7 +15,7 @@
 - Preserva byte a byte os quatro módulos de disco da b3: `aggregate_hsps.py`, `build_loci.py`, `build_hsp_evidence.py` e `competitive_hits.py`.
 - Retira atribuições de configuração sem uso e documenta os globais consumidos pelos helpers, sem mudar a resolução da configuração.
 - Mantém autoria/licença, VERSION/contrato Evidence `2.0.0-alpha.2`, parâmetros, perfis, locks e resultados históricos. Builder continua separado.
-- A identificação 2.0.2 distingue o novo pacote e a proposta de PR; não anuncia merge na main, teto universal de RAM, solução geral de disco ou nova avaliação biológica. Verificações e limites em [integração de memória](docs/integracao-memoria-22out.md).
+- A identificação 2.0.2 distingue o pacote da 2.0.1; não anuncia teto universal de RAM, solução geral de disco ou nova avaliação biológica. A integração de memória está na main (PR #2). Verificações e limites em [integração de memória](docs/integracao-memoria-22out.md).
 
 ## 2026-10-20 — 2.0.1, correção de distribuição
 

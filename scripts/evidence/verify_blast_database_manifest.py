@@ -15,12 +15,18 @@ except ImportError:
     from common import sha256_file
 
 
-def verify(prefix: Path, manifest_path: Path | None = None) -> int:
+def verify(prefix: Path, manifest_path: Path | None = None, *, check_hashes: bool = True) -> int:
     prefix = prefix.resolve()
     manifest_path = manifest_path or Path(str(prefix) + ".db-manifest.json")
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    files = manifest.get("produced_files")
-    if manifest.get("schema_version") != "1.0" or not isinstance(files, dict) or not files:
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except ValueError as exc:
+        raise ValueError(
+            f"manifesto do banco BLAST ilegível ou corrompido (JSON inválido) em {manifest_path} / "
+            "BLAST database manifest is unreadable or corrupt (invalid JSON); reconstrua o banco e seu manifesto"
+        ) from exc
+    files = manifest.get("produced_files") if isinstance(manifest, dict) else None
+    if not isinstance(manifest, dict) or manifest.get("schema_version") != "1.0" or not isinstance(files, dict) or not files:
         raise ValueError("manifesto BLAST inválido ou sem arquivos/hashes")
     parent = prefix.parent
     alias = Path(str(prefix) + ".nal")
@@ -42,7 +48,8 @@ def verify(prefix: Path, manifest_path: Path | None = None) -> int:
         if not re.fullmatch(r"[0-9a-f]{64}", str(details.get("sha256", ""))):
             raise ValueError(f"hash não registrado no manifesto: {name}")
         path = parent / name
-        if not path.is_file() or path.stat().st_size != details["size"] or sha256_file(path) != details["sha256"]:
+        if not path.is_file() or path.stat().st_size != details["size"] or (
+                check_hashes and sha256_file(path) != details["sha256"]):
             raise ValueError(f"banco BLAST alterado ou incompleto: {name}; reconstrua o banco e seu manifesto")
     return len(files)
 
@@ -51,13 +58,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("prefix", type=Path)
     parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--sizes-only", action="store_true",
+                        help="Check manifest structure and file sizes without hashing (quick diagnostic).")
     args = parser.parse_args()
     try:
-        count = verify(args.prefix, args.manifest)
+        count = verify(args.prefix, args.manifest, check_hashes=not args.sizes_only)
     except (OSError, ValueError, TypeError) as exc:
         print(f"[FATAL] Integridade do banco BLAST: {exc}", file=sys.stderr)
         return 2
-    print(f"[OK] Banco BLAST: {count} arquivos conferidos por tamanho e SHA-256.")
+    checked = "tamanho" if args.sizes_only else "tamanho e SHA-256"
+    print(f"[OK] Banco BLAST: {count} arquivos conferidos por {checked}.")
     return 0
 
 

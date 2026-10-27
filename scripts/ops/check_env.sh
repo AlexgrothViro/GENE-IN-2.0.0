@@ -456,8 +456,54 @@ echo
 echo "== Validação de Arquivos Físicos e Bancos Locais =="
 REF_FASTA="${REF_FASTA:-data/ref/${DB}.fa}"
 LEGACY_FASTA="data/${DB}_db.fa"
+DIAG_BLAST_DB="${BLAST_DB:-blastdb/${DB}}"
 
-if validate_blast_database "${BLAST_DB:-blastdb/${DB}}"; then
+# Damaged index files can make blastdbcmd crash (SIGSEGV/SIGBUS) instead of
+# returning an error. A crash, or an error on files that exist, means a damaged
+# database, never one that is merely not prepared yet. Hashes are left to the
+# pipeline's DATABASE_PREFLIGHT; this only checks readability, manifest JSON and sizes.
+BLAST_DB_FAILURE=""
+inspect_blast_database() {
+  local database="$1" status=0 present=0 file detail
+  for file in "$database".n* "$database".db-manifest.json; do
+    if [[ -e "$file" ]]; then
+      present=1
+      break
+    fi
+  done
+  command -v blastdbcmd >/dev/null 2>&1 || return 1
+  { validate_blast_database "$database"; } 2>/dev/null || status=$?
+  if (( status > 128 )); then
+    BLAST_DB_FAILURE="blastdbcmd encerrou com o sinal SIG$(kill -l $((status - 128)) 2>/dev/null || echo "$((status - 128))") ao ler o banco / blastdbcmd crashed while reading the database"
+    return 1
+  fi
+  if (( status != 0 )); then
+    if (( present )); then
+      BLAST_DB_FAILURE="blastdbcmd não conseguiu ler os arquivos do banco (código ${status}) / blastdbcmd could not read the database files (exit ${status})"
+    fi
+    return 1
+  fi
+  if [[ -e "${database}.db-manifest.json" ]] && command -v python3 >/dev/null 2>&1; then
+    if ! detail="$(python3 "${SCRIPTS_ROOT}/evidence/verify_blast_database_manifest.py" "$database" --sizes-only 2>&1 >/dev/null)"; then
+      BLAST_DB_FAILURE="${detail#\[FATAL\] }"
+      return 1
+    fi
+  fi
+  return 0
+}
+
+BLAST_DB_READY=0
+if inspect_blast_database "$DIAG_BLAST_DB"; then
+  BLAST_DB_READY=1
+fi
+if [[ -n "$BLAST_DB_FAILURE" ]]; then
+  echo "  [ERRO] Banco BLAST inválido ou corrompido em ${DIAG_BLAST_DB} / Invalid or corrupt BLAST database."
+  echo "         ${BLAST_DB_FAILURE}"
+  echo "         Ação: reconstrua o banco e o manifesto (bash bundle/run.sh db DB=${DB}) ou informe outro prefixo preparado."
+  echo "         Action: rebuild the database and its manifest, or point to another prepared prefix."
+fi
+
+if [[ $BLAST_DB_READY -eq 1 ]]; then
   echo "  [OK] Banco explícito pronto; FASTA local adicional não é obrigatório."
 elif [[ -s "$REF_FASTA" ]]; then
   echo "  [OK] FASTA de referência principal ativo: $REF_FASTA"
@@ -477,11 +523,11 @@ else
 fi
 
 # BLAST Index Check
-DIAG_BLAST_DB="${BLAST_DB:-blastdb/${DB}}"
-
 if [[ -n "${BLAST_DB:-}" ]]; then
   echo "  [INFO] Caminho BLAST_DB ativo: $BLAST_DB"
-  if ! validate_blast_database "$BLAST_DB"; then
+  if [[ -n "$BLAST_DB_FAILURE" ]]; then
+    echo "  [ERRO] Índices BLAST presentes, mas ilegíveis; veja o erro acima."
+  elif [[ $BLAST_DB_READY -eq 0 ]]; then
     if [[ -s "$REF_FASTA" || -s "data/ref/${DB}.fa" || -s "data/${DB}_db.fa" ]]; then
       echo "  [INFO] BLAST_DB ainda não preparado. Execute: bash bundle/run.sh db DB=${DB}"
     else
@@ -494,8 +540,10 @@ if [[ -n "${BLAST_DB:-}" ]]; then
 else
   # BLAST_DB não foi passado explicitamente no ambiente
   # Verifica o prefixo padrão pela interface do BLAST+, aceitando aliases v5.
-  if validate_blast_database "$DIAG_BLAST_DB"; then
+  if [[ $BLAST_DB_READY -eq 1 ]]; then
     echo "  [OK] Índices BLAST autodetectados no caminho padrão: $DIAG_BLAST_DB"
+  elif [[ -n "$BLAST_DB_FAILURE" ]]; then
+    echo "  [ERRO] Índices BLAST presentes no caminho padrão, mas ilegíveis; veja o erro acima."
   else
     if [[ -s "$REF_FASTA" || -s "data/ref/${DB}.fa" || -s "data/${DB}_db.fa" ]]; then
       echo "  [INFO] BLAST_DB ainda não encontrado. Execute: bash bundle/run.sh db DB=${DB}"
@@ -545,6 +593,18 @@ mkdir -p "$VERSIONS_DIR"
     fi
   done
 } > "$VERSIONS_FILE"
+
+if [[ -n "$BLAST_DB_FAILURE" ]]; then
+  echo "-------------------------------------------------------" >&2
+  echo "⚠️ FALHA NO DIAGNÓSTICO: banco BLAST inválido ou manifesto corrompido." >&2
+  echo "   Invalid or corrupt BLAST database or manifest. Do not treat this check as successful." >&2
+  echo "   ${BLAST_DB_FAILURE}" >&2
+  echo "   Ação: reconstrua o banco e o manifesto (bash bundle/run.sh db DB=${DB}) ou informe outro prefixo." >&2
+  echo "   Action: rebuild the database and its manifest, or point to another prepared prefix." >&2
+  echo "   Versões catalogadas em: $VERSIONS_FILE" >&2
+  echo "-------------------------------------------------------" >&2
+  exit 1
+fi
 
 echo "-------------------------------------------------------"
 echo "✅ DIAGNÓSTICO CONCLUÍDO COM SUCESSO!"

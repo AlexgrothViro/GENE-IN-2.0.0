@@ -29,6 +29,7 @@ class ProcessRunner:
     def __init__(self, env: dict[str, str]):
         self.env = env
         self.cancelled = False
+        self._process: subprocess.Popen | None = None
 
     def checkpoint(self) -> None:
         if self.cancelled:
@@ -38,6 +39,12 @@ class ProcessRunner:
     def signals(self):
         def cancel(_signum, _frame):
             self.cancelled = True
+            process = self._process
+            if process is not None and process.pid:
+                try:
+                    os.killpg(process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
 
         previous = {sig: signal.signal(sig, cancel) for sig in (signal.SIGINT, signal.SIGTERM)}
         try:
@@ -75,6 +82,7 @@ class ProcessRunner:
             start_new_session=True, text=True,
             stdout=subprocess.PIPE if capture else None,
         )
+        self._process = process
         try:
             while True:
                 if allow_cancel:
@@ -92,6 +100,9 @@ class ProcessRunner:
         except BaseException:
             self._stop_group(process)
             raise
+        finally:
+            if self._process is process:
+                self._process = None
 
 
 def execute_sample(*, repo_root: Path, row: dict[str, str], run_id: str,
