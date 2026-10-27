@@ -4,13 +4,13 @@
 
 Gene-In recovers and organizes candidate sequences from fragmented sequencing data for human review. The program is general: the host and the reference database are choices of the person running the analysis. Swine and picornavirus are only the model case used in validation, not a limit of the program. It combines quality control, optional host filtering, assembly, similarity search, provenance and export. Candidate sequences of **20–100 bases and longer** are retained. A sequence alignment does not establish origin, species, infection or diagnosis.
 
-**2.0.2 — memory processing update on distribution 2.0.1, prepared on 2026-10-22.** The Evidence contract remains `2.0.0-alpha.2`, with recovery policy `fragment_recovery_20_100_v1` and scientific revision `scientific_review_20261005_v1`. The [integration note](docs/integracao-memoria-22out.md) explains disk processing, preserved outputs and verification scope. Scientific parameters, profiles and locks remain unchanged. This update is proposed on its own branch; publishing a pull request does not merge it into main.
+**2.0.2 — memory processing update on distribution 2.0.1, on main since PR #2 (`572a827`); the installer fix (PR #3) is also on main.** The Evidence contract remains `2.0.0-alpha.2`, with recovery policy `fragment_recovery_20_100_v1` and scientific revision `scientific_review_20261005_v1`. The [integration note](docs/integracao-memoria-22out.md) explains disk processing, preserved outputs and verification scope. Scientific parameters, profiles and locks remain unchanged.
 
 This is the [repository](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Published packages belong in [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). Previous names are listed in the [history index](docs/repositorios-e-historico.md).
 
 ## Quick start
 
-Supported fixed environment: **Linux x86_64 or Windows x86_64 through WSL2/Ubuntu**. Native Windows, macOS and ARM are not covered by this environment. Initial installation requires internet. Reference databases and samples are not included.
+Supported fixed environment: **Linux x86_64 or Windows x86_64 through WSL2/Ubuntu**. Native Windows, macOS and ARM are not covered by this environment. Initial installation requires internet. The ZIP/source tree does not include a BLAST database or sample FASTQ; prepare a bank and supply your reads (see [usage and databases](docs/uso-e-bancos.md)).
 
 On Windows, extract the complete package to a permanent directory, run `INSTALAR_GENEIN.bat`, then `ABRIR_GENEIN.bat`. On Linux, from the source directory:
 

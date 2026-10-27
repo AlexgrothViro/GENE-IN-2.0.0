@@ -16,3 +16,12 @@ def test_wrapper_without_make_is_actionable(tmp_path, wrapper):
     assert 'make não encontrado' in result.stderr
     assert 'bash bundle/install_wsl.sh' in result.stderr
     assert 'exec: make' not in result.stderr
+
+
+def test_wrapper_forwards_interrupt_to_the_child_tree():
+    text = (Path(__file__).resolve().parents[2] / "bundle/run.sh").read_text(encoding="utf-8")
+    assert "genein_run_tree" in text
+    assert "CANCELADO" in text
+    assert "setsid" in text
+    assert 'exec "$MICRO" run -p "$ENV_DIR" python -m genein' not in text
+    assert 'exec "$MICRO" run -p "$ENV_DIR" make' not in text

@@ -9,7 +9,10 @@ import argparse
 import json
 import os
 from pathlib import Path
+import signal
+import subprocess
 import sys
+import time
 
 import pytest
 
@@ -208,6 +211,58 @@ def test_failed_child_process_sets_receipt_failed_and_propagates_exit_code(cli_r
     receipt = json.loads((output_root / "execution.json").read_text(encoding="utf-8"))
     assert receipt["status"] == "failed"
     assert receipt["exit_code"] == 3
+    # Preflight already passed; the reserved output directory is kept.
+    assert output_root.is_dir()
+
+
+def test_sigint_cancels_child_tree_and_prints_cancelled(cli_repo, tmp_path):
+    output_root = tmp_path / "out"
+    marker = tmp_path / "marker.json"
+    db = blast_db(tmp_path)
+    reads = fastq(tmp_path, "se.fq")
+    env = os.environ.copy()
+    env["GENEIN_REPO_ROOT"] = str(cli_repo)
+    env["GENEIN_TEST_MARKER"] = str(marker)
+    env["GENEIN_TEST_SLEEP"] = "30"
+    env["PYTHONPATH"] = str(ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    script = (
+        "from genein.pipeline import cli as pipeline_cli\n"
+        "import argparse, sys\n"
+        "parser = argparse.ArgumentParser()\n"
+        "commands = parser.add_subparsers(dest='command', required=True)\n"
+        "pipeline_cli.register_commands(commands)\n"
+        "args = parser.parse_args(['run', '--sample', 's1', '--single', sys.argv[1], "
+        "'--output-root', sys.argv[2], '--blast-db', sys.argv[3]])\n"
+        "raise SystemExit(pipeline_cli.run(args))\n"
+    )
+    process = subprocess.Popen(
+        [sys.executable, "-c", script, str(reads), str(output_root), str(db)],
+        env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        start_new_session=True,
+    )
+    try:
+        deadline = time.monotonic() + 10
+        while not marker.exists():
+            assert process.poll() is None, (process.stdout.read() if process.stdout else "") + (
+                process.stderr.read() if process.stderr else ""
+            )
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
+        process.send_signal(signal.SIGINT)
+        assert process.wait(timeout=15) == 130
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.wait()
+    stderr = process.stderr.read() if process.stderr else ""
+    stdout = process.stdout.read() if process.stdout else ""
+    combined = stdout + stderr
+    assert "CANCELADO" in combined
+    assert "CONCLUÍDO COM SUCESSO" not in combined
+    receipt = json.loads((output_root / "execution.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "cancelled"
+    assert receipt["exit_code"] == 130
+    assert receipt["failure_type"] == "CANCELLED"
 
 
 def test_batch_manifest_command_forwards_sample_options(cli_repo, tmp_path):

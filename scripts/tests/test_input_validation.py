@@ -74,6 +74,31 @@ class InputValidationTests(unittest.TestCase):
             r2.write_text("@read1/2\nTGCA\n+\nIIII\n", encoding="utf-8")
             self.assertEqual(validation.validate_fastq(r1, r2), 1)
 
+    def test_corrupt_gzip_and_binary_junk_are_rewritten(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            junk = tmp / "junk.fastq.gz"
+            junk.write_bytes(b"\x1f\x8b\x08" + bytes(range(80)))
+            with self.assertRaises(ValueError) as raised:
+                validation.validate_fastq(junk)
+            self.assertIn("corrompido", str(raised.exception))
+            self.assertIn("Re-import", str(raised.exception))
+            self.assertNotIn("codec can't decode", str(raised.exception))
+            binary = tmp / "junk.fastq"
+            binary.write_bytes(bytes(range(256)))
+            with self.assertRaises(ValueError) as raised:
+                validation.validate_fastq(binary)
+            self.assertIn("corrompido", str(raised.exception))
+            self.assertIn("Re-import", str(raised.exception))
+            self.assertNotIn("codec can't decode", str(raised.exception))
+            truncated = tmp / "trunc.fastq.gz"
+            with gzip.open(truncated, "wt", encoding="utf-8") as handle:
+                handle.write("@read1\nACGT\n+\nIIII\n")
+            truncated.write_bytes(truncated.read_bytes()[:18])
+            with self.assertRaises(ValueError) as raised:
+                validation.validate_fastq(truncated)
+            self.assertIn("corrompido", str(raised.exception))
+
     def test_compressed_fastq_without_records_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "empty.fastq.gz"

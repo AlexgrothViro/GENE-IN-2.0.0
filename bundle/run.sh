@@ -59,6 +59,36 @@ fi
 
 shift || true
 
+# Run without exec so this waiter can stop the child tree on Ctrl+C / SIGINT.
+# micromamba and make do not always reap grandchildren (SPAdes, python).
+genein_run_tree() {
+  local child status
+  if command -v setsid >/dev/null 2>&1; then
+    setsid "$@" &
+  else
+    "$@" &
+  fi
+  child=$!
+  genein_stop_tree() {
+    echo "[CANCELADO] Execução interrompida (Ctrl+C / SIGINT). Processos filhos encerrados. / Cancelled; child processes were stopped." >&2
+    trap '' INT TERM
+    kill -INT "$child" 2>/dev/null || true
+    kill -INT -"$child" 2>/dev/null || true
+    sleep 2
+    kill -KILL "$child" 2>/dev/null || true
+    kill -KILL -"$child" 2>/dev/null || true
+    wait "$child" 2>/dev/null || true
+    exit 130
+  }
+  trap genein_stop_tree INT TERM
+  set +e
+  wait "$child"
+  status=$?
+  set -e
+  trap - INT TERM
+  return "$status"
+}
+
 # ─────────────────────────────────────────────────────────────────────
 #  Roda o alvo do Makefile dentro do ambiente isolado
 # ─────────────────────────────────────────────────────────────────────
@@ -67,6 +97,8 @@ if [[ "$TARGET" == genein ]]; then
     # An existing shared environment may still contain an editable installation
     # pointing at another checkout. Always run this bundle's source.
     export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
-    exec "$MICRO" run -p "$ENV_DIR" python -m genein "$@"
+    genein_run_tree "$MICRO" run -p "$ENV_DIR" python -m genein "$@"
+    exit $?
 fi
-exec "$MICRO" run -p "$ENV_DIR" make -C "$ROOT" "$TARGET" "$@"
+genein_run_tree "$MICRO" run -p "$ENV_DIR" make -C "$ROOT" "$TARGET" "$@"
+exit $?

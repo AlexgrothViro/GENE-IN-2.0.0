@@ -7,6 +7,7 @@ then exits with GENEIN_TEST_EXIT (default 0).
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 record = {
@@ -21,4 +22,6 @@ if log_text:
     log_dir = Path(os.environ["GENEIN_WORK_ROOT"]) / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     (log_dir / "sample_pipeline.log").write_text(log_text, encoding="utf-8")
+if os.environ.get("GENEIN_TEST_SLEEP"):
+    time.sleep(float(os.environ["GENEIN_TEST_SLEEP"]))
 raise SystemExit(int(os.environ.get("GENEIN_TEST_EXIT", "0")))

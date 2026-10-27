@@ -21,6 +21,11 @@ SAMPLE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$")
 RUN_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{7,127}$")
 BATCH_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$")
 FASTQ_SUFFIXES = (".fastq", ".fastq.gz", ".fq", ".fq.gz")
+CORRUPT_FASTQ = (
+    "Arquivo FASTQ parece corrompido ou ilegível (gzip/UTF-8). "
+    "Reimporte o FASTQ original completo. / "
+    "File looks corrupt or unreadable (gzip/UTF-8). Re-import the complete original FASTQ."
+)
 
 
 def validate_sample_id(value: str) -> str:
@@ -59,6 +64,10 @@ def _open_text(path: Path) -> TextIO:
     return path.open("r", encoding="utf-8", errors="strict")
 
 
+def _corrupt_fastq(path: Path) -> ValueError:
+    return ValueError(f"{CORRUPT_FASTQ} ({path})")
+
+
 def _read_fastq_record(handle: TextIO, path: Path, record_no: int):
     lines = [handle.readline() for _ in range(4)]
     if not any(lines):
@@ -83,14 +92,17 @@ def _pair_id(value: str) -> str:
 
 def iter_fastq(path: Path) -> Iterator[tuple[str, str]]:
     """Stream validated reads, including gzip and an empty post-filter file."""
-    with _open_text(path) as handle:
-        record_no = 1
-        while True:
-            record = _read_fastq_record(handle, path, record_no)
-            if record is None:
-                return
-            yield record
-            record_no += 1
+    try:
+        with _open_text(path) as handle:
+            record_no = 1
+            while True:
+                record = _read_fastq_record(handle, path, record_no)
+                if record is None:
+                    return
+                yield record
+                record_no += 1
+    except (UnicodeDecodeError, EOFError, OSError) as exc:
+        raise _corrupt_fastq(path) from exc
 
 
 def validate_fastq(path: Path, mate: Path | None = None) -> int:
@@ -100,30 +112,33 @@ def validate_fastq(path: Path, mate: Path | None = None) -> int:
         raise ValueError(f"FASTQ mate ausente ou vazio: {mate}")
 
     count = 0
-    with _open_text(path) as first:
-        second = _open_text(mate) if mate is not None else None
-        try:
-            while True:
-                left = _read_fastq_record(first, path, count + 1)
-                if second is None:
-                    if left is None:
+    try:
+        with _open_text(path) as first:
+            second = _open_text(mate) if mate is not None else None
+            try:
+                while True:
+                    left = _read_fastq_record(first, path, count + 1)
+                    if second is None:
+                        if left is None:
+                            break
+                        count += 1
+                        continue
+                    right = _read_fastq_record(second, mate, count + 1)
+                    if left is None and right is None:
                         break
+                    if left is None or right is None:
+                        raise ValueError(f"FASTQ pareado com numero de reads diferente: {path} / {mate}")
+                    if right is not None and _pair_id(left[0]) != _pair_id(right[0]):
+                        raise ValueError(
+                            f"IDs de reads nao pareados no registro {count + 1}: "
+                            f"{left[0]} != {right[0]}"
+                        )
                     count += 1
-                    continue
-                right = _read_fastq_record(second, mate, count + 1)
-                if left is None and right is None:
-                    break
-                if left is None or right is None:
-                    raise ValueError(f"FASTQ pareado com numero de reads diferente: {path} / {mate}")
-                if right is not None and _pair_id(left[0]) != _pair_id(right[0]):
-                    raise ValueError(
-                        f"IDs de reads nao pareados no registro {count + 1}: "
-                        f"{left[0]} != {right[0]}"
-                    )
-                count += 1
-        finally:
-            if second is not None:
-                second.close()
+            finally:
+                if second is not None:
+                    second.close()
+    except (UnicodeDecodeError, EOFError, OSError) as exc:
+        raise _corrupt_fastq(path) from exc
     if count == 0:
         raise ValueError(f"FASTQ sem registros: {path}")
     return count

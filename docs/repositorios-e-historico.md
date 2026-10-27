@@ -12,7 +12,7 @@ O desenvolvimento desta entrega está em [AlexgrothViro/GENE-IN-2.0.0](https://g
 | Relatar ou consultar problemas | [Issues](https://github.com/AlexgrothViro/GENE-IN-2.0.0/issues) |
 | Instalar e usar esta cópia | [Documentação](README.md) |
 
-A atualização 2.0.2 é preparada em branch própria sobre a 2.0.1. Seu ZIP local, a publicação de uma branch, a abertura de PR, o merge na main e uma release no GitHub são estados distintos; confira o commit de cada um antes de atribuir a integração à main. O Builder permanece separado. Uma proposta ou branch histórica não integra automaticamente a versão atual. Mudanças aproveitadas precisam ser verificadas contra a arquitetura, os contratos e os testes da fonte distribuída. A existência de uma release identifica software e não aprova resultados científicos.
+A atualização 2.0.2 (integração de memória) está na main desde o PR #2 (`572a827`); o instalador (PR #3) também já está na main. Um ZIP local, uma release no GitHub e o commit de uma análise continuam estados distintos: cite o commit realmente usado. O Builder permanece separado. Uma proposta ou branch histórica não integra automaticamente a versão atual. Mudanças aproveitadas precisam ser verificadas contra a arquitetura, os contratos e os testes da fonte distribuída. A existência de uma release identifica software e não aprova resultados científicos.
 
 ## Repositórios históricos
 

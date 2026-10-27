@@ -3,7 +3,7 @@
   "delivery_date": "2026-10-22",
   "repository": "https://github.com/AlexgrothViro/GENE-IN-2.0.0",
   "software_version": "2.0.2",
-  "distribution_note": "Integra processamento em disco sobre 2.0.1; preserva resumo, identidade, melhorias b3, parâmetros e contrato científico. Proposta em PR sem merge.",
+  "distribution_note": "Integra processamento em disco sobre 2.0.1; preserva resumo, identidade, melhorias b3, parâmetros e contrato científico. A correção de memória (PR #2) e o instalador (PR #3) já estão na main.",
   "distribution_channel": "research-release",
   "candidate_version": "2.0.0rc1",
   "candidate_version_note": "Nome histórico da rc1. O commit em que essa candidata foi preparada ficou na cópia local do autor e não está neste repositório público. Não é a versão de software. A versão de software é software_version.",

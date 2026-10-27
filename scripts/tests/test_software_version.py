@@ -31,6 +31,23 @@ class SoftwareVersionTests(unittest.TestCase):
         self.assertIn("não está neste repositório público", release["candidate_version_note"])
         self.assertIn("version: 2.0.2\n", citation)
 
+    def test_user_docs_no_longer_claim_an_unmerged_memory_pr(self):
+        banned = (
+            "PR sem merge",
+            "proposta sem merge",
+            "does not merge it into main",
+            "não representa merge na main",
+            "não significa incorporá-la à main",
+        )
+        for relative in ("README.md", "README.en.md", "LEIA_PRIMEIRO.md", "RELEASE.json"):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            for phrase in banned:
+                self.assertNotIn(phrase, text, relative)
+        leia = (ROOT / "LEIA_PRIMEIRO.md").read_text(encoding="utf-8")
+        self.assertIn("SOURCE_COMMIT", leia)
+        self.assertIn("não inclui banco BLAST", leia)
+        self.assertIn("build_release.py", leia)
+
 
 if __name__ == "__main__":
     unittest.main()
