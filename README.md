@@ -20,7 +20,7 @@ bash bundle/run.sh test-env
 bash run_linux.sh
 ```
 
-Abra a URL indicada no terminal. O painel roda localmente em `127.0.0.1` e escolhe outra porta se necessário. Mantenha o terminal aberto e use Ctrl+C para encerrar o servidor após os trabalhos. Veja [instalação e reprodução](docs/installation-reproducibility.md) para pré-requisitos e ambientes separados.
+Abra a URL indicada no terminal. O painel roda localmente em `127.0.0.1` e escolhe outra porta se necessário. Mantenha o terminal aberto e use Ctrl+C para encerrar o servidor após os trabalhos. Se faltarem pré-requisitos e o apt não conseguir instalá-los, `bash bundle/install_wsl.sh` para com erro e não cria o ambiente. Veja [instalação e reprodução](docs/installation-reproducibility.md) para pré-requisitos e ambientes separados.
 
 O ambiente científico fica fora da fonte. O prefixo padrão é `~/.gene-in-bundle`. Para outro diretório, exporte `GENEIN_BUNDLE_DIR` antes de instalar, abrir o painel e analisar. O lançador Windows usa o padrão.
 

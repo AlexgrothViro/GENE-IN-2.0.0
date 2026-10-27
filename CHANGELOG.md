@@ -1,5 +1,10 @@
 # Histórico de entregas
 
+## 2026-10-27 — 2.0.2, falha explícita de pré-requisitos
+
+- `bundle/install_wsl.sh` informa, em português e inglês, quando um pré-requisito falta e o `apt-get update` ou `apt-get install` falha. O processo termina com o código do apt e não cria o ambiente Gene-In.
+- Sem `apt-get`, sem sudo ou com o comando ainda ausente depois do apt, a instalação também para com erro e sem ambiente. Contrato Evidence, limiares e licença permanecem os mesmos.
+
 ## 2026-10-22 — 2.0.2, integração de memória
 
 - Integra o processamento em disco do resgate à distribuição 2.0.1, mantendo suas saídas, identidade, configuração e leitura de metadados de referência.

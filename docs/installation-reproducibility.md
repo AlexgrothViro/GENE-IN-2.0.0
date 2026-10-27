@@ -6,7 +6,7 @@ Guia da **2.0.2**, integração de memória sobre a distribuição 2.0.1. O [gui
 
 O ambiente científico fixado atende **Linux x86_64** e **Windows x86_64 com WSL2/Ubuntu**. O ambiente de referência das verificações anteriores é Ubuntu 24.04/WSL2. macOS, ARM e Windows sem WSL não são atendidos por esse lock.
 
-A instalação precisa de internet na primeira preparação, salvo quando os artefatos já estão no cache local. O sistema Linux precisa de Bash, `make`, `python3`, `curl`, `tar`, `bzip2`, certificados e utilitários de `coreutils`/`findutils`. O instalador verifica esses requisitos e, em Debian/Ubuntu, tenta instalar os ausentes com `apt-get`, usando sudo quando necessário. Sem esses privilégios, informa o que pedir ao administrador.
+A instalação precisa de internet na primeira preparação, salvo quando os artefatos já estão no cache local. O sistema Linux precisa de Bash, `make`, `python3`, `curl`, `tar`, `bzip2`, certificados e utilitários de `coreutils`/`findutils`. O instalador verifica esses requisitos e, em Debian/Ubuntu, tenta instalar os ausentes com `apt-get`, usando sudo quando necessário. Sem esses privilégios, informa o que pedir ao administrador. Se o apt falhar ou o comando continuar ausente, a instalação termina com erro em português e inglês e não cria o ambiente.
 
 Use a árvore completa de fonte, extraída do ZIP ou obtida pelo Git. Não execute de dentro do ZIP. **Mantenha a fonte no mesmo local depois de instalar**: o pacote Python é editável e chama adaptadores shell da mesma árvore. Um wheel isolado não contém o fluxo bioinformático completo.
 

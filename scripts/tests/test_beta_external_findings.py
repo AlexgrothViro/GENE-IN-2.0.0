@@ -73,22 +73,66 @@ class ProvenanceVersionTests(unittest.TestCase):
 
 @unittest.skipUnless(os.name == "posix", "Linux installer")
 class InstallerSystemRequirementsTests(unittest.TestCase):
+    def _run_installer(self, apt_get):
+        import shutil
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        bin_dir = Path(tmp.name)
+        for name in ("dirname", "python3", "curl", "tar", "bzip2", "install", "find", "chmod"):
+            path = shutil.which(name)
+            if path:
+                (bin_dir / name).symlink_to(path)
+        (bin_dir / "uname").write_text('#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n')
+        (bin_dir / "apt-get").write_text(apt_get)
+        (bin_dir / "sudo").write_text('#!/bin/sh\nexec "$@"\n')
+        for name in ("uname", "apt-get", "sudo"):
+            (bin_dir / name).chmod(0o755)
+        env = dict(os.environ, PATH=tmp.name, GENEIN_BUNDLE_DIR=tmp.name + "/bundle")
+        result = subprocess.run(["/bin/bash", str(ROOT / "bundle/install_wsl.sh")], env=env, capture_output=True, text=True)
+        return bin_dir, result
+
+    def _assert_not_installed(self, bin_dir, result, code):
+        combined = result.stdout + result.stderr
+        self.assertEqual(result.returncode, code, combined)
+        self.assertIn("[ERRO]", result.stderr)
+        self.assertIn("[ERROR]", result.stderr)
+        self.assertIn("não foi instalado", result.stderr)
+        self.assertIn("was not installed", result.stderr)
+        self.assertNotIn("[OK]", combined)
+        self.assertFalse((bin_dir / "bundle").exists())
+
     def test_missing_make_is_reported_before_environment_download(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            bin_dir = Path(tmp)
-            for name in ("dirname", "python3", "curl", "tar", "bzip2", "install", "find", "chmod"):
-                import shutil
-                path = shutil.which(name)
-                if path:
-                    (bin_dir / name).symlink_to(path)
-            (bin_dir / "uname").write_text('#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n')
-            (bin_dir / "apt-get").write_text('#!/bin/sh\necho "APT_ATTEMPT:$*" >&2\nexit 42\n')
-            (bin_dir / "sudo").write_text('#!/bin/sh\nexec "$@"\n')
-            for name in ("uname", "apt-get", "sudo"):
-                (bin_dir / name).chmod(0o755)
-            env = dict(os.environ, PATH=tmp, GENEIN_BUNDLE_DIR=tmp + "/bundle")
-            result = subprocess.run(["/bin/bash", str(ROOT / "bundle/install_wsl.sh")], env=env, capture_output=True, text=True)
-            self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
-            self.assertIn("ausentes: make", result.stderr)
-            self.assertIn("APT_ATTEMPT:update", result.stderr)
-            self.assertFalse((bin_dir / "bundle").exists())
+        bin_dir, result = self._run_installer('#!/bin/sh\necho "APT_ATTEMPT:$*" >&2\nexit 42\n')
+        self._assert_not_installed(bin_dir, result, 42)
+        self.assertIn("ausentes: make", result.stderr)
+        self.assertIn("APT_ATTEMPT:update", result.stderr)
+        self.assertIn("apt-get update", result.stderr)
+
+    def test_apt_install_failure_does_not_create_environment(self):
+        script = '#!/bin/sh\necho "APT_ATTEMPT:$*" >&2\ncase " $*" in *" install "*) exit 100;; esac\nexit 0\n'
+        bin_dir, result = self._run_installer(script)
+        self._assert_not_installed(bin_dir, result, 100)
+        self.assertIn("APT_ATTEMPT:install", result.stderr)
+        self.assertIn("apt-get install", result.stderr)
+
+    def test_apt_success_without_command_does_not_create_environment(self):
+        bin_dir, result = self._run_installer('#!/bin/sh\necho "APT_ATTEMPT:$*" >&2\nexit 0\n')
+        self._assert_not_installed(bin_dir, result, 2)
+        self.assertIn("ainda ausente: make", result.stderr)
+        self.assertIn("still missing: make", result.stderr)
+
+    def test_missing_package_manager_stops_before_environment(self):
+        import shutil
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        bin_dir = Path(tmp.name)
+        for name in ("dirname", "python3", "curl", "tar", "bzip2", "install", "find", "chmod"):
+            path = shutil.which(name)
+            if path:
+                (bin_dir / name).symlink_to(path)
+        (bin_dir / "uname").write_text('#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n')
+        (bin_dir / "uname").chmod(0o755)
+        env = dict(os.environ, PATH=tmp.name, GENEIN_BUNDLE_DIR=tmp.name + "/bundle")
+        result = subprocess.run(["/bin/bash", str(ROOT / "bundle/install_wsl.sh")], env=env, capture_output=True, text=True)
+        self._assert_not_installed(bin_dir, result, 2)
+        self.assertNotIn("APT_ATTEMPT", result.stderr)

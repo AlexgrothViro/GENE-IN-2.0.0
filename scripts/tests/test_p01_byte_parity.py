@@ -19,6 +19,11 @@ def test_installer_checks_make_before_creating_environment(tmp_path):
     result = subprocess.run(['/bin/bash', str(ROOT / 'bundle/install_wsl.sh')], env=dict(os.environ, PATH=str(tmp_path), GENEIN_BUNDLE_DIR=str(tmp_path / 'bundle')), capture_output=True)
     assert result.returncode == 42
     assert b'ausentes: make' in result.stderr
+    assert b'[ERRO]' in result.stderr
+    assert b'[ERROR]' in result.stderr
+    assert b'n\xc3\xa3o foi instalado' in result.stderr
+    assert b'was not installed' in result.stderr
+    assert b'[OK]' not in result.stdout + result.stderr
     assert not (tmp_path / 'bundle').exists()
 
 

@@ -20,6 +20,17 @@ export MAMBA_ROOT_PREFIX="$MAMBA_ROOT"
 
 need_cmd() { command -v "$1" >/dev/null 2>&1; }
 
+# set -e would abort a bare apt-get before any product message. Record the
+# status and stop here so a missing prerequisite never looks installed.
+stop_install() {
+  local status="$1"
+  local pt="$2"
+  local en="$3"
+  echo "[ERRO] ${pt}" >&2
+  echo "[ERROR] ${en}" >&2
+  exit "$status"
+}
+
 LOCAL_MAMBA_CANDIDATES=(
   "$ROOT/bundle/cache/micromamba.tar.bz2"
   "$ROOT/bundle/cache/micromamba-linux-64.tar.bz2"
@@ -45,20 +56,34 @@ done
 if ((${#missing_system[@]})); then
   echo "[AVISO] Pré-requisitos do sistema ausentes: ${missing_system[*]}" >&2
   echo "Instale: make python3 curl tar bzip2 ca-certificates coreutils findutils." >&2
-  command -v apt-get >/dev/null 2>&1 || {
-    echo "[ERRO] Instale esses pacotes pelo gerenciador do sistema e execute novamente." >&2; exit 2;
-  }
+  command -v apt-get >/dev/null 2>&1 || stop_install 2 \
+    "Instale esses pacotes pelo gerenciador do sistema e execute novamente. O Gene-In não foi instalado." \
+    "Install these packages with the system package manager and run again. Gene-In was not installed."
   apt_prefix=()
   if [[ "$EUID" -ne 0 ]]; then
-    command -v sudo >/dev/null 2>&1 || {
-      echo "[ERRO] Sem sudo: peça a instalação dos pré-requisitos ao administrador." >&2; exit 2;
-    }
+    command -v sudo >/dev/null 2>&1 || stop_install 2 \
+      "Sem sudo: peça a instalação dos pré-requisitos ao administrador. O Gene-In não foi instalado." \
+      "No sudo: ask an administrator to install the prerequisites. Gene-In was not installed."
     apt_prefix=(sudo)
   fi
-  "${apt_prefix[@]}" apt-get update
-  "${apt_prefix[@]}" apt-get install -y make python3 curl tar bzip2 ca-certificates coreutils findutils
+  apt_status=0
+  "${apt_prefix[@]}" apt-get update || apt_status=$?
+  if (( apt_status != 0 )); then
+    stop_install "$apt_status" \
+      "Falha do apt-get update (código ${apt_status}). Ausentes: ${missing_system[*]}. O Gene-In não foi instalado." \
+      "apt-get update failed (exit ${apt_status}). Missing: ${missing_system[*]}. Gene-In was not installed."
+  fi
+  apt_status=0
+  "${apt_prefix[@]}" apt-get install -y make python3 curl tar bzip2 ca-certificates coreutils findutils || apt_status=$?
+  if (( apt_status != 0 )); then
+    stop_install "$apt_status" \
+      "Falha do apt-get install (código ${apt_status}). Ausentes: ${missing_system[*]}. O Gene-In não foi instalado." \
+      "apt-get install failed (exit ${apt_status}). Missing: ${missing_system[*]}. Gene-In was not installed."
+  fi
   for required in "${missing_system[@]}"; do
-    need_cmd "$required" || { echo "[ERRO] Pré-requisito ainda ausente: $required" >&2; exit 2; }
+    need_cmd "$required" || stop_install 2 \
+      "Pré-requisito ainda ausente: ${required}. O Gene-In não foi instalado." \
+      "Prerequisite still missing: ${required}. Gene-In was not installed."
   done
 fi
 mkdir -p "$BIN_DIR" "$MAMBA_ROOT"
