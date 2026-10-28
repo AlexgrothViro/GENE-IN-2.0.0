@@ -98,6 +98,12 @@ class PipelineValidationTests(unittest.TestCase):
         with self.assertRaises(ConfigError):
             base_pipeline_config(sourced={"ASSEMBLER": "bwa"})
 
+    def test_builder_is_opt_in_and_the_default_stays_velvet(self):
+        self.assertEqual(base_pipeline_config()["assembler"], "velvet")
+        resolved = base_pipeline_config(cli={"ASSEMBLER": "builder"})
+        self.assertEqual(resolved["assembler"], "builder")
+        self.assertEqual(resolved["analysis_strategy"], "single")
+
     def test_blast_task_enum_is_enforced(self):
         with self.assertRaises(ConfigError):
             base_pipeline_config(sourced={"BLAST_TASK": "megablast"})

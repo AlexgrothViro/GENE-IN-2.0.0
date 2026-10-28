@@ -107,7 +107,7 @@ Opções:
   --single ARQUIVO          FASTQ single-end
   --kmer K                  k-mer para Velvet (padrão: VELVET_K ou 31)
   --analysis-profile NOME   perfil: default ou assembly-consensus
-  --assembler NOME          montador manual: velvet, spades ou metaspades
+  --assembler NOME          montador manual: velvet, spades, metaspades ou builder
   --threads N               número de threads (padrão: THREADS ou 4)
   --spades-params "PARAMS"  parâmetros extras para SPAdes/metaSPAdes
   --advanced-kmers LISTA    k-mers manuais, impares/crescentes e menores que as reads

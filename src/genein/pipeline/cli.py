@@ -51,7 +51,7 @@ def register_commands(commands) -> None:
     parser.add_argument("--blast-db", required=True, help="Prepared BLAST database prefix with .db-manifest.json; no automatic download.")
     parser.add_argument("--run-id", help="Run identifier (8–128 safe characters); generated if omitted.")
     parser.add_argument("--threads", type=_positive_threads, default=4)
-    parser.add_argument("--assembler", choices=("velvet", "spades", "metaspades"))
+    parser.add_argument("--assembler", choices=("velvet", "spades", "metaspades", "builder"))
     parser.add_argument("--analysis-profile", choices=("default", "assembly-consensus"))
     parser.add_argument("--kmer")
     parser.add_argument("--spades-params", help="Extra existing SPAdes options, e.g. --spades-params='-m 4'.")

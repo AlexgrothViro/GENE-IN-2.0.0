@@ -143,7 +143,7 @@ export async function renderContigs(store) {
 }
 
 const CONFIG_FIELDS = [
-  ["ASSEMBLER", "Montador", "select", ["", "velvet", "spades", "metaspades"]],
+  ["ASSEMBLER", "Montador", "select", ["", "velvet", "spades", "metaspades", "builder"]],
   ["THREADS", "Threads", "number"], ["DB", "Banco", "text"],
   ["BLAST_EVALUE", "BLAST e-value", "text"], ["BLAST_MAX_TARGET_SEQS", "Máximo de alvos BLAST", "number"],
   ["HOST_FILTER_ENABLED", "Filtro de hospedeiro habilitado", "select", ["", "false", "true"]],

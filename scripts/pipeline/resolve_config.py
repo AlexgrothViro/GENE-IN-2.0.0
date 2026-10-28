@@ -153,7 +153,7 @@ DEFAULTS = {
 
 HOST_FILTER_TRUE = {"true", "1", "yes", "sim"}
 HOST_FILTER_FALSE = {"false", "0", "no", "nao"}
-ASSEMBLER_CHOICES = {"velvet", "spades", "metaspades", "consensus"}
+ASSEMBLER_CHOICES = {"velvet", "spades", "metaspades", "consensus", "builder"}
 BLAST_TASK_CHOICES = {"blastn", "blastn-short"}
 ROLE_CHOICES = {"sample", "negative_extraction", "negative_library", "negative_sequencing", "positive"}
 QC_STATUS_CHOICES = {"unknown", "completed", "explicitly_skipped", "not_applicable"}
@@ -328,7 +328,7 @@ def resolve_pipeline_config(
         assembler = env_first("ASSEMBLER")
     if assembler not in ASSEMBLER_CHOICES:
         raise ConfigError(
-            f"ASSEMBLER invalido: {assembler} — Use velvet, spades, metaspades ou assembly-consensus."
+            f"ASSEMBLER invalido: {assembler} — Use velvet, spades, metaspades, builder ou assembly-consensus."
         )
 
     blast_task = config_first("BLAST_TASK")

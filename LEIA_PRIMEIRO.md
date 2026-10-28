@@ -1,14 +1,11 @@
-# Gene-In 2.0.2 — comece aqui
+# Comece aqui
 
-Atualização de software para pesquisa e triagem humana, na main desde o PR #2 (`572a827`) sobre a distribuição 2.0.1; o instalador (PR #3) também já está na main. A deduplicação do BLAST passa a usar SQLite e as exportações percorrem as linhas em fluxo, preservando o resumo de candidatos e os contratos. O filtro conserva as duas passagens que já existiam na 2.0.1 e melhora o tratamento de falhas, sem mudar o contrato: raw ausente é erro; arquivo existente vazio produz somente cabeçalhos. Consulte a [nota da integração](docs/integracao-memoria-22out.md). Esta entrega não acrescenta validação biológica nova. O programa é geral: hospedeiro e banco de referência são escolhas de quem analisa. Suíno e picornavírus são o caso-modelo de validação. Confira o [alcance científico](docs/validacao.md) e os campos de versão e commit no [guia de citação](docs/citacao.md). A licença rege a distribuição desta versão.
+1. Leia a [apresentação do Gene-In](README.md).
+2. Siga a [instalação](docs/guia/instalacao.md) em Linux ou Windows com WSL2.
+3. Abra o painel e siga os [primeiros passos](docs/guia/uso.md).
+4. Para usar o montador opcional, consulte [Gene-In Builder](docs/guia/montadores.md).
+5. Revise os [resultados e limitações](docs/guia/resultados.md).
 
-1. Leia o [guia inicial](README.md) para conhecer as utilidades e os resultados.
-2. Instale em Linux x86_64 ou Windows x86_64 com WSL2/Ubuntu. No Windows, extraia o pacote inteiro em uma pasta permanente e execute `INSTALAR_GENEIN.bat`, depois `ABRIR_GENEIN.bat`. No Linux, use `bash bundle/install_wsl.sh` e `bash run_linux.sh`. Se faltar um pré-requisito (por exemplo `make` ou `bzip2`) e o `apt-get` falhar, a instalação para com uma mensagem curta e não cria o ambiente; instale o que faltar e rode o comando de novo. O ambiente fica em `~/.gene-in-bundle`, salvo se `GENEIN_BUNDLE_DIR` apontar para outro diretório. `GENEIN_WORK_ROOT` e `GENEIN_OUTPUT_ROOT` separam bancos e saídas da fonte; o guia inicial explica os dois.
-3. O ZIP não inclui banco BLAST nem FASTQ de exemplo. Prepare um banco e forneça as leituras (ou use o caminho DEMO / [uso e bancos](docs/uso-e-bancos.md)); não há primeira corrida biológica só com o ZIP.
-4. Preserve candidatos, relatórios, logs, configuração e manifestos. Use o [guia de citação](docs/citacao.md) para relatar a execução.
+O pacote não inclui bancos biológicos nem dados de amostras. Preserve toda a pasta de cada execução.
 
-O Gene-In Builder permanece um trabalho separado e não integra esta atualização. O pacote não inclui bancos biológicos, índices de hospedeiro ou dados de pesquisa. O painel roda no computador local. Candidatos recuperados exigem revisão humana e não confirmam origem viral, espécie ou diagnóstico. Leia os [limites científicos](docs/validacao.md).
-
-A [licença](LICENSE) permite avaliação acadêmica, ensino e pesquisa não comercial; redistribuição, modificação e outros usos restritos exigem autorização prévia por escrito do titular. Consulte também os [avisos de terceiros](THIRD_PARTY_NOTICES.md).
-
-O [índice da documentação](docs/README.md) reúne instalação, solução de problemas, testes e registros históricos. A versão de software é `2.0.2` (`pyproject.toml` e `RELEASE.json`). O arquivo `VERSION` continua `2.0.0-alpha.2`: é o contrato Evidence, não uma versão alfa do programa. A fonte 2.0.0 fechada pelo autor permanece no histórico. Em um checkout Git, `genein --version` lê `git rev-parse HEAD`. No ZIP de release, sem pasta `.git`, o mesmo SHA está na primeira linha de `SOURCE_COMMIT` (gravado por `scripts/ops/build_release.py`).
+[Documentação](docs/README.md) · [Suporte](docs/guia/suporte.md) · [Licença](LICENSE)
