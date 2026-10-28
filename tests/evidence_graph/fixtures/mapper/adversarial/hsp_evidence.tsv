@@ -1,3 +1,0 @@
-hsp_id	duplicate_of_hsp_id	qseqid	sseqid	task	query_start	query_end	subject_start	subject_end	alignment_length	identity_pct	matches	mismatches	gaps	gap_openings	evalue	bitscore	strand	coord_system	query_length	subject_length	locus_id	eligible	rejection_reason	rule_id
-dup-hsp		contig1	ref1	blastn-short	1	120	100	220	120	95.5	114	6	0	0	1e-20	180.0	+	1-based-inclusive	120	8000	LOCUS_badinterval	true		ADMIT-HSP
-dup-hsp	dup-hsp	contig1	ref1	blastn-short	1	120	350	400	50	98.0	49	1	0	0	1e-15	90.0	+	1-based-inclusive	120	8000	LOCUS_badinterval	false	DUPLICATE_SOURCE_OBSERVATION	ADMIT-HSP

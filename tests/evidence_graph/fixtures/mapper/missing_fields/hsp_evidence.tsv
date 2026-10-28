@@ -1,2 +1,0 @@
-hsp_id	duplicate_of_hsp_id	qseqid	sseqid	task	query_start	query_end	subject_start	subject_end	alignment_length	identity_pct	matches	mismatches	gaps	gap_openings	evalue	bitscore	strand	coord_system	query_length	subject_length	locus_id	eligible	rejection_reason	rule_id
-hsp-missing		contig1	ref1	blastn-short	1	50	10	60	50	95.0	NA	NA	NA	0	1e-10	80.0	+	NA	120	8000	LOCUS_deadbeef0001	false	MISSING_FIELD	ADMIT-HSP
