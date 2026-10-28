@@ -354,8 +354,8 @@ def validate_config_updates(updates):
             continue
         if not text or len(text) > 4096 or "\x00" in text or "\n" in text or "\r" in text:
             raise ValueError(f"Valor invalido para {key}: vazio, grande ou com quebra de linha")
-        if key == "ASSEMBLER" and text.lower() not in {"velvet", "spades", "metaspades"}:
-            raise ValueError("ASSEMBLER deve ser velvet, spades ou metaspades")
+        if key == "ASSEMBLER" and text.lower() not in {"velvet", "spades", "metaspades", "builder"}:
+            raise ValueError("ASSEMBLER deve ser velvet, spades, metaspades ou builder")
         if key == "BIND_HOST" and not is_loopback_host(text):
             raise ValueError("BIND_HOST deve ser localhost ou um endereco loopback")
         if key in numeric_ranges:

@@ -55,6 +55,8 @@ run_engineering() {
     python3 -m pytest -q -p no:cacheprovider tests
   step "Roteamento/fallback de montagem com executáveis controlados" \
     bash scripts/tests/test_assembly_router_regressions.sh
+  step "Builder opcional: contrato e roteamento com executável controlado" \
+    bash scripts/tests/test_builder_arm.sh
   step "Montagem concluída sem contigs é SOFT; saída ausente/inválida é HARD" \
     bash scripts/tests/test_assembly_empty_output_regressions.sh
   step "Estado explícito sem UMI-tools no remapeamento controlado" \

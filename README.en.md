@@ -1,18 +1,35 @@
-# Gene-In — candidate sequence recovery and review
+<div align="center">
 
-[Português](README.md) · [Documentation](docs/README.md) · [Installation](docs/installation-reproducibility.md) · [Citation](docs/citacao.md)
+# Gene-In
 
-Gene-In recovers and organizes candidate sequences from fragmented sequencing data for human review. The program is general: the host and the reference database are choices of the person running the analysis. Swine and picornavirus are only the model case used in validation, not a limit of the program. It combines quality control, optional host filtering, assembly, similarity search, provenance and export. Candidate sequences of **20–100 bases and longer** are retained. A sequence alignment does not establish origin, species, infection or diagnosis.
+### Candidate sequence recovery and human review
 
-**2.0.2 — memory processing update on distribution 2.0.1, on main since PR #2 (`572a827`); the installer fix (PR #3) is also on main.** The Evidence contract remains `2.0.0-alpha.2`, with recovery policy `fragment_recovery_20_100_v1` and scientific revision `scientific_review_20261005_v1`. The [integration note](docs/integracao-memoria-22out.md) explains disk processing, preserved outputs and verification scope. Scientific parameters, profiles and locks remain unchanged.
+**Local dashboard · Linux and WSL2 · Execution provenance**
 
-This is the [repository](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Published packages belong in [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). Previous names are listed in the [history index](docs/repositorios-e-historico.md).
+[Português](README.md) · [Documentation](docs/README.md) · [Installation](docs/guia/instalacao.md) · [Assemblers](docs/guia/montadores.md)
 
-## Quick start
+</div>
 
-Supported fixed environment: **Linux x86_64 or Windows x86_64 through WSL2/Ubuntu**. Native Windows, macOS and ARM are not covered by this environment. Initial installation requires internet. The ZIP/source tree does not include a BLAST database or sample FASTQ; prepare a bank and supply your reads (see [usage and databases](docs/uso-e-bancos.md)).
+---
 
-On Windows, extract the complete package to a permanent directory, run `INSTALAR_GENEIN.bat`, then `ABRIR_GENEIN.bat`. On Linux, from the source directory:
+Gene-In brings data preparation, assembly, similarity search and result reporting into a workflow for human review. Users select their inputs, references and assembler; the application records the configuration and provenance.
+
+## Highlights
+
+- Local dashboard for setup, execution monitoring and exports.
+- Velvet, SPAdes, metaSPAdes, MULTI and an optional Gene-In Builder integration.
+- Candidate sequences, tables, logs and execution records.
+- Separate locations for source code, environments, databases and results.
+
+Candidate sequences are not confirmed biological identifications. Similarity does not establish species, infection or diagnosis.
+
+## Installation
+
+Supported environments: Linux x86_64 or Windows x86_64 with WSL2/Ubuntu. The first installation needs internet access.
+
+On Windows, extract the complete source into a permanent folder, then run `INSTALAR_GENEIN.bat` followed by `ABRIR_GENEIN.bat`.
+
+On Linux or in an Ubuntu/WSL terminal:
 
 ```bash
 bash bundle/install_wsl.sh
@@ -20,53 +37,44 @@ bash bundle/run.sh test-env
 bash run_linux.sh
 ```
 
-Open the URL printed in the terminal. The dashboard binds to `127.0.0.1`; keep its terminal open and stop the server with Ctrl+C when finished. Keep the source tree in place because the editable installation also uses its shell adapters. If tools such as `make` or `bzip2` are missing and `apt-get` fails, installation stops without creating the environment: install them and run the command again. See the [installation guide](docs/installation-reproducibility.md).
+Open the address printed in the terminal. Keep the source in its installed location. Databases and sample data are not bundled. See the [installation guide](docs/guia/instalacao.md).
 
-The scientific environment lives outside the source tree. The default prefix is `~/.gene-in-bundle`. Set `GENEIN_BUNDLE_DIR` before installing, opening the dashboard and running analyses when another directory is wanted. The Windows launcher uses the default.
+## Optional Builder
 
-Reference data can live outside the source tree as well. When `GENEIN_WORK_ROOT` is an existing absolute directory, the default download FASTA, BLAST database and Bowtie2 index are created there. An explicit `REF_FASTA`, `BLAST_DB` or `BOWTIE2_INDEX` stays on the path you chose. The CLI already requires `--output-root` outside the source tree. Export `GENEIN_OUTPUT_ROOT` to the directory that holds those outputs, or to one output directory that contains `execution.json`, before `bash run_linux.sh`, so the dashboard history lists them.
-
-In the dashboard, select the input reads, prepare/select a database, choose MULTI or one assembler and start with a small library and known controls. MULTI combines Velvet, SPAdes and metaSPAdes outputs and keeps sequences produced by a single assembler. Supply actual library adapters when needed and enable host filtering explicitly with a matching index and host identity.
-
-Read rescue uses SQLite to deduplicate BLAST rows on disk, and export and summary validation process rows incrementally. Filtering retains the two-pass processing and streaming hashes already present in 2.0.1, with improved failure handling and the same input contract: a missing raw file is an error; an existing empty file produces headers only. The full table, one best hit per candidate, descriptions, taxon and provenance remain available. This does not establish a universal RAM limit or solve every disk-space constraint. Gene-In Builder remains separate.
-
-For data of about 300,000 read pairs and 30 million HSPs, the environment check warns below **45 GB free**. This is working space, not a universal capacity requirement. RAM, disk and time depend on the input, database and assembler.
-
-## Command line
-
-After installation, use Linux paths and a prepared BLAST database with its manifest:
+The optional integration uses **Gene-In Builder 0.4.0**, pinned to an identified source commit. It is installed into its own environment:
 
 ```bash
-bash bundle/run.sh genein run \
-  --sample SAMPLE_01 --r1 /data/R1.fastq.gz --r2 /data/R2.fastq.gz \
-  --blast-db /references/panel --output-root /results/new_run \
-  --analysis-profile assembly-consensus --evidence-v2 --threads 2
+bash bundle/install_builder.sh
 ```
 
-The output directory must be new and outside the source tree. To build a database from your own reference FASTA, pass the database name and the file. Index prefixes may live outside the source tree:
+Access to the private Builder repository is required. Select **Gene-In Builder** in the dashboard or `--assembler builder` with the `default` analysis profile in the CLI. MULTI remains unchanged. A missing or incompatible Builder produces an explicit error without silently switching assemblers.
 
-```bash
-bash bundle/run.sh db DB=my_database REF_FASTA=/data/reference.fa \
-  BLAST_DB=/data/blastdb/my_database BOWTIE2_INDEX=/data/bowtie2/my_database
-```
+The original Builder outputs, warnings and manifest are retained in `builder_raw/`. No host is assumed. See [assemblers](docs/guia/montadores.md) and [results](docs/guia/resultados.md).
 
-For individual SPAdes assembly, use `--analysis-profile default --assembler spades`. Do not combine `--assembler` with `assembly-consensus`. For all options:
+## Help
 
 ```bash
 bash bundle/run.sh genein --version
+bash bundle/run.sh genein --help
 bash bundle/run.sh genein run --help
 ```
 
-For single-end input, replace `--r1/--r2` with `--single /data/reads.fastq.gz`; for preassembled sequences, use `--contigs /data/contigs.fa`. See the [usage guide](docs/uso-e-bancos.md) for batches, host filtering, controls, competitive panels and adapters.
+## Documentation
 
-## Results and interpretation
+| Topic | Guide |
+|---|---|
+| Setup | [Installation](docs/guia/instalacao.md) |
+| Dashboard and CLI | [Usage](docs/guia/uso.md) |
+| Assembly options | [Assemblers](docs/guia/montadores.md) |
+| Outputs and limitations | [Results](docs/guia/resultados.md) |
+| Troubleshooting | [Support](docs/guia/suporte.md) |
+| Citation and licensing | [Citation](docs/guia/citacao.md) |
+| Development and research | [Project](docs/guia/projeto.md) |
 
-Results include `candidate_sequences.fa`, `candidate_sequences.tsv`, `candidate_summary.tsv`, `candidate_queries.json` and Evidence reports. The summary has one row per candidate. The best hit is the highest bitscore; ties break on the lower e-value, then the higher identity. `min_evalue` also records the smallest e-value, which may belong to another subject. Taxon and the reference description come from the subject label or, when the label is absent, from the reference title. The query manifest may include queries without aligned candidates. Preserve the complete output directory, logs, resolved configuration and database manifests. `execution.json` is a technical launcher receipt.
+The detailed guides are currently in Portuguese.
 
-Read length, emitted sequence length and HSP length are separate measurements. Repeated sequence observations do not establish independent molecules. Reference coverage is the union of aligned positions per reference/segment; do not add different references as coverage of one genome.
+## Citation and license
 
-The label shown in the report and the panel is `CANDIDATOS_PARA_REVISAO` when candidate sequences are present, and `SEM_CANDIDATOS_PARA_REVISAO` when they are not. JSON files keep the contract codes `EVIDENCE_RECOVERED` and `DETECTED` (or `NO_EVIDENCE_RECOVERED` and `NO_SIGNAL`). Scientific qualification remains `NOT_EVALUATED`. Taxonomic preference is limited to labeled hits reported in the panel; ambiguity, missing competition and unmeasured support must remain visible.
+Use [CITATION.cff](CITATION.cff) and record the exact source commit and environment. Gene-In uses the [Gene-In Limited Public Use License](LICENSE), not an unrestricted open-source license. Third-party components retain their [own terms](THIRD_PARTY_NOTICES.md).
 
-Functional synthetic checks do not establish biological accuracy, clinical sensitivity, superiority or recovery of every fragment. The historical 27-library campaign belongs to an earlier configuration and retains its failed G0.8 gate. See [validation scope](docs/validacao.md).
-
-The [Gene-In Limited Public Use License v1.0](LICENSE) permits academic evaluation, education and non-commercial research. Redistribution, modification and other restricted uses require prior written permission from the copyright holder. [Third-party terms](THIRD_PARTY_NOTICES.md) apply separately. Cite **Alexsander Groth, Gene-In, version 2.0.2, 2026**, the source commit, databases and parameters; see [CITATION.cff](CITATION.cff) and the [citation guide](docs/citacao.md).
+Report software problems through [GitHub Issues](https://github.com/AlexgrothViro/GENE-IN-2.0.0/issues).

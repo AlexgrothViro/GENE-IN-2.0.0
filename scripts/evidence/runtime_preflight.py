@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -56,6 +57,14 @@ def run(
         selected.append("spades.py")
     elif assembler == "metaspades":
         selected.append("metaspades.py")
+    elif assembler == "builder":
+        adapter = Path(__file__).resolve().parents[1] / "pipeline" / "assemblers" / "builder_adapter.py"
+        check = subprocess.run([sys.executable, str(adapter), "check"], capture_output=True, text=True)
+        report["commands"]["genein-builder"] = {"available": check.returncode == 0}
+        if check.returncode:
+            errors.append("Gene-In Builder indisponível ou incompatível: " + check.stderr.strip())
+        else:
+            report["commands"]["genein-builder"].update(json.loads(check.stdout))
     if umi_mode != "none":
         selected.append("umi_tools")
     if require_phylogeny:
@@ -76,7 +85,11 @@ def main() -> int:
     activation.add_argument("--activation-policy", type=Path)
     activation.add_argument("--experimental-activation-policy", type=Path)
     parser.add_argument("--profiles", type=Path)
-    parser.add_argument("--assembler", choices=["none", "velvet", "spades", "metaspades"], default="none")
+    parser.add_argument(
+        "--assembler",
+        choices=["none", "velvet", "spades", "metaspades", "builder"],
+        default="none",
+    )
     parser.add_argument("--umi-mode", choices=["none", "read_name", "tag"], default="none")
     parser.add_argument("--require-phylogeny", action="store_true")
     parser.add_argument("--require-command", action="append", default=[])

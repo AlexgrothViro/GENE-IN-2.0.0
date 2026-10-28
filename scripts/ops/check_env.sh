@@ -307,10 +307,19 @@ elif [[ "$ASSEMBLER" == "spades" && $SPADES_FOUND -eq 0 ]]; then
 elif [[ "$ASSEMBLER" == "metaspades" && $METASPADES_FOUND -eq 0 ]]; then
   echo "  [CRÍTICO] metaSPAdes está configurado como ASSEMBLER ativo, mas não está instalado!"
   MISSING=1
+elif [[ "$ASSEMBLER" == "builder" ]]; then
+  if python3 "${REPO_ROOT}/scripts/pipeline/assemblers/builder_adapter.py" check; then
+    echo "  [OK] Gene-In Builder 0.4.0 disponível (opcional)."
+  else
+    echo "  [CRÍTICO] ASSEMBLER=builder, mas o pacote genein-builder nao esta instalado."
+    echo "            bash bundle/install_builder.sh"
+    MISSING=1
+  fi
 fi
 
-# Garante que pelo menos um montador esteja presente no ambiente
-if [[ $VELVET_FOUND -eq 0 && $SPADES_FOUND -eq 0 && $METASPADES_FOUND -eq 0 ]]; then
+# Garante que pelo menos um montador do caminho padrao esteja presente.
+# builder e opcional e nao substitui essa exigencia quando outro montador esta ativo.
+if [[ "$ASSEMBLER" != "builder" && $VELVET_FOUND -eq 0 && $SPADES_FOUND -eq 0 && $METASPADES_FOUND -eq 0 ]]; then
   echo "  [CRÍTICO] Nenhum montador genômico (Velvet, SPAdes ou metaSPAdes) está disponível no sistema!"
   MISSING=1
 fi

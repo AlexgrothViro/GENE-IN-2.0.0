@@ -55,8 +55,8 @@ if [[ "$PROFILE_STRATEGY" == "consensus" ]]; then
   ASSEMBLER="consensus"
 fi
 case "$ASSEMBLER" in
-  velvet|spades|metaspades|consensus) ;;
-  *) log_error "Montador invalido: '$ASSEMBLER'. Use velvet, spades, metaspades ou o perfil assembly-consensus." ;;
+  velvet|spades|metaspades|consensus|builder) ;;
+  *) log_error "Montador invalido: '$ASSEMBLER'. Use velvet, spades, metaspades, builder ou o perfil assembly-consensus." ;;
 esac
 if ! [[ "$THREADS" =~ ^[1-9][0-9]*$ ]]; then
   log_error "THREADS deve ser um inteiro positivo: '$THREADS'."
@@ -155,6 +155,19 @@ run_single_assembler() {
       fi
       rc=$?
       ;;
+    builder)
+      contigs_src="${ASSEMBLY_DIR}/${SAFE_SAMPLE_KEY}_builder/contigs.fasta"
+      if [[ -n "$RAW_SINGLE" ]]; then
+        SAMPLE_SINGLE="$RAW_SINGLE" ASSEMBLY_DIR="$ASSEMBLY_DIR" BUILDER_MOTOR="${BUILDER_MOTOR:-v1}" \
+          "${SCRIPT_DIR}/assemblers/builder.sh" "$SAFE_SAMPLE_KEY" "$THREADS" \
+          > "$stdout_log" 2> "$stderr_log"
+      else
+        R1="$RAW1" R2="$RAW2" ASSEMBLY_DIR="$ASSEMBLY_DIR" BUILDER_MOTOR="${BUILDER_MOTOR:-v1}" \
+          "${SCRIPT_DIR}/assemblers/builder.sh" "$SAFE_SAMPLE_KEY" "$THREADS" \
+          > "$stdout_log" 2> "$stderr_log"
+      fi
+      rc=$?
+      ;;
   esac
 
   if [[ $rc -ne 0 ]]; then
@@ -176,7 +189,9 @@ run_single_assembler() {
          {seqlen += length($0)}
          END {if (seqlen > max) max = seqlen; print (max + 0)}' "$contigs_src"
   )"
-  if (( LAST_MAX_CONTIG_LEN < 200 )); then
+  # builder publica de proposito sequencias de 20 pb ou mais. O limiar de
+  # 200 pb continua valendo para velvet, spades e metaspades.
+  if [[ "$asm" != "builder" ]] && (( LAST_MAX_CONTIG_LEN < 200 )); then
     log_warning "Maior contig gerado por $asm (${LAST_MAX_CONTIG_LEN} bp) menor que 200 bp (falha branda)."
     return 2
   fi
@@ -273,7 +288,9 @@ else
   run_single_assembler "$ASSEMBLER"
   ASM_STATUS=$?
 
-  if [[ $ASM_STATUS -eq 1 ]]; then
+  if [[ $ASM_STATUS -eq 1 && "$ASSEMBLER" == "builder" ]]; then
+    log_warning "Montador builder falhou. Nenhum fallback para velvet, spades ou metaspades sera aplicado."
+  elif [[ $ASM_STATUS -eq 1 ]]; then
     ASSEMBLY_FALLBACK=1
     log_recovered "Montador inicial $ASSEMBLER reportou falha dura. Iniciando fallback."
     case "$ASSEMBLER" in
@@ -303,7 +320,11 @@ else
       ASSEMBLY_FAILURE_TYPE="HARD"
       LAST_CONTIGS_SRC=""
       LAST_MAX_CONTIG_LEN=0
-      log_warning "Todos os montadores aplicaveis falharam."
+      if [[ "$ASSEMBLER" == "builder" ]]; then
+        log_warning "Montador builder falhou. O resultado fica registrado como HARD e nenhum outro montador foi acionado."
+      else
+        log_warning "Todos os montadores aplicaveis falharam."
+      fi
       ;;
   esac
 fi
@@ -340,6 +361,20 @@ fi
   printf 'ASSEMBLY_CONSENSUS_MINIMUM=%s\n' "$PROFILE_MINIMUM_SUCCESSFUL"
   printf 'RESCUE_TRIGGERED=0\n'
   printf 'INPUT_MODE="READS"\n'
+  if [[ "$ASSEMBLER_REQUESTED" == "builder" ]]; then
+    BUILDER_PROVENANCE="${ASSEMBLY_DIR}/${SAFE_SAMPLE_KEY}_builder/builder_provenance.env"
+    if [[ -f "$BUILDER_PROVENANCE" ]]; then
+      while IFS= read -r BUILDER_LINE || [[ -n "$BUILDER_LINE" ]]; do
+        if [[ "$BUILDER_LINE" =~ ^[A-Z0-9_]+=\"[A-Za-z0-9._+-]*\"$ ]]; then
+          printf '%s\n' "$BUILDER_LINE"
+        fi
+      done < "$BUILDER_PROVENANCE"
+    else
+      printf 'BUILDER_VERSION="unavailable"\n'
+      printf 'BUILDER_COMMIT="unavailable"\n'
+      printf 'BUILDER_STATUS="UNRECORDED"\n'
+    fi
+  fi
 } > "$METADATA_TMP"
 
 if [[ -s "${STD_ASM_DIR}/contigs.fa" ]]; then

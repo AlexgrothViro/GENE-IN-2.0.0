@@ -725,7 +725,7 @@ def custom_database_env(params):
 def assembly_command_args(params):
     """Resolve the dashboard selection without an override on MULTI."""
     selected = str(params.get("assembler") or "spades").strip().lower()
-    if selected not in {"velvet", "spades", "metaspades", "consensus"}:
+    if selected not in {"velvet", "spades", "metaspades", "consensus", "builder"}:
         raise ValueError("assembler invalido")
     profile = str(params.get("analysis_profile") or params.get("profile") or
                   ("assembly-consensus" if selected == "consensus" else "default")).strip()
@@ -936,7 +936,7 @@ def build_command(action, params):
     elif action == "assembly_only":
         sample = validate_sample_id(params["sample"])
         assembler = (params.get("assembler") or "velvet").strip().lower()
-        if assembler not in {"velvet", "spades", "metaspades"}:
+        if assembler not in {"velvet", "spades", "metaspades", "builder"}:
             raise ValueError("assembler invalido")
         cmd = [
             "bash", "scripts/experimental/assembly_only/run.sh",

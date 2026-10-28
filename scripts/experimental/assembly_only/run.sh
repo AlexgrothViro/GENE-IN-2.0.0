@@ -14,11 +14,11 @@ source "${SCRIPTS_ROOT}/lib/common.sh"
 usage() {
   cat <<'USAGE' >&2
 Uso:
-  bash scripts/experimental/assembly_only/run.sh --sample <id> --assembler <velvet|spades|metaspades> [--kmer <k>] [--spades-params <params>]
+  bash scripts/experimental/assembly_only/run.sh --sample <id> --assembler <velvet|spades|metaspades|builder> [--kmer <k>] [--spades-params <params>]
 
 Opções:
   --sample        ID da amostra (obrigatório)
-  --assembler     Montador a usar: velvet, spades, metaspades (padrão: velvet)
+  --assembler     Montador a usar: velvet, spades, metaspades ou builder (padrão: velvet)
   --kmer          Tamanho do k-mer (padrão: 31)
   --spades-params Parâmetros extras para SPAdes/metaSPAdes (opcional)
   -h, --help      Exibe esta ajuda
@@ -69,8 +69,8 @@ fi
 # Validação do assembler
 # ---------------------------------------------------------------------------
 case "$ASSEMBLER" in
-  velvet|spades|metaspades) ;;
-  *) log_error "Assembler inválido: '$ASSEMBLER'. Use velvet, spades ou metaspades." ;;
+  velvet|spades|metaspades|builder) ;;
+  *) log_error "Assembler inválido: '$ASSEMBLER'. Use velvet, spades, metaspades ou builder." ;;
 esac
 
 # ---------------------------------------------------------------------------
@@ -174,6 +174,18 @@ case "$ASSEMBLER" in
     R1="$RAW1" R2="$RAW2" \
       ASSEMBLY_DIR="$ASSEMBLY_DIR" "${SCRIPTS_ROOT}/pipeline/assemblers/metaspades.sh" "$SAFE_SAMPLE" "$THREADS" "$SPADES_PARAMS"
     CONTIGS_SRC="${ASSEMBLY_DIR}/${SAFE_SAMPLE}_metaspades/contigs.fasta"
+    copy_contigs "$CONTIGS_SRC" "${STD_ASM_DIR}/contigs.fa"
+    ;;
+
+  builder)
+    if [[ "$READ_MODE" == "single" ]]; then
+      SAMPLE_SINGLE="$RAW_SINGLE" ASSEMBLY_DIR="$ASSEMBLY_DIR" \
+        "${SCRIPTS_ROOT}/pipeline/assemblers/builder.sh" "$SAFE_SAMPLE" "$THREADS"
+    else
+      R1="$RAW1" R2="$RAW2" ASSEMBLY_DIR="$ASSEMBLY_DIR" \
+        "${SCRIPTS_ROOT}/pipeline/assemblers/builder.sh" "$SAFE_SAMPLE" "$THREADS"
+    fi
+    CONTIGS_SRC="${ASSEMBLY_DIR}/${SAFE_SAMPLE}_builder/contigs.fasta"
     copy_contigs "$CONTIGS_SRC" "${STD_ASM_DIR}/contigs.fa"
     ;;
 esac

@@ -298,7 +298,7 @@ export async function renderNewAnalysis(store, rerender) {
   }
   if (wizard.step === 3) {
     card.append(panelHead("4. Configuração"));
-    const assembler = h("select", { id: "wizard-assembler" }, [h("option", { value: "consensus", text: "MULTI — SPAdes, metaSPAdes e Velvet" }), h("option", { value: "spades", text: "SPAdes" }), h("option", { value: "metaspades", text: "metaSPAdes" }), h("option", { value: "velvet", text: "Velvet" })]);
+    const assembler = h("select", { id: "wizard-assembler" }, [h("option", { value: "consensus", text: "MULTI — SPAdes, metaSPAdes e Velvet" }), h("option", { value: "spades", text: "SPAdes" }), h("option", { value: "metaspades", text: "metaSPAdes" }), h("option", { value: "velvet", text: "Velvet" }), h("option", { value: "builder", text: "Gene-In Builder (opcional)" })]);
     assembler.value = wizard.assembler;
     assembler.addEventListener("change", () => store.set({ wizard: { assembler: assembler.value } }));
     card.append(field("Montagem", assembler, "MULTI preserva as sequências dos três montadores, inclusive as produzidas por apenas um deles."));

@@ -438,10 +438,11 @@ if [[ -n "$CONTIGS" ]]; then
     echo "RESCUE_TRIGGERED=0"
     echo "INPUT_MODE=\"CONTIGS\""
   } > "$METADATA_FILE"
-elif [[ "$INPUT_MODE" == "READS" && $SHORT_READ_COUNT -gt 0 && $MAXIMUM_READ_LENGTH -le 20 && $VELVET_K -gt $MAXIMUM_READ_LENGTH && -z "$ADVANCED_KMERS" && -z "${SPADES_PARAMS:-}" ]]; then
+elif [[ "$ASSEMBLER" != "builder" && "$INPUT_MODE" == "READS" && $SHORT_READ_COUNT -gt 0 && $MAXIMUM_READ_LENGTH -le 20 && $VELVET_K -gt $MAXIMUM_READ_LENGTH && -z "$ADVANCED_KMERS" && -z "${SPADES_PARAMS:-}" ]]; then
   # The default SPAdes k-mer setup starts above this length; Velvet's
   # selected k also exceeds every read. Preserve a direct-read path rather
   # than run an inapplicable assembly. Explicit smaller k remains honoured.
+  # builder fica de fora deste atalho: ele registra a propria saida vazia.
   ASSEMBLY_CONTIGS="${WORK_ROOT}/data/assemblies/${SAMPLE_NAME}_assembly/contigs.fa"
   METADATA_FILE="$(dirname "$ASSEMBLY_CONTIGS")/assembly_metadata.env"
   mkdir -p "$(dirname "$ASSEMBLY_CONTIGS")"
@@ -675,6 +676,7 @@ case "$ASSEMBLER" in
   velvet)     OUT="${OUTDIR}/${SAMPLE_NAME}_k${VELVET_K}_vs_db.tsv" ;;
   metaspades) OUT="${OUTDIR}/${SAMPLE_NAME}_metaspades_vs_db.tsv" ;;
   consensus)  OUT="${OUTDIR}/${SAMPLE_NAME}_assembly_consensus_vs_db.tsv" ;;
+  builder)    OUT="${OUTDIR}/${SAMPLE_NAME}_builder_vs_db.tsv" ;;
   *)          OUT="${OUTDIR}/${SAMPLE_NAME}_spades_vs_db.tsv" ;;
 esac
 
