@@ -31,15 +31,19 @@ remove_new_builder_env() {
 }
 SPEC="$("$PYTHON" "$ROOT/scripts/pipeline/assemblers/builder_adapter.py" install-spec)"
 echo "[INFO] Instalando Builder 0.4.0 em ambiente separado."
-if ! "$TARGET/bin/python" -m pip install "$SPEC"; then
-  status=$?
+# `if ! cmd` deixa $? em 0 quando o if é verdadeiro. O código do pip tem de ser
+# gravado no próprio `||`, senão a falha sai como EXIT 0.
+pip_status=0
+"$TARGET/bin/python" -m pip install "$SPEC" || pip_status=$?
+if [[ "$pip_status" -ne 0 ]]; then
   remove_new_builder_env
-  exit "$status"
+  exit "$pip_status"
 fi
-if ! "$TARGET/bin/python" -m pip check; then
-  status=$?
+pip_status=0
+"$TARGET/bin/python" -m pip check || pip_status=$?
+if [[ "$pip_status" -ne 0 ]]; then
   remove_new_builder_env
-  exit "$status"
+  exit "$pip_status"
 fi
 GENEIN_BUILDER_BIN="$TARGET/bin/genein-builder" "$PYTHON" "$ROOT/scripts/pipeline/assemblers/builder_adapter.py" check
 echo "[OK] Builder disponível na opção de montador do Gene-In."

@@ -69,10 +69,15 @@ def class_priority(label: str) -> int:
     return _CLASS_PRIORITY.get(label, 99)
 
 
-_VALIDATED_CONTROLS = {"CONTROL_BELOW_SAMPLE", "CONTROL_NOT_DETECTED", "CONTROL_NOT_APPLICABLE"}
+_VALIDATED_CONTROLS = {"CONTROL_BELOW_SAMPLE", "CONTROL_NOT_DETECTED"}
 
 
-def confidence_tier_for(evidence_class: str, *, control_status: str = "UNCONTROLLED") -> str:
+def confidence_tier_for(
+    evidence_class: str,
+    *,
+    control_status: str = "UNCONTROLLED",
+    evidence_level: str = "",
+) -> str:
     """Mapeia as classes que participam da contagem canônica.
 
     REVIEW continua exportado com best_ref, evidence_class e valores brutos
@@ -91,7 +96,9 @@ def confidence_tier_for(evidence_class: str, *, control_status: str = "UNCONTROL
         tier = "DISCORDANT"
     else:
         tier = "UNCLASSIFIED"
-    if tier == "ACTIONABLE" and control_status not in _VALIDATED_CONTROLS:
+    if tier == "ACTIONABLE" and (
+        evidence_level == "REVIEW" or control_status not in _VALIDATED_CONTROLS
+    ):
         return "REVIEW"
     return tier
 
@@ -384,7 +391,12 @@ def main() -> None:
     ap.add_argument(
         "--control-status",
         default="UNCONTROLLED",
-        help="Estado de controle da execução. Sem controle validado, confidence_tier permanece REVIEW.",
+        help="Estado de controle da execução. CONTROL_NOT_APPLICABLE não libera ACTIONABLE.",
+    )
+    ap.add_argument(
+        "--evidence-level",
+        default="",
+        help="Rótulo já gravado em sample_evidence.json. REVIEW mantém confidence_tier em REVIEW.",
     )
     args = ap.parse_args()
 
@@ -592,7 +604,11 @@ def main() -> None:
                 f"{hit['aln_cov']:.5f}",
                 f"{hit['adj_identity']:.3f}",
                 hit["evidence_class"],
-                confidence_tier_for(hit["evidence_class"], control_status=args.control_status),
+                confidence_tier_for(
+                    hit["evidence_class"],
+                    control_status=args.control_status,
+                    evidence_level=args.evidence_level,
+                ),
             ]
             if risk_note_present:
                 row_data.append(hit["risk_note"])
@@ -627,7 +643,9 @@ def main() -> None:
     for hit in exported:
         cls = hit["evidence_class"]
         counts_by_class[cls] = counts_by_class.get(cls, 0) + 1
-        tier = confidence_tier_for(cls, control_status=args.control_status)
+        tier = confidence_tier_for(
+            cls, control_status=args.control_status, evidence_level=args.evidence_level,
+        )
         counts_by_tier[tier] = counts_by_tier.get(tier, 0) + 1
         refs_found.add(hit["sseqid"])
         seq_lens.append(len(contigs_seqs[hit["qseqid"]]))
