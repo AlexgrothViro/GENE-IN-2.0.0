@@ -11,7 +11,7 @@ bash bundle/run.sh genein --version
 git rev-parse HEAD
 ```
 
-Em pacotes sem Git, consulte `SOURCE_COMMIT`, quando incluído pelo empacotador. A branch de distribuição com Builder não deve ser confundida com uma release anterior apenas por compartilhar o número de versão da base.
+Em pacotes sem Git, `genein --version` lê `SOURCE_COMMIT`. O mesmo commit fica gravado em `RELEASE.json` do pacote, no campo `source_commit`. A branch de distribuição com Builder não deve ser confundida com uma release anterior apenas por compartilhar o número de versão da base.
 
 ## Registrar o trabalho
 

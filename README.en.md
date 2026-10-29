@@ -39,9 +39,19 @@ bash run_linux.sh
 
 Open the address printed in the terminal. Keep the source in its installed location. Databases and sample data are not bundled. See the [installation guide](docs/guia/instalacao.md).
 
+## Assemblers
+
+| Option | Role |
+|---|---|
+| Velvet | Assembler in the Gene-In environment |
+| SPAdes | Individual assembly option |
+| metaSPAdes | Individual option for compatible inputs |
+| MULTI | Velvet, SPAdes and metaSPAdes together |
+| Gene-In Builder | Optional. It cannot be installed without granted access to the private repository |
+
 ## Optional Builder
 
-The optional integration uses **Gene-In Builder 0.4.0**, pinned to an identified source commit. It is installed into its own environment:
+The optional integration uses **Gene-In Builder 0.4.0**, pinned to an identified source commit. It cannot be installed without granted access to the private repository. It is installed into its own environment:
 
 ```bash
 bash bundle/install_builder.sh

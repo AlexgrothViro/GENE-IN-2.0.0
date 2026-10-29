@@ -4,9 +4,22 @@
 
 ## Arquivos para revisão
 
+Os arquivos `candidate_*` só existem quando a execução pede `--evidence-v2`. O caminho é `results/evidence/runs/<run_id>/`, dentro da pasta de saída.
+
+```bash
+bash bundle/run.sh genein run \
+  --sample amostra \
+  --r1 /dados/R1.fastq.gz \
+  --r2 /dados/R2.fastq.gz \
+  --blast-db /dados/blastdb/banco \
+  --output-root /dados/saida_nova \
+  --assembler velvet \
+  --evidence-v2
+```
+
 | Arquivo | Uso |
 |---|---|
-| `candidate_sequences.fa` | Sequências candidatas para revisão |
+| `candidate_sequences.fa` | Sequências candidatas para revisão, em `results/evidence/runs/<run_id>/` |
 | `candidate_sequences.tsv` | Tabela completa de alinhamentos reportados |
 | `candidate_summary.tsv` | Uma linha de resumo por candidato |
 | `candidate_queries.json` | Proveniência das sequências consultadas |
@@ -26,6 +39,14 @@ Guarde também configuração resolvida, logs e manifesto do banco. A presença 
 Uma execução concluída não confirma uma identificação biológica. Ausência de candidatos também não demonstra, isoladamente, ausência de um organismo.
 
 O painel apresenta `CANDIDATOS_PARA_REVISAO` ou `SEM_CANDIDATOS_PARA_REVISAO`. Os códigos históricos dos arquivos estruturados permanecem preservados para compatibilidade. A qualificação científica continua separada do sucesso técnico.
+
+## Rótulo da execução
+
+Sem controle positivo ou negativo validado, o estado é `UNCONTROLLED`. Nesse estado o rótulo da execução não passa de REVIEW/candidato: não recebe `DETECTED` nem `ACTIONABLE`. Candidatos continuam nas tabelas para revisão humana.
+
+Registros do Builder com menos de 200 pb aparecem em `candidate_summary.tsv` com `fragmento_curto=true` e `rotulo=REVIEW`. Esse registro não sobe acima de REVIEW. A isenção de 200 pb na montagem permanece: o Builder ainda pode publicar sequências a partir de 20 pb, e o limiar de 200 pb dos outros montadores não muda.
+
+Uma entrada sintética aleatória, sem controle validado, fica com zero rótulos `DETECTED`.
 
 ## Ao usar o Builder
 

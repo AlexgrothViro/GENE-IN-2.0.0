@@ -241,6 +241,7 @@ python3 "$EVIDENCE_DIR/run_state.py" --state "$STATE_FILE" status --value runnin
 CURRENT_STAGE="input_validation"
 EVIDENCE_FAILURE_TYPE="UNKNOWN"
 RESOURCE_SHORTAGE=0
+RESOURCE_MESSAGE=""
 EVIDENCE_FAILED_COMMAND=""
 # BEGIN resource_shortage
 # Classifica ENOSPC e a mensagem do sqlite "database or disk is full" como
@@ -276,9 +277,14 @@ run_recording_stderr() {
   fi
   if [[ "$rc" -ne 0 ]]; then
     EVIDENCE_FAILED_COMMAND="$*"
-    if [[ -n "$err_file" ]] && grep -Eq 'No space left on device|database or disk is full|ENOSPC|Errno 28' "$err_file"; then
+    if [[ -n "$err_file" ]] && grep -Eq 'std::bad_alloc|bad_alloc' "$err_file" || [[ "$rc" -eq 134 ]]; then
       RESOURCE_SHORTAGE=1
-      echo "[FATAL] falta de recurso: disco cheio (ENOSPC ou 'database or disk is full'). TMPDIR=${TMPDIR:-/tmp}" >&2
+      RESOURCE_MESSAGE="Falta de memória (std::bad_alloc ou saída 134). Próximo passo: libere memória e repita a execução."
+      echo "[FATAL] ${RESOURCE_MESSAGE}" >&2
+    elif [[ -n "$err_file" ]] && grep -Eq 'No space left on device|database or disk is full|ENOSPC|EFBIG|Errno 27|Errno 28|File too large' "$err_file"; then
+      RESOURCE_SHORTAGE=1
+      RESOURCE_MESSAGE="Falta de espaço em disco (Errno 27 ou 28). Próximo passo: libere espaço em disco e repita a execução."
+      echo "[FATAL] ${RESOURCE_MESSAGE}" >&2
     fi
   fi
   if [[ -n "$err_file" ]]; then
@@ -312,7 +318,7 @@ fail_run_v2() {
   local failed_command="${EVIDENCE_FAILED_COMMAND:-${BASH_COMMAND:-}}"
   trap - ERR INT TERM
   if [[ "${RESOURCE_SHORTAGE:-0}" == "1" ]]; then
-    message="falta de recurso: disco cheio (ENOSPC ou database or disk is full). TMPDIR=${TMPDIR:-/tmp}"
+    message="${RESOURCE_MESSAGE:-Falta de espaço em disco (Errno 27 ou 28). Próximo passo: libere espaço em disco e repita a execução.}"
   fi
   python3 "$EVIDENCE_DIR/run_state.py" --state "$STATE_FILE" write-failure-evidence \
     --root "$OUTDIR" --reason "$message: $CURRENT_STAGE" \
@@ -526,8 +532,12 @@ for spec in "${BLAST_SPECS[@]}"; do
   task="${spec%%=*}"; path="${spec#*=}"
   PROVENANCE_ARTIFACTS+=(--artifact "blast_${task}_$(basename "$path")=$path")
 done
+PROVENANCE_PROFILE_ARGS=()
+if [[ -n "$SEARCH_PROFILE_MANIFEST" ]]; then
+  PROVENANCE_PROFILE_ARGS+=(--search-profile "$SEARCH_PROFILE_MANIFEST")
+fi
 python3 "$EVIDENCE_DIR/write_provenance.py" --config "$PROFILES" --out "$OUTDIR/provenance.json" \
-  "${PROVENANCE_ARTIFACTS[@]}" \
+  "${PROVENANCE_ARTIFACTS[@]}" "${PROVENANCE_PROFILE_ARGS[@]}" \
   --value "run_id=$RUN_ID" --value "sample_id=$SAMPLE" --value "shadow_mode=$SHADOW_MODE" --value "dust=$DUST" \
   --value "profile_id=$PROFILE_ID" --value "profile_version=$PROFILE_VERSION" \
   --value "profile_sha256=$PROFILE_SHA256" --value "activation_record_id=$ACTIVATION_RECORD_ID" \

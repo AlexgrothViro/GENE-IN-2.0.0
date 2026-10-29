@@ -28,8 +28,10 @@ except ImportError:
 
 SCHEMA_VERSION = "2.0"
 PIPELINE_VERSION = "2.0.0-alpha.2"
-EVIDENCE_LEVELS = {"DETECTED", "NO_SIGNAL", "NOT_EVALUABLE"}
-ANALYSIS_OUTCOMES = {"EVIDENCE_RECOVERED", "NO_EVIDENCE_RECOVERED", "NOT_EVALUABLE"}
+EVIDENCE_LEVELS = {"DETECTED", "REVIEW", "NO_SIGNAL", "NOT_EVALUABLE"}
+ANALYSIS_OUTCOMES = {
+    "EVIDENCE_RECOVERED", "CANDIDATES_FOR_REVIEW", "NO_EVIDENCE_RECOVERED", "NOT_EVALUABLE",
+}
 EXECUTION_STATUSES = {"queued", "running", "done", "warning", "blocked", "failed", "cancelled"}
 CONTROL_PASS = {"CONTROL_BELOW_SAMPLE", "CONTROL_NOT_DETECTED", "CONTROL_NOT_APPLICABLE"}
 TERMINAL_EXECUTION_STATUSES = {"done", "warning", "blocked", "failed", "cancelled"}
@@ -40,6 +42,7 @@ def evidence_label(value: dict) -> str:
     """Public wording for the existing recovery codes, including old runs."""
     return {
         "EVIDENCE_RECOVERED": "Candidatos recuperados",
+        "CANDIDATES_FOR_REVIEW": "Candidatos para revisão",
         "NO_EVIDENCE_RECOVERED": "Nenhum candidato recuperado",
         "NOT_EVALUABLE": "Não avaliável",
     }.get(value.get("analysis_outcome"), "Não avaliável")
@@ -49,10 +52,26 @@ def evidence_label(value: dict) -> str:
 # EVIDENCE_RECOVERED permanecem no JSON para compatibilidade.
 PUBLIC_REVIEW_LABELS = {
     "EVIDENCE_RECOVERED": "CANDIDATOS_PARA_REVISAO",
+    "CANDIDATES_FOR_REVIEW": "CANDIDATOS_PARA_REVISAO",
     "DETECTED": "CANDIDATOS_PARA_REVISAO",
+    "REVIEW": "CANDIDATOS_PARA_REVISAO",
     "NO_EVIDENCE_RECOVERED": "SEM_CANDIDATOS_PARA_REVISAO",
     "NO_SIGNAL": "SEM_CANDIDATOS_PARA_REVISAO",
 }
+
+
+def labels_for_control(control_status: str, *, has_candidates: bool) -> tuple[str, str]:
+    """Return ``(analysis_outcome, evidence_level)`` for one execution.
+
+    A validated positive or negative control may carry ``DETECTED``. Without
+    that state (``UNCONTROLLED`` and any other status outside ``CONTROL_PASS``),
+    candidates stay available for review and the execution label is ``REVIEW``.
+    """
+    if not has_candidates:
+        return "NO_EVIDENCE_RECOVERED", "NO_SIGNAL"
+    if control_status in CONTROL_PASS:
+        return "EVIDENCE_RECOVERED", "DETECTED"
+    return "CANDIDATES_FOR_REVIEW", "REVIEW"
 
 
 def public_review_label(code: object) -> str:
@@ -90,6 +109,10 @@ def _validate_public_state(execution_status: object, analysis_outcome: object,
         raise ValueError("NOT_EVALUABLE evidence level requires NOT_EVALUABLE outcome")
     if analysis_outcome == "EVIDENCE_RECOVERED" and evidence_level != "DETECTED":
         raise ValueError("EVIDENCE_RECOVERED requires DETECTED evidence level")
+    if analysis_outcome == "CANDIDATES_FOR_REVIEW" and evidence_level != "REVIEW":
+        raise ValueError("CANDIDATES_FOR_REVIEW requires REVIEW evidence level")
+    if evidence_level == "REVIEW" and analysis_outcome != "CANDIDATES_FOR_REVIEW":
+        raise ValueError("REVIEW evidence level requires CANDIDATES_FOR_REVIEW outcome")
     if analysis_outcome == "NO_EVIDENCE_RECOVERED" and evidence_level != "NO_SIGNAL":
         raise ValueError("NO_EVIDENCE_RECOVERED requires NO_SIGNAL evidence level")
 

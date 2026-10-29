@@ -172,6 +172,11 @@ run_single_assembler() {
 
   if [[ $rc -ne 0 ]]; then
     log_warning "Montador $asm falhou com exit code $rc (falha dura). Logs: stdout=${stdout_log}; stderr=${stderr_log}"
+    if [[ "$asm" == "builder" && -f "$stderr_log" ]]; then
+      log_warning "Últimas linhas de ${stderr_log}:"
+      tail -n 40 "$stderr_log" >&2 || true
+    fi
+    explain_resource_shortage "$rc" "$stderr_log" || true
     return 1
   fi
   if [[ ! -s "$contigs_src" ]]; then

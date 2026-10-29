@@ -17,12 +17,29 @@ if [[ -e "$TARGET" && ! -x "$TARGET/bin/python" ]]; then
   echo "[ERRO] $TARGET existe, mas não é um ambiente utilizável. Preserve-o e escolha outro GENEIN_BUNDLE_DIR." >&2
   exit 2
 fi
+echo "[AVISO] O Builder não pode ser instalado sem acesso concedido ao repositório privado. A obtenção do código via Git começa agora; sem esse acesso, a instalação falha." >&2
+CREATED_BUILDER_ENV=0
 if [[ ! -d "$TARGET" ]]; then
   "$PYTHON" -m venv "$TARGET"
+  CREATED_BUILDER_ENV=1
 fi
+remove_new_builder_env() {
+  if [[ "$CREATED_BUILDER_ENV" -eq 1 ]]; then
+    rm -rf "$TARGET"
+    echo "[AVISO] O ambiente ${TARGET} criado nesta tentativa foi removido porque o pip falhou." >&2
+  fi
+}
 SPEC="$("$PYTHON" "$ROOT/scripts/pipeline/assemblers/builder_adapter.py" install-spec)"
-echo "[INFO] Instalando Builder 0.4.0 em ambiente separado. É necessário acesso ao repositório privado."
-"$TARGET/bin/python" -m pip install "$SPEC"
-"$TARGET/bin/python" -m pip check
+echo "[INFO] Instalando Builder 0.4.0 em ambiente separado."
+if ! "$TARGET/bin/python" -m pip install "$SPEC"; then
+  status=$?
+  remove_new_builder_env
+  exit "$status"
+fi
+if ! "$TARGET/bin/python" -m pip check; then
+  status=$?
+  remove_new_builder_env
+  exit "$status"
+fi
 GENEIN_BUILDER_BIN="$TARGET/bin/genein-builder" "$PYTHON" "$ROOT/scripts/pipeline/assemblers/builder_adapter.py" check
 echo "[OK] Builder disponível na opção de montador do Gene-In."

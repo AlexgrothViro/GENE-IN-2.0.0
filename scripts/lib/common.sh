@@ -20,6 +20,25 @@ log_info()      { echo "[INFO]       $(log_context) — $*"; }
 log_error() { log_fatal "$@"; }
 log_warn()  { log_warning "$@"; }
 
+# Next step when a tool stops for memory (std::bad_alloc / exit 134) or disk (Errno 27/28).
+explain_resource_shortage() {
+  local rc="${1:-0}"
+  local log_file="${2:-}"
+  local sample=""
+  if [[ -n "$log_file" && -f "$log_file" ]]; then
+    sample="$(tail -c 20000 "$log_file" 2>/dev/null || true)"
+  fi
+  if [[ "$rc" -eq 134 ]] || [[ "$sample" == *"std::bad_alloc"* ]] || [[ "$sample" == *"bad_alloc"* ]]; then
+    echo "[FATAL] Falta de memória (std::bad_alloc ou saída 134). Próximo passo: libere memória e repita a execução." >&2
+    return 0
+  fi
+  if [[ "$sample" == *"Errno 27"* || "$sample" == *"Errno 28"* || "$sample" == *"No space left on device"* || "$sample" == *"ENOSPC"* || "$sample" == *"EFBIG"* || "$sample" == *"database or disk is full"* ]]; then
+    echo "[FATAL] Falta de espaço em disco (Errno 27 ou 28). Próximo passo: libere espaço em disco e repita a execução." >&2
+    return 0
+  fi
+  return 1
+}
+
 resolve_path() {
   local path="$1"
   if [[ "$path" == /* ]]; then
