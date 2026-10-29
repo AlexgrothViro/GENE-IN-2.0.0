@@ -283,7 +283,7 @@ run_recording_stderr() {
       echo "[FATAL] ${RESOURCE_MESSAGE}" >&2
     elif [[ -n "$err_file" ]] && grep -Eq 'No space left on device|database or disk is full|ENOSPC|EFBIG|Errno 27|Errno 28|File too large' "$err_file"; then
       RESOURCE_SHORTAGE=1
-      RESOURCE_MESSAGE="Falta de espaço em disco (Errno 27 ou 28). Próximo passo: libere espaço em disco e repita a execução."
+      RESOURCE_MESSAGE="Falta de espaço em disco (Errno 27 ou 28). Próximo passo: libere espaço em disco e repita a execução. TMPDIR=${TMPDIR:-/tmp}"
       echo "[FATAL] ${RESOURCE_MESSAGE}" >&2
     fi
   fi
@@ -318,7 +318,7 @@ fail_run_v2() {
   local failed_command="${EVIDENCE_FAILED_COMMAND:-${BASH_COMMAND:-}}"
   trap - ERR INT TERM
   if [[ "${RESOURCE_SHORTAGE:-0}" == "1" ]]; then
-    message="${RESOURCE_MESSAGE:-Falta de espaço em disco (Errno 27 ou 28). Próximo passo: libere espaço em disco e repita a execução.}"
+    message="${RESOURCE_MESSAGE:-Falta de espaço em disco (Errno 27 ou 28). Próximo passo: libere espaço em disco e repita a execução. TMPDIR=${TMPDIR:-/tmp}}"
   fi
   python3 "$EVIDENCE_DIR/run_state.py" --state "$STATE_FILE" write-failure-evidence \
     --root "$OUTDIR" --reason "$message: $CURRENT_STAGE" \
