@@ -240,6 +240,8 @@ def validate_document(
         raise ValueError("NO_EVIDENCE_RECOVERED requires an empty candidate list")
     if value["analysis_outcome"] == "EVIDENCE_RECOVERED" and not value["candidates"]:
         raise ValueError("EVIDENCE_RECOVERED requires at least one candidate")
+    if value["analysis_outcome"] == "CANDIDATES_FOR_REVIEW" and not value["candidates"]:
+        raise ValueError("CANDIDATES_FOR_REVIEW requires at least one candidate")
     if value["analysis_outcome"] != "NOT_EVALUABLE":
         metrics = value.get("metrics")
         if not isinstance(metrics, dict):
