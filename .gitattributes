@@ -22,6 +22,9 @@
 *.fasta text eol=lf
 Makefile text eol=lf
 
+# git archive preenche o commit. O ZIP de build_release.py grava o mesmo arquivo por cima.
+SOURCE_COMMIT export-subst
+
 # Binarios: nunca normalizar, nunca diferenciar como texto.
 *.ico  binary
 *.png  binary

@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts/evidence'))
 from blast_router import deduplicate_combined_files
-from export_candidate_sequences import _best_hit_rows, export
+from export_candidate_sequences import _best_hit_rows, _builder_short, export
 import validate_run_artifacts as validator
 
 
@@ -41,8 +41,11 @@ def reference_summary(rows, catalog):
         description, taxon = catalog.get(best['sseqid'], ('', ''))
         if not best.get('taxon') and taxon:
             best['taxon'] = taxon
+        short = _builder_short(best)
         output.append({**best, 'reference_description': description,
-                       'min_evalue': text, 'hit_row_count': str(len(group))})
+                       'min_evalue': text, 'hit_row_count': str(len(group)),
+                       'fragmento_curto': 'true' if short else 'false',
+                       'rotulo': 'REVIEW' if short else 'CANDIDATO'})
     return output
 
 

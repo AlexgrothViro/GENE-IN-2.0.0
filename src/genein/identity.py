@@ -11,11 +11,19 @@ def source_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _commit_token(value: str) -> str:
+    token = value.strip().splitlines()[0].strip() if value.strip() else ""
+    if token and 7 <= len(token) <= 64 and all(character in "0123456789abcdef" for character in token):
+        return token
+    return ""
+
+
 def source_commit(root: Path | None = None) -> str:
     """Return the Git commit of this source tree.
 
     A checkout uses ``git rev-parse``. A packaged tree has no ``.git`` and
     reads the first line of ``SOURCE_COMMIT``, written when the archive is built.
+    ``RELEASE.json`` may carry the same commit in ``source_commit``.
     """
     root = (root or source_root()).resolve()
     if (root / ".git").exists():
@@ -27,14 +35,27 @@ def source_commit(root: Path | None = None) -> str:
         except (OSError, subprocess.CalledProcessError):
             completed = None
         if completed is not None:
-            sha = completed.stdout.strip()
+            sha = _commit_token(completed.stdout)
             if sha:
                 return sha
     stamped = root / "SOURCE_COMMIT"
     if stamped.is_file():
-        line = stamped.read_text(encoding="utf-8").strip().splitlines()
-        if line and line[0].strip():
-            return line[0].strip()
+        try:
+            sha = _commit_token(stamped.read_text(encoding="utf-8"))
+        except OSError:
+            sha = ""
+        if sha:
+            return sha
+    release = root / "RELEASE.json"
+    if release.is_file():
+        try:
+            recorded = json.loads(release.read_text(encoding="utf-8")).get("source_commit")
+        except (OSError, json.JSONDecodeError):
+            recorded = None
+        if isinstance(recorded, str):
+            sha = _commit_token(recorded)
+            if sha:
+                return sha
     return "unavailable"
 
 

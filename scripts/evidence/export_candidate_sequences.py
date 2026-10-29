@@ -21,6 +21,10 @@ _TITLE_CUT = re.compile(
     re.IGNORECASE,
 )
 _ACCESSION = re.compile(r"^[A-Za-z0-9_.|:.-]+$")
+# The Builder already publishes sequences from 20 bp and keeps the 200 bp
+# boundary for its contig FASTA. This mark records that boundary; it does not
+# move it.
+_BUILDER_SHORT_BP = 200
 
 
 def export(queries: Path, manifest_path: Path, fragments: Path, output: Path,
@@ -64,7 +68,10 @@ def export(queries: Path, manifest_path: Path, fragments: Path, output: Path,
 
     write_tsv_atomic(output / "candidate_sequences.tsv", rows(), fields)
     catalog = load_reference_catalog(reference_fasta, blast_db, sorted(subjects))
-    summary_fields = fields + ["reference_description", "min_evalue", "hit_row_count"]
+    summary_fields = fields + [
+        "reference_description", "min_evalue", "hit_row_count",
+        "fragmento_curto", "rotulo",
+    ]
     write_tsv_atomic(output / "candidate_summary.tsv", _summary_rows(grouped, catalog), summary_fields)
     write_json_atomic(output / "candidate_queries.json", manifest)
 
@@ -247,14 +254,29 @@ def _accumulate_summary(grouped: dict, row: dict) -> None:
         state["min_text"] = str(row.get("best_evalue", ""))
 
 
+def _builder_short(row: dict) -> bool:
+    method = str(row.get("assembly_method") or "").lower()
+    if "builder" not in {part.strip() for part in method.split(",")}:
+        return False
+    try:
+        length = int(row.get("sequence_length_bp") or 0)
+    except (TypeError, ValueError):
+        return False
+    return length < _BUILDER_SHORT_BP
+
+
 def _summary_rows(grouped: dict, catalog: dict[str, tuple[str, str]]):
     for state in grouped.values():
         best = dict(state["best"])
         description, hinted_taxon = _catalog_record(catalog, str(best.get("sseqid", "")))
         if not str(best.get("taxon") or "") and hinted_taxon:
             best["taxon"] = hinted_taxon
+        short = _builder_short(best)
+        # A Builder record below 200 bp stays at REVIEW. Other rows remain candidates.
         yield {**best, "reference_description": description,
-               "min_evalue": state["min_text"], "hit_row_count": str(state["count"])}
+               "min_evalue": state["min_text"], "hit_row_count": str(state["count"]),
+               "fragmento_curto": "true" if short else "false",
+               "rotulo": "REVIEW" if short else "CANDIDATO"}
 
 
 def _best_hit_rows(rows: Iterable[dict], catalog: dict[str, tuple[str, str]] | None = None) -> list[dict]:

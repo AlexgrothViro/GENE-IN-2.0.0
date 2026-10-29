@@ -75,6 +75,17 @@ class CheckEnvBlastIntegrityTests(unittest.TestCase):
             self.assertIn("inválido ou corrompido", text)
             self.assertIn("JSON inválido", text)
 
+    def test_absent_database_names_the_prefix_and_withholds_unqualified_success(self):
+        with tempfile.TemporaryDirectory() as raw:
+            tmp = Path(raw)
+            prefix = tmp / "blastdb" / "meu_banco"
+            result = _run_check_env(tmp, prefix, "#!/bin/sh\necho '0 sequences'\nexit 1\n")
+            text = result.stdout + result.stderr
+            self.assertIn(f"BLAST_DB={prefix}", text)
+            self.assertNotIn("DB=ptv", text.split("Configuração ativa", 1)[-1].splitlines()[0])
+            self.assertIn("Ressalva", text)
+            self.assertNotIn("CONCLUÍDO COM SUCESSO", text)
+
 
 if __name__ == "__main__":
     unittest.main()

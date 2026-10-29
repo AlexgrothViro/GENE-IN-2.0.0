@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 SCHEMA_VERSION = "1.0"
@@ -62,6 +63,41 @@ def _database_identity(config: dict, database_manifest: str) -> dict:
     return identity
 
 
+def _omitted_scoring(task: str) -> dict[str, int]:
+    evidence = Path(__file__).resolve().parents[1] / "evidence"
+    if str(evidence) not in sys.path:
+        sys.path.insert(0, str(evidence))
+    from blast_router import omitted_scoring
+
+    return omitted_scoring(task)
+
+
+def effective_blast_record(
+    config: dict,
+    *,
+    max_target_seqs: str = "",
+    database_sequence_count: str = "",
+) -> dict[str, str]:
+    """Values already chosen for this run, in the names provenance records.
+
+    Word size and e-value come from the resolved configuration (the same
+    fields profile A stores). Reward, penalty and gaps are what blastn
+    applies for that task when the contig search omits those flags.
+    """
+    task = str(config.get("blast_task") or "blastn")
+    scoring = _omitted_scoring(task)
+    return {
+        "blast_evalue": str(config.get("blast_evalue", "")),
+        "blastn_word_size": str(config.get("blast_word_size", "")),
+        "blast_gapopen": str(scoring["gapopen"]),
+        "blast_gapextend": str(scoring["gapextend"]),
+        "blastn_reward": str(scoring["reward"]),
+        "blastn_penalty": str(scoring["penalty"]),
+        "blast_max_target_seqs": str(max_target_seqs),
+        "blast_database_sequence_count": str(database_sequence_count),
+    }
+
+
 def build_manifest(
     *,
     config: dict,
@@ -72,6 +108,8 @@ def build_manifest(
     short_fragment_fasta: str = "",
     short_fragment_blast_tsv: str = "",
     short_fragment_filtered_tsv: str = "",
+    max_target_seqs: str = "",
+    database_sequence_count: str = "",
 ) -> dict:
     profile = config.get("search_profile", {})
     short_fragment = config.get("short_fragment", {})
@@ -81,6 +119,11 @@ def build_manifest(
     return {
         "schema_version": SCHEMA_VERSION,
         "sample": sample,
+        "effective_blast": effective_blast_record(
+            config,
+            max_target_seqs=max_target_seqs,
+            database_sequence_count=database_sequence_count,
+        ),
         "identity": profile.get("identity", ""),
         "requested": profile.get("requested", ""),
         "selected": profile.get("selected", ""),
@@ -146,6 +189,8 @@ def main() -> None:
     parser.add_argument("--short-fragment-fasta", default="")
     parser.add_argument("--short-fragment-blast-tsv", default="")
     parser.add_argument("--short-fragment-filtered-tsv", default="")
+    parser.add_argument("--max-target-seqs", default="")
+    parser.add_argument("--database-sequence-count", default="")
     args = parser.parse_args()
 
     with open(args.config, "r", encoding="utf-8") as handle:
@@ -160,6 +205,8 @@ def main() -> None:
         short_fragment_fasta=args.short_fragment_fasta,
         short_fragment_blast_tsv=args.short_fragment_blast_tsv,
         short_fragment_filtered_tsv=args.short_fragment_filtered_tsv,
+        max_target_seqs=args.max_target_seqs,
+        database_sequence_count=args.database_sequence_count,
     )
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

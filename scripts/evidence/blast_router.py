@@ -61,17 +61,35 @@ def profiles_for_length(length: int, config: dict, recover_short_fragments=False
     return ("conventional",)
 
 
+def omitted_scoring(task: str) -> dict[str, int]:
+    """Reward, penalty and gap costs blastn applies when those flags are omitted.
+
+    The numbers are the ones ``profile_parameters`` already sends for each
+    task. Recording them does not change the search.
+    """
+    table = {
+        "blastn-short": {"reward": 1, "penalty": -3, "gapopen": 5, "gapextend": 2},
+        "blastn": {"reward": 2, "penalty": -3, "gapopen": 5, "gapextend": 2},
+    }
+    try:
+        return dict(table[task])
+    except KeyError as exc:
+        raise ValueError(f"unsupported blast task: {task}") from exc
+
+
 def profile_parameters(config: dict, max_target_seqs: int = 50) -> dict[str, dict[str, object]]:
     blast = config["blast"]
     shared = {
-        "gapopen": 5, "gapextend": 2, "evalue": 1000,
+        "evalue": 1000,
         "max_target_seqs": max_target_seqs,
         "dust": "yes" if blast["explicit_dust"] else "no",
         "soft_masking": "true" if blast["soft_masking"] else "false",
     }
+    short = omitted_scoring("blastn-short")
+    conventional = omitted_scoring("blastn")
     return {
-        "short": {**shared, "task": "blastn-short", "word_size": 7, "reward": 1, "penalty": -3},
-        "conventional": {**shared, "task": "blastn", "word_size": 11, "reward": 2, "penalty": -3},
+        "short": {**shared, **short, "task": "blastn-short", "word_size": 7},
+        "conventional": {**shared, **conventional, "task": "blastn", "word_size": 11},
     }
 
 

@@ -8,11 +8,17 @@ fi
 SAMPLE_NAME="$(python3 "${SCRIPTS_ROOT}/lib/input_validation.py" sample "$SAMPLE_NAME")"
 PIPELINE_SCRATCH="$(genein_scratch_dir)"
 mkdir -p "${PIPELINE_SCRATCH}"
-exec 8>"${PIPELINE_SCRATCH}/${SAMPLE_NAME}.pipeline.lock"
+PIPELINE_LOCK_FILE="${PIPELINE_SCRATCH}/${SAMPLE_NAME}.pipeline.lock"
+exec 8>"${PIPELINE_LOCK_FILE}"
 if ! flock -n 8; then
   echo "[FATAL] ja existe um pipeline em execucao para a amostra '${SAMPLE_NAME}'" >&2
   exit 1
 fi
+remove_pipeline_lock() {
+  rm -f "${PIPELINE_LOCK_FILE}"
+}
+trap 'remove_pipeline_lock; exit 130' INT
+trap 'remove_pipeline_lock; exit 143' TERM
 if [[ -n "$SAMPLE_OVERRIDE" ]]; then
   SAMPLE_ID="$SAMPLE_NAME"
 else
@@ -680,19 +686,29 @@ case "$ASSEMBLER" in
   *)          OUT="${OUTDIR}/${SAMPLE_NAME}_spades_vs_db.tsv" ;;
 esac
 
-if [[ -s "${ASSEMBLY_CONTIGS}" ]]; then
-  echo "Parâmetros BLAST de contigs: task=$BLAST_TASK word_size=$BLAST_WORD_SIZE evalue=$BLAST_EVALUE"
-  BLAST_TMP="${OUT}.tmp.$$"
-  BLAST_REPORT_LIMIT="$(
+BLAST_DATABASE_SEQUENCE_COUNT=""
+BLAST_REPORT_LIMIT=""
+if [[ -n "${BLAST_DB:-}" ]] && command -v blastdbcmd >/dev/null 2>&1; then
+  if BLAST_LIMITS="$(
     python3 - "$SCRIPTS_ROOT" "$BLAST_DB" "$(command -v blastdbcmd)" <<'PY'
 import sys
 
 sys.path.insert(0, f"{sys.argv[1]}/evidence")
-from blast_router import database_report_limit
+from blast_router import database_report_limit, database_sequence_count
 
-print(database_report_limit(sys.argv[2], sys.argv[3]))
+count = database_sequence_count(sys.argv[2], sys.argv[3])
+limit = database_report_limit(sys.argv[2], sys.argv[3], sequence_count=count)
+print(f"{count} {limit}")
 PY
-  )"
+  )"; then
+    BLAST_DATABASE_SEQUENCE_COUNT="${BLAST_LIMITS%% *}"
+    BLAST_REPORT_LIMIT="${BLAST_LIMITS##* }"
+  fi
+fi
+if [[ -s "${ASSEMBLY_CONTIGS}" ]]; then
+  echo "Parâmetros BLAST de contigs: task=$BLAST_TASK word_size=$BLAST_WORD_SIZE evalue=$BLAST_EVALUE"
+  [[ -n "$BLAST_REPORT_LIMIT" ]] || log_fatal "Não foi possível ler a contagem do banco BLAST em ${BLAST_DB}."
+  BLAST_TMP="${OUT}.tmp.$$"
   blastn -task "$BLAST_TASK" -query "$ASSEMBLY_CONTIGS" -db "$(blast_db_arg "$BLAST_DB")" \
     -outfmt '6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen slen nident gaps' \
     -max_target_seqs "$BLAST_REPORT_LIMIT" -evalue "$BLAST_EVALUE" -word_size "$BLAST_WORD_SIZE" -num_threads "$THREADS" > "$BLAST_TMP"
@@ -718,11 +734,14 @@ python3 "$SCRIPT_DIR/search_profile_manifest.py" \
   --contigs "$ASSEMBLY_CONTIGS" --contig-blast-tsv "$OUT" \
   --short-fragment-fasta "$SF_QUERY_FASTA" \
   --short-fragment-blast-tsv "$SF_BLAST_TSV" \
-  --short-fragment-filtered-tsv "$SF_FILTERED_TSV"
+  --short-fragment-filtered-tsv "$SF_FILTERED_TSV" \
+  --max-target-seqs "$BLAST_REPORT_LIMIT" \
+  --database-sequence-count "$BLAST_DATABASE_SEQUENCE_COUNT"
 echo "Perfil de busca registrado em: $SEARCH_PROFILE_MANIFEST"
 REPORT="${WORK_ROOT}/results/reports/${SAMPLE_NAME}_summary.md"
 "$SCRIPT_DIR/report_minimal.sh" --sample "$SAMPLE_NAME" --contigs "$ASSEMBLY_CONTIGS" --blast "$OUT" --out "$REPORT" \
-  --search-profile "$SEARCH_PROFILE_MANIFEST"
+  --search-profile "$SEARCH_PROFILE_MANIFEST" \
+  --control-status "${CONTROL_STATUS:-UNCONTROLLED}"
 evidence_state_status running "done" running
 case "${EVIDENCE_V2,,}" in
   true|1|yes)
