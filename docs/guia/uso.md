@@ -31,6 +31,25 @@ bash bundle/run.sh genein run --help
 
 Confirme as combinações na ajuda. O perfil `assembly-consensus` controla o MULTI e não aceita substituição por `--assembler`. Para selecionar Builder, use o perfil `default` e `--assembler builder`.
 
+Os arquivos `candidate_*` pedem `--evidence-v2` e saem em `results/evidence/runs/<run_id>/`:
+
+```bash
+bash bundle/run.sh genein run \
+  --sample amostra \
+  --r1 /dados/R1.fastq.gz \
+  --r2 /dados/R2.fastq.gz \
+  --blast-db /dados/blastdb/banco \
+  --output-root /dados/saida_nova \
+  --assembler velvet \
+  --evidence-v2
+```
+
+Para preparar um banco a partir de um FASTA próprio:
+
+```bash
+DB=meu_banco REF_FASTA=/dados/ref.fa bash bundle/run.sh db
+```
+
 ## Organização dos arquivos
 
 | Local | Conteúdo |

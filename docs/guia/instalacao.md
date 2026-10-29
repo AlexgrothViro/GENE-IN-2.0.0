@@ -55,7 +55,15 @@ Não mova a fonte depois de instalar: a instalação editável e os adaptadores 
 
 ## Builder opcional
 
-Depois de instalar o Gene-In, siga o [guia de montadores](montadores.md). O Builder usa seu próprio ambiente e exige acesso ao repositório privado. Sua ausência não impede o uso dos montadores existentes.
+| Opção | Como aparece |
+|---|---|
+| Velvet | Montador individual no ambiente do Gene-In |
+| SPAdes | Opção individual de montagem |
+| metaSPAdes | Opção individual para entradas compatíveis |
+| MULTI | Velvet, SPAdes e metaSPAdes |
+| Gene-In Builder | Não pode ser instalado sem acesso concedido ao repositório privado |
+
+Depois de instalar o Gene-In, siga o [guia de montadores](montadores.md). O Builder usa seu próprio ambiente. Sem acesso concedido ao repositório privado, a instalação do Builder para antes de concluir. A ausência do Builder não impede o uso dos outros montadores.
 
 ## Conferência rápida
 

@@ -13,7 +13,9 @@ try:
         load_public_activation_policy,
         policy_identity,
     )
-    from .evidence_contract import PIPELINE_VERSION, SCHEMA_VERSION, validate_document
+    from .evidence_contract import (
+        PIPELINE_VERSION, SCHEMA_VERSION, labels_for_control, validate_document,
+    )
 except ImportError:
     from common import as_float, as_int, format_intervals, interval_size, parse_intervals, read_tsv, write_json_atomic
     from activation_policy import (
@@ -22,7 +24,9 @@ except ImportError:
         load_public_activation_policy,
         policy_identity,
     )
-    from evidence_contract import PIPELINE_VERSION, SCHEMA_VERSION, validate_document
+    from evidence_contract import (
+        PIPELINE_VERSION, SCHEMA_VERSION, labels_for_control, validate_document,
+    )
 
 
 def _required_section(thresholds: dict, name: str) -> dict:
@@ -281,10 +285,17 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         coverage_status = "COVERAGE_AVAILABLE" if coverage_passes else "INSUFFICIENT_COVERAGE"
     else:
         coverage_status = "COVERAGE_UNAVAILABLE"
-    analysis_outcome = "EVIDENCE_RECOVERED" if candidates else "NO_EVIDENCE_RECOVERED"
+    analysis_outcome, evidence_level = labels_for_control(
+        control_status, has_candidates=bool(candidates),
+    )
     caveats = [*support_caveats, *coverage_caveats]
-    if candidates:
+    if candidates and evidence_level == "DETECTED":
         caveats.append("Candidatos recuperados para triagem humana; DETECTED é o código de recuperação, não confirmação de origem viral ou espécie.")
+    elif candidates:
+        caveats.append(
+            "Candidatos recuperados para triagem humana. Sem controle positivo ou negativo "
+            "validado, o rótulo da execução permanece REVIEW."
+        )
         if specificity_status == "NON_TARGET_BEST":
             caveats.append("O melhor alinhamento competitivo é de um não alvo; os candidatos permanecem disponíveis como sinais não confirmados.")
         elif specificity_status != "TARGET_SPECIFIC":
@@ -340,7 +351,7 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         "run_id": resolved_run_id,
         "execution_status": "done",
         "analysis_outcome": analysis_outcome,
-        "evidence_level": "DETECTED" if candidates else "NO_SIGNAL",
+        "evidence_level": evidence_level,
         "shadow_mode": shadow,
         "reported_conclusion": (
             analysis_outcome
@@ -361,7 +372,11 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         "controls": {"status": control_status, "metrics": {}},
         "provenance": provenance,
         "scientific_revision": SCIENCE_REVISION,
-        "evidence_label": "Candidatos recuperados" if candidates else "Nenhum candidato recuperado",
+        "evidence_label": (
+            "Candidatos para revisão" if evidence_level == "REVIEW"
+            else "Candidatos recuperados" if candidates
+            else "Nenhum candidato recuperado"
+        ),
         "reference_coverage": {
             "unit": "UNION_REFERENCE_POSITIONS_PER_REFERENCE_SEGMENT",
             "biological_origin_confirmed": False,

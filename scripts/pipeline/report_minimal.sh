@@ -256,6 +256,7 @@ fi
     [[ "${_ec_weak}"         -gt 0 ]] 2>/dev/null && echo "| WEAK_RECOVERABLE | ${_ec_weak}     |"
     [[ "${_ec_review}"       -gt 0 ]] 2>/dev/null && echo "| REVIEW           | ${_ec_review}   |"
     echo "- **Contigs ACTIONABLE na alegação canônica:** ${_ec_canonical}"
+    echo "- **Rótulo da execução:** sem controle positivo ou negativo validado, o rótulo permanece REVIEW. A coluna confidence_tier não usa ACTIONABLE nesse estado."
     if [[ "${_ec_review}" -gt 0 ]] 2>/dev/null; then
       echo
       echo "> **Nota:** hits REVIEW são sinal para auditoria/revisão -- não participam"
@@ -281,6 +282,7 @@ fi
   else
     echo "_Nenhum contig com hit viral foi exportado para esta amostra._"
     echo "- **Contigs ACTIONABLE na alegação canônica:** 0"
+    echo "- **Rótulo da execução:** sem controle positivo ou negativo validado, o rótulo permanece REVIEW."
     if [[ -f "$HIT_CONTIGS_FA" ]]; then
       echo
       echo "_(Arquivo FASTA vazio gerado em: \`${HIT_CONTIGS_FA}\`)_"

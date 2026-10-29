@@ -221,7 +221,12 @@ echo "======================================================="
 echo "   DIAGNÓSTICO E VALIDAÇÃO DE AMBIENTE — GENE-IN"
 echo "======================================================="
 echo "   Horário da checagem: $(date +'%Y-%m-%d %H:%M:%S %Z')"
-echo "   Configuração ativa:  ASSEMBLER=$ASSEMBLER • DB=$DB"
+if [[ -n "${BLAST_DB:-}" ]]; then
+  EFFECTIVE_BLAST_DB="$BLAST_DB"
+else
+  EFFECTIVE_BLAST_DB="$(genein_resolve_blast_db "${DB:-custom}")"
+fi
+echo "   Configuração ativa:  ASSEMBLER=$ASSEMBLER • BLAST_DB=$EFFECTIVE_BLAST_DB"
 if [[ -n "$GENEIN_ENV_BIN" ]]; then
   echo "   Ambiente Gene-In:    $GENEIN_ENV_DIR"
 fi
@@ -616,8 +621,15 @@ if [[ -n "$BLAST_DB_FAILURE" ]]; then
 fi
 
 echo "-------------------------------------------------------"
-echo "✅ DIAGNÓSTICO CONCLUÍDO COM SUCESSO!"
-echo "   Versões dos softwares catalogadas em: $VERSIONS_FILE"
-echo "   Ferramentas verificadas. Confira o banco, o índice do hospedeiro e os recursos necessários antes da análise."
+if [[ "$BLAST_DB_READY" -ne 1 ]]; then
+  echo "Ferramentas presentes."
+  echo "   Ressalva: o banco BLAST está ausente no prefixo ${EFFECTIVE_BLAST_DB}."
+  echo "   Prepare o banco antes da análise. Esta checagem não trata o banco como pronto."
+  echo "   Versões dos softwares catalogadas em: $VERSIONS_FILE"
+else
+  echo "✅ DIAGNÓSTICO CONCLUÍDO COM SUCESSO!"
+  echo "   Versões dos softwares catalogadas em: $VERSIONS_FILE"
+  echo "   Ferramentas verificadas. Confira o banco, o índice do hospedeiro e os recursos necessários antes da análise."
+fi
 echo "-------------------------------------------------------"
 exit 0
