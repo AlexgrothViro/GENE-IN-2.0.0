@@ -740,7 +740,8 @@ python3 "$SCRIPT_DIR/search_profile_manifest.py" \
 echo "Perfil de busca registrado em: $SEARCH_PROFILE_MANIFEST"
 REPORT="${WORK_ROOT}/results/reports/${SAMPLE_NAME}_summary.md"
 "$SCRIPT_DIR/report_minimal.sh" --sample "$SAMPLE_NAME" --contigs "$ASSEMBLY_CONTIGS" --blast "$OUT" --out "$REPORT" \
-  --search-profile "$SEARCH_PROFILE_MANIFEST"
+  --search-profile "$SEARCH_PROFILE_MANIFEST" \
+  --control-status "${CONTROL_STATUS:-UNCONTROLLED}"
 evidence_state_status running "done" running
 case "${EVIDENCE_V2,,}" in
   true|1|yes)

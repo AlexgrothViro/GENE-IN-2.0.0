@@ -588,6 +588,7 @@ CLASSIFY_ARGS=(
   --provenance "$OUTDIR/provenance.json" --run-id "$RUN_ID" --out "$OUTDIR/sample_evidence.json"
 )
 [[ ! -f "$OUTDIR/assembly_concordance.json" ]] || CLASSIFY_ARGS+=(--assembly-concordance "$OUTDIR/assembly_concordance.json")
+[[ ! -s "$OUTDIR/fragment_evidence.tsv" ]] || CLASSIFY_ARGS+=(--fragments "$OUTDIR/fragment_evidence.tsv")
 run_recording_stderr python3 "$EVIDENCE_DIR/classify_sample.py" "${CLASSIFY_ARGS[@]}"
 state_stage evidence_classification "done"
 state_stage report_export running

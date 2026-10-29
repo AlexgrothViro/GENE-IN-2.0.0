@@ -33,7 +33,9 @@ ANALYSIS_OUTCOMES = {
     "EVIDENCE_RECOVERED", "CANDIDATES_FOR_REVIEW", "NO_EVIDENCE_RECOVERED", "NOT_EVALUABLE",
 }
 EXECUTION_STATUSES = {"queued", "running", "done", "warning", "blocked", "failed", "cancelled"}
-CONTROL_PASS = {"CONTROL_BELOW_SAMPLE", "CONTROL_NOT_DETECTED", "CONTROL_NOT_APPLICABLE"}
+# CONTROL_NOT_APPLICABLE marca a própria linha de controle. Não é um controle
+# validado da amostra e não libera DETECTED nem ACTIONABLE.
+CONTROL_PASS = {"CONTROL_BELOW_SAMPLE", "CONTROL_NOT_DETECTED"}
 TERMINAL_EXECUTION_STATUSES = {"done", "warning", "blocked", "failed", "cancelled"}
 FAILED_EXECUTION_STATUSES = {"blocked", "failed", "cancelled"}
 
@@ -60,18 +62,25 @@ PUBLIC_REVIEW_LABELS = {
 }
 
 
-def labels_for_control(control_status: str, *, has_candidates: bool) -> tuple[str, str]:
+def labels_for_control(
+    control_status: str,
+    *,
+    has_candidates: bool,
+    only_short_builder: bool = False,
+) -> tuple[str, str]:
     """Return ``(analysis_outcome, evidence_level)`` for one execution.
 
     A validated positive or negative control may carry ``DETECTED``. Without
-    that state (``UNCONTROLLED`` and any other status outside ``CONTROL_PASS``),
-    candidates stay available for review and the execution label is ``REVIEW``.
+    that state, candidates stay available for review and the execution label
+    is ``REVIEW``. ``CONTROL_NOT_APPLICABLE`` is not a validated control.
+    A sample whose only evidence is a Builder fragment shorter than 200 bp
+    also stays at ``REVIEW``, including inside a batch.
     """
     if not has_candidates:
         return "NO_EVIDENCE_RECOVERED", "NO_SIGNAL"
-    if control_status in CONTROL_PASS:
-        return "EVIDENCE_RECOVERED", "DETECTED"
-    return "CANDIDATES_FOR_REVIEW", "REVIEW"
+    if only_short_builder or control_status not in CONTROL_PASS:
+        return "CANDIDATES_FOR_REVIEW", "REVIEW"
+    return "EVIDENCE_RECOVERED", "DETECTED"
 
 
 def public_review_label(code: object) -> str:
