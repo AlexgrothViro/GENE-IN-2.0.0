@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SAMPLE=""; CONTIGS=""; BLAST=""; OUT=""; SEARCH_PROFILE=""
+CONTROL_STATUS="UNCONTROLLED"; EVIDENCE_LEVEL=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --sample) SAMPLE="${2:-}"; shift 2 ;;
@@ -9,6 +10,8 @@ while [[ $# -gt 0 ]]; do
     --blast) BLAST="${2:-}"; shift 2 ;;
     --out) OUT="${2:-}"; shift 2 ;;
     --search-profile) SEARCH_PROFILE="${2:-}"; shift 2 ;;
+    --control-status) CONTROL_STATUS="${2:-}"; shift 2 ;;
+    --evidence-level) EVIDENCE_LEVEL="${2:-}"; shift 2 ;;
     *) echo "[ERRO] arg inválido: $1" >&2; exit 1 ;;
   esac
 done
@@ -76,7 +79,9 @@ export_output="$(python3 "$(dirname "$0")/export_hit_contigs.py" \
   --sample   "$SAMPLE" \
   --out-dir  "$BLAST_OUTDIR" \
   --classes  ALL \
-  --min-len  0 2>/dev/null)" || true
+  --min-len  0 \
+  --control-status "$CONTROL_STATUS" \
+  --evidence-level "$EVIDENCE_LEVEL" 2>/dev/null)" || true
 
 # Parse das variáveis de estatística emitidas pelo script Python
 _ec_count=0;   _ec_strong=0; _ec_moderate=0
@@ -256,6 +261,13 @@ fi
     [[ "${_ec_weak}"         -gt 0 ]] 2>/dev/null && echo "| WEAK_RECOVERABLE | ${_ec_weak}     |"
     [[ "${_ec_review}"       -gt 0 ]] 2>/dev/null && echo "| REVIEW           | ${_ec_review}   |"
     echo "- **Contigs ACTIONABLE na alegação canônica:** ${_ec_canonical}"
+    if [[ -n "$EVIDENCE_LEVEL" ]]; then
+      echo "- **Rótulo da execução:** ${EVIDENCE_LEVEL} (estado ${CONTROL_STATUS})."
+    elif [[ "$CONTROL_STATUS" == "CONTROL_BELOW_SAMPLE" || "$CONTROL_STATUS" == "CONTROL_NOT_DETECTED" ]]; then
+      echo "- **Rótulo da execução:** estado ${CONTROL_STATUS}. A coluna confidence_tier pode ser ACTIONABLE."
+    else
+      echo "- **Rótulo da execução:** estado ${CONTROL_STATUS}. A coluna confidence_tier permanece REVIEW."
+    fi
     if [[ "${_ec_review}" -gt 0 ]] 2>/dev/null; then
       echo
       echo "> **Nota:** hits REVIEW são sinal para auditoria/revisão -- não participam"
@@ -281,6 +293,11 @@ fi
   else
     echo "_Nenhum contig com hit viral foi exportado para esta amostra._"
     echo "- **Contigs ACTIONABLE na alegação canônica:** 0"
+    if [[ -n "$EVIDENCE_LEVEL" ]]; then
+      echo "- **Rótulo da execução:** ${EVIDENCE_LEVEL} (estado ${CONTROL_STATUS})."
+    else
+      echo "- **Rótulo da execução:** estado ${CONTROL_STATUS}."
+    fi
     if [[ -f "$HIT_CONTIGS_FA" ]]; then
       echo
       echo "_(Arquivo FASTA vazio gerado em: \`${HIT_CONTIGS_FA}\`)_"

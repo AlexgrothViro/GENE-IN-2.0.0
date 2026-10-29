@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
+import subprocess
 
 try:
     from .activation_policy import load_public_activation_policy
@@ -15,6 +17,38 @@ except ImportError:
     from classify_sample import classify
     from common import read_tsv, write_json_atomic, write_text_atomic
     from export_evidence import render
+
+
+def refresh_sample_reports(sample_id: str, control_status: str, evidence_level: str) -> None:
+    """Rewrite the sample summary so it carries the same label as sample_evidence.json."""
+    work = os.environ.get("GENEIN_WORK_ROOT", "")
+    if not work:
+        return
+    root = Path(work)
+    contigs = root / "data/assemblies" / f"{sample_id}_assembly" / "contigs.fa"
+    blast = root / "results/blast" / f"{sample_id}_vs_db.tsv"
+    report = root / "results/reports" / f"{sample_id}_summary.md"
+    if not contigs.is_file() or not blast.is_file():
+        return
+    script = Path(__file__).resolve().parents[1] / "pipeline" / "report_minimal.sh"
+    command = [
+        "bash", str(script),
+        "--sample", sample_id,
+        "--contigs", str(contigs),
+        "--blast", str(blast),
+        "--out", str(report),
+        "--control-status", control_status,
+    ]
+    if evidence_level:
+        command += ["--evidence-level", evidence_level]
+    profile = root / "results/blast" / f"{sample_id}_search_profile.json"
+    if profile.is_file():
+        command += ["--search-profile", str(profile)]
+    completed = subprocess.run(command, check=False)
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"não foi possível atualizar o resumo de {sample_id} para o estado {control_status}"
+        )
 
 
 def main() -> None:
@@ -38,6 +72,7 @@ def main() -> None:
         json_path = directory / "sample_evidence.json"
         with json_path.open("r", encoding="utf-8", errors="strict") as handle:
             previous = json.load(handle)
+        fragments_path = directory / "fragment_evidence.tsv"
         result = classify(
             sample_id,
             read_tsv(directory / "locus_evidence.tsv"),
@@ -50,11 +85,13 @@ def main() -> None:
             previous.get("provenance", {}),
             previous.get("run_id"),
             policy,
+            fragments=read_tsv(fragments_path) if fragments_path.is_file() and fragments_path.stat().st_size else None,
         )
         result["controls"]["metrics"] = dict(status)
         result["control_metrics"] = dict(status)
         write_json_atomic(json_path, result)
         write_text_atomic(directory / "evidence_report.md", render(result))
+        refresh_sample_reports(sample_id, status["control_status"], result.get("evidence_level", ""))
 
 
 if __name__ == "__main__":

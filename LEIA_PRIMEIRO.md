@@ -8,4 +8,6 @@
 
 O pacote não inclui bancos biológicos nem dados de amostras. Preserve toda a pasta de cada execução.
 
+Em uma cópia sem Git, `genein --version` lê `SOURCE_COMMIT`. O ZIP oficial, gerado por `scripts/ops/build_release.py`, e um `git archive` gravam esse arquivo.
+
 [Documentação](docs/README.md) · [Suporte](docs/guia/suporte.md) · [Licença](LICENSE)

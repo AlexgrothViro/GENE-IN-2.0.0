@@ -69,21 +69,38 @@ def class_priority(label: str) -> int:
     return _CLASS_PRIORITY.get(label, 99)
 
 
-def confidence_tier_for(evidence_class: str) -> str:
+_VALIDATED_CONTROLS = {"CONTROL_BELOW_SAMPLE", "CONTROL_NOT_DETECTED"}
+
+
+def confidence_tier_for(
+    evidence_class: str,
+    *,
+    control_status: str = "UNCONTROLLED",
+    evidence_level: str = "",
+) -> str:
     """Mapeia as classes que participam da contagem canônica.
 
     REVIEW continua exportado com best_ref, evidence_class e valores brutos
     preservados, mas fica fora da contagem canônica. DISCORDANT e classes
     desconhecidas também não entram nessa contagem. DISCORDANT é mantida como
     DISCORDANT; esta camada não reescreve evidence_class.
+
+    Sem controle positivo ou negativo validado, o rótulo da execução não passa
+    de REVIEW: a classe bruta permanece, e confidence_tier não fica ACTIONABLE.
     """
     if evidence_class in _ACTIONABLE_CLASSES:
-        return "ACTIONABLE"
-    if evidence_class in {"REVIEW", "WEAK_RECOVERABLE"}:
+        tier = "ACTIONABLE"
+    elif evidence_class in {"REVIEW", "WEAK_RECOVERABLE"}:
+        tier = "REVIEW"
+    elif evidence_class == "DISCORDANT":
+        tier = "DISCORDANT"
+    else:
+        tier = "UNCLASSIFIED"
+    if tier == "ACTIONABLE" and (
+        evidence_level == "REVIEW" or control_status not in _VALIDATED_CONTROLS
+    ):
         return "REVIEW"
-    if evidence_class == "DISCORDANT":
-        return "DISCORDANT"
-    return "UNCLASSIFIED"
+    return tier
 
 
 def read_fasta(path: Path) -> dict:
@@ -371,6 +388,16 @@ def main() -> None:
         metavar="N",
         help="Comprimento mínimo do contig para exportação em bp (default: 0 = sem filtro)",
     )
+    ap.add_argument(
+        "--control-status",
+        default="UNCONTROLLED",
+        help="Estado de controle da execução. CONTROL_NOT_APPLICABLE não libera ACTIONABLE.",
+    )
+    ap.add_argument(
+        "--evidence-level",
+        default="",
+        help="Rótulo já gravado em sample_evidence.json. REVIEW mantém confidence_tier em REVIEW.",
+    )
     args = ap.parse_args()
 
     try:
@@ -577,7 +604,11 @@ def main() -> None:
                 f"{hit['aln_cov']:.5f}",
                 f"{hit['adj_identity']:.3f}",
                 hit["evidence_class"],
-                confidence_tier_for(hit["evidence_class"]),
+                confidence_tier_for(
+                    hit["evidence_class"],
+                    control_status=args.control_status,
+                    evidence_level=args.evidence_level,
+                ),
             ]
             if risk_note_present:
                 row_data.append(hit["risk_note"])
@@ -612,7 +643,9 @@ def main() -> None:
     for hit in exported:
         cls = hit["evidence_class"]
         counts_by_class[cls] = counts_by_class.get(cls, 0) + 1
-        tier = confidence_tier_for(cls)
+        tier = confidence_tier_for(
+            cls, control_status=args.control_status, evidence_level=args.evidence_level,
+        )
         counts_by_tier[tier] = counts_by_tier.get(tier, 0) + 1
         refs_found.add(hit["sseqid"])
         seq_lens.append(len(contigs_seqs[hit["qseqid"]]))

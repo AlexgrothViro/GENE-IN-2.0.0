@@ -296,15 +296,27 @@ smoke-test: test-env ptv-fasta-legacy blastdb bowtie2-index
 test: test-engineering
 
 test-engineering:
+	if [[ ! -d scripts/tests ]]; then
+	  echo "Esta cópia não inclui scripts/tests. Os testes estão na branch trabalho/software-builder." >&2
+	  exit 1
+	fi
 	bash scripts/tests/run_test_suite.sh engineering
 
 test-operational:
+	if [[ ! -d scripts/tests ]]; then
+	  echo "Esta cópia não inclui scripts/tests. Os testes estão na branch trabalho/software-builder." >&2
+	  exit 1
+	fi
 	bash scripts/tests/run_test_suite.sh operational
 
 .PHONY: test-tracks
 test-tracks: test-validation
 
 test-validation:
+	if [[ ! -d scripts/tests ]]; then
+	  echo "Esta cópia não inclui scripts/tests. Os testes estão na branch trabalho/software-builder." >&2
+	  exit 1
+	fi
 	python3 -m unittest scripts.tests.test_open_configuration
 	python3 scripts/ops/validation_track_runner.py --track "$(TRACK)"
 
