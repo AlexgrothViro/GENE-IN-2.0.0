@@ -140,7 +140,7 @@ class ConfidenceTierTests(unittest.TestCase):
             ]
             result, summary_path, _ = run_export(
                 tmp, "DEV_PTV_HIGH_MIXED", rows, {"NODE_1": "ACGT" * 20},
-                control_status="CONTROL_NOT_APPLICABLE",
+                control_status="CONTROL_BELOW_SAMPLE",
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             summary_rows = read_summary_rows(summary_path)

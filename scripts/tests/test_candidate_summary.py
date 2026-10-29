@@ -57,18 +57,20 @@ def test_summary_is_one_best_hit_and_full_table_keeps_every_row(tmp_path):
     assert [line.split("\t")[0] for line in full[1:]] == ["q1", "q2", "q1", "q1"]
     assert len(full) == 5
     summary = (out / "candidate_summary.tsv").read_text(encoding="utf-8").splitlines()
-    assert summary[0].endswith("\treference_description\tmin_evalue\thit_row_count")
+    assert summary[0].endswith("\treference_description\tmin_evalue\thit_row_count\tfragmento_curto\trotulo")
     rows = [line.split("\t") for line in summary[1:]]
     assert [row[0] for row in rows] == ["q1", "q2"]
     by_query = {row[0]: row for row in rows}
     # bitscore 40 beats 10; equal bitscore then lower e-value (1e-8) beats 1e-3.
     assert by_query["q1"][4] == "strong"
-    assert by_query["q1"][-3] == ""
-    assert by_query["q1"][-2] == "1e-8"
-    assert by_query["q1"][-1] == "3"
+    assert by_query["q1"][-5] == ""
+    assert by_query["q1"][-4] == "1e-8"
+    assert by_query["q1"][-3] == "3"
+    assert by_query["q1"][-2] == "false"
+    assert by_query["q1"][-1] == "CANDIDATO"
     assert by_query["q2"][4] == "only"
-    assert by_query["q2"][-2] == "1e-5"
-    assert by_query["q2"][-1] == "1"
+    assert by_query["q2"][-4] == "1e-5"
+    assert by_query["q2"][-3] == "1"
     (out / "fragment_evidence.tsv").write_bytes(fragments.read_bytes())
     assert validate_candidate_exports(out) == []
 
@@ -107,11 +109,11 @@ def test_summary_keeps_bitscore_winner_and_fills_taxon_from_the_title(tmp_path):
     assert by_query["q1"][4] == "high"
     assert by_query["q1"][6] == "Porcine teschovirus 1"
     assert by_query["q1"][5] == "UNLABELED"
-    assert by_query["q1"][-3] == "Porcine teschovirus 1 strain X, complete genome"
-    assert by_query["q1"][-2] == "1e-20"
+    assert by_query["q1"][-5] == "Porcine teschovirus 1 strain X, complete genome"
+    assert by_query["q1"][-4] == "1e-20"
     assert by_query["q1"][12] == "1e-2"
     assert by_query["q2"][6] == "Porcine teschovirus 1"
-    assert by_query["q2"][-3] == "Something else, complete genome"
+    assert by_query["q2"][-5] == "Something else, complete genome"
     full = (out / "candidate_sequences.tsv").read_text(encoding="utf-8")
     assert "reference_description" not in full.splitlines()[0]
     assert full.splitlines()[1].split("\t")[6] == ""
@@ -174,8 +176,8 @@ def test_summary_fills_taxon_from_a_real_blast_database(tmp_path):
         row = (out / "candidate_summary.tsv").read_text(encoding="utf-8").splitlines()[1].split("\t")
         assert row[4] == sseqid
         assert row[5] == "UNLABELED"
-        assert row[6] == "Porcine teschovirus 1", (name, row[6], row[-3])
-        assert "Porcine teschovirus 1 strain X" in row[-3]
+        assert row[6] == "Porcine teschovirus 1", (name, row[6], row[-5])
+        assert "Porcine teschovirus 1 strain X" in row[-5]
         full = (out / "candidate_sequences.tsv").read_text(encoding="utf-8").splitlines()[1].split("\t")
         assert full[6] == ""
 
@@ -220,7 +222,7 @@ def test_titles_from_fasta_survives_latin1_and_gzip(tmp_path, capsys):
     export(queries, manifest, fragments, out, reference_fasta=latin)
     row = (out / "candidate_summary.tsv").read_text(encoding="utf-8").splitlines()[1].split("\t")
     assert row[0] == "q1"
-    assert row[-3]
+    assert row[-5]
 
 
 def test_entry_batch_is_only_the_hit_accessions(monkeypatch, tmp_path):

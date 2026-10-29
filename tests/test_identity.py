@@ -31,6 +31,22 @@ def test_package_without_git_reads_release_json_commit(tmp_path):
     assert source_commit(tmp_path) == payload["source_commit"]
 
 
+def test_git_archive_fills_source_commit():
+    import subprocess
+    import tarfile
+    import io
+    blob = subprocess.check_output(["git", "-C", str(ROOT), "archive", "HEAD", "SOURCE_COMMIT"])
+    with tarfile.open(fileobj=io.BytesIO(blob)) as archive:
+        text = archive.extractfile("SOURCE_COMMIT").read().decode()
+    assert source_commit_text_is_head(text)
+
+
+def source_commit_text_is_head(text: str) -> bool:
+    import subprocess
+    head = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
+    return text.strip() == head and "$Format" not in text
+
+
 def test_missing_identity_is_explicit(tmp_path):
     assert source_commit(tmp_path) == "unavailable"
     assert software_version(tmp_path) == "unavailable"
