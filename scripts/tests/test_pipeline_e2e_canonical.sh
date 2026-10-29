@@ -180,10 +180,17 @@ if expected_outcome == "NOT_EVALUABLE":
     if success.is_file():
         raise SystemExit("NOT_EVALUABLE must not write SUCCESS.json")
 else:
-    expected_level = "DETECTED" if expected_outcome == "EVIDENCE_RECOVERED" else "NO_SIGNAL"
+    if expected_outcome == "EVIDENCE_RECOVERED":
+        expected_level = "DETECTED"
+    elif expected_outcome == "CANDIDATES_FOR_REVIEW":
+        expected_level = "REVIEW"
+    else:
+        expected_level = "NO_SIGNAL"
     if evidence["evidence_level"] != expected_level:
         raise SystemExit(f"evidence_level must be {expected_level}")
-    if expected_outcome == "EVIDENCE_RECOVERED" and not evidence.get("candidates"):
+    if "DETECTED" in json.dumps(evidence) and expected_outcome != "EVIDENCE_RECOVERED":
+        raise SystemExit("uncontrolled execution must not carry DETECTED")
+    if expected_outcome in {"EVIDENCE_RECOVERED", "CANDIDATES_FOR_REVIEW"} and not evidence.get("candidates"):
         raise SystemExit("recovered case lost its computational candidates")
     if expected_outcome == "NO_EVIDENCE_RECOVERED" and evidence.get("candidates"):
         raise SystemExit("negative case must not invent candidates")
@@ -193,7 +200,7 @@ PY
 
 echo "[E4] recovered candidate"
 run_canonical "$SAMPLE_R" "$RUN_R"
-assert_json "$EVIDENCE_ROOT/runs/$RUN_R" EVIDENCE_RECOVERED success
+assert_json "$EVIDENCE_ROOT/runs/$RUN_R" CANDIDATES_FOR_REVIEW success
 if ! grep -q "HOST_FILTER_ENABLED=false; reads seguem sem etapa Bowtie2 de hospedeiro." \
     "${WORK}/pipeline/logs/${SAMPLE_R}_pipeline.log"; then
   echo "host filter opt-in was not recorded" >&2

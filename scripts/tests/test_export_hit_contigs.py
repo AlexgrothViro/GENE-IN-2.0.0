@@ -20,7 +20,8 @@ LABELED_HEADER = [
 ]
 
 
-def run_export(tmp: Path, sample: str, rows: list[list[str]], contig_seqs: dict[str, str]):
+def run_export(tmp: Path, sample: str, rows: list[list[str]], contig_seqs: dict[str, str],
+               control_status: str | None = None):
     labeled = tmp / "labeled_hits.tsv"
     contigs = tmp / "contigs.fa"
     out_dir = tmp / "out"
@@ -31,11 +32,11 @@ def run_export(tmp: Path, sample: str, rows: list[list[str]], contig_seqs: dict[
     with contigs.open("w", encoding="utf-8") as handle:
         for name, seq in contig_seqs.items():
             handle.write(f">{name}\n{seq}\n")
-    result = subprocess.run(
-        [sys.executable, str(SCRIPT), "--labeled", str(labeled), "--contigs", str(contigs),
-         "--sample", sample, "--out-dir", str(out_dir)],
-        capture_output=True, text=True,
-    )
+    command = [sys.executable, str(SCRIPT), "--labeled", str(labeled), "--contigs", str(contigs),
+               "--sample", sample, "--out-dir", str(out_dir)]
+    if control_status:
+        command += ["--control-status", control_status]
+    result = subprocess.run(command, capture_output=True, text=True)
     summary_path = out_dir / f"{sample}_hit_contigs_summary.tsv"
     fasta_path = out_dir / f"{sample}_hit_contigs.fa"
     return result, summary_path, fasta_path
@@ -94,6 +95,7 @@ class ConfidenceTierTests(unittest.TestCase):
             ]]
             result, summary_path, _ = run_export(
                 tmp, "DEV_PTV_HIGH", rows, {"NODE_1_strong": "ACGT" * 20},
+                control_status="CONTROL_BELOW_SAMPLE",
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             summary_rows = read_summary_rows(summary_path)
@@ -113,6 +115,7 @@ class ConfidenceTierTests(unittest.TestCase):
             result, summary_path, _ = run_export(
                 tmp, "MIXED_CLASSES", rows,
                 {"NODE_A": "ACGT" * 1500, "NODE_B": "ACGT" * 15, "NODE_C": "ACGT" * 7},
+                control_status="CONTROL_NOT_DETECTED",
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             summary_rows = {r["qseqid"]: r for r in read_summary_rows(summary_path)}
@@ -137,6 +140,7 @@ class ConfidenceTierTests(unittest.TestCase):
             ]
             result, summary_path, _ = run_export(
                 tmp, "DEV_PTV_HIGH_MIXED", rows, {"NODE_1": "ACGT" * 20},
+                control_status="CONTROL_NOT_APPLICABLE",
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             summary_rows = read_summary_rows(summary_path)
@@ -169,6 +173,24 @@ class ConfidenceTierTests(unittest.TestCase):
             self.assertEqual(row["evidence_class"], "ACTIONABLE")
             self.assertEqual(row["confidence_tier"], "UNCLASSIFIED")
             self.assertIn("EXPORT_HIT_CONTIGS_CANONICAL_CLAIM_COUNT=0", result.stdout)
+
+    def test_uncontrolled_strong_hit_stays_review(self):
+        """Without a validated control, a STRONG class does not become ACTIONABLE."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            rows = [[
+                "NODE_1_strong", "ref|NC_003985.1|", "99.0", "7090", "1e-200",
+                "10000.0", "7090", "1.0", "99.0", "STRONG", "ok",
+            ]]
+            result, summary_path, _ = run_export(
+                tmp, "UNCONTROLLED_STRONG", rows, {"NODE_1_strong": "ACGT" * 20},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            row = read_summary_rows(summary_path)[0]
+            self.assertEqual(row["evidence_class"], "STRONG")
+            self.assertEqual(row["confidence_tier"], "REVIEW")
+            self.assertIn("EXPORT_HIT_CONTIGS_CANONICAL_CLAIM_COUNT=0", result.stdout)
+            self.assertNotIn("ACTIONABLE", result.stdout)
 
     def test_no_hits_summary_header_still_declares_confidence_tier(self):
         """The header-only empty-result contract also carries the new column,

@@ -560,10 +560,10 @@ printf 'RC=%s\nSHORTAGE=%s\n' "$rc" "$RESOURCE_SHORTAGE"
                     self.assertIn(f"RC={code}", completed.stdout)
                     self.assertIn(f"SHORTAGE={shortage}", completed.stdout)
                     if shortage == "1":
-                        self.assertIn("falta de recurso", completed.stderr)
+                        self.assertIn("Próximo passo: libere espaço em disco", completed.stderr)
                         self.assertIn(f"TMPDIR={tmp}", completed.stderr)
                     else:
-                        self.assertNotIn("falta de recurso", completed.stderr)
+                        self.assertNotIn("Próximo passo: libere espaço em disco", completed.stderr)
                     self.assertEqual(list(Path(tmp).glob(".genein-cmd-err.*")), [])
             quiet = function + r'''
 set -euo pipefail
@@ -578,7 +578,7 @@ printf 'RC=%s\nSHORTAGE=%s\n' "$?" "$RESOURCE_SHORTAGE"
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertIn("RC=0", completed.stdout)
             self.assertIn("SHORTAGE=0", completed.stdout)
-            self.assertNotIn("falta de recurso", completed.stderr)
+            self.assertNotIn("Próximo passo: libere espaço em disco", completed.stderr)
 
     def test_failed_command_is_the_wrapped_stage_not_the_internal_return(self):
         function = _resource_wrapper()
@@ -644,10 +644,10 @@ printf 'RC=%s\nSHORTAGE=%s\nCMD=%s\n' "$rc" "$RESOURCE_SHORTAGE" "$EVIDENCE_FAIL
                     self.assertIn(f"RC={code}", completed.stdout)
                     self.assertIn(f"SHORTAGE={shortage}", completed.stdout)
                     if shortage == "1":
-                        self.assertIn("falta de recurso", completed.stderr)
+                        self.assertIn("Próximo passo: libere espaço em disco", completed.stderr)
                         self.assertIn("database or disk is full", completed.stderr)
                     else:
-                        self.assertNotIn("falta de recurso", completed.stderr)
+                        self.assertNotIn("Próximo passo: libere espaço em disco", completed.stderr)
                         self.assertNotIn("disco cheio", completed.stderr)
             self.assertEqual(list(outdir.glob(".genein-cmd-err.*")), [])
 
