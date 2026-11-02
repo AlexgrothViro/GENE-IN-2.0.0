@@ -24,7 +24,7 @@ class OptionalE2EContractTests(unittest.TestCase):
     def test_zero_exit_cannot_replace_a_missing_receipt(self):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaises(FileNotFoundError):
-                runner.check_run(Path(directory), "current-run", True, True)
+                runner.check_run(Path(directory), "current-run", True, True, {})
 
     def test_fixture_is_repeatable_and_contains_only_requested_lengths(self):
         with tempfile.TemporaryDirectory() as first, tempfile.TemporaryDirectory() as second:

@@ -74,7 +74,7 @@ def fixtures(work: Path) -> dict:
             "pairs_by_length": dict(counts)}
 
 
-def check_run(work: Path, run_id: str, competition: bool, remapping: bool) -> dict:
+def check_run(work: Path, run_id: str, competition: bool, remapping: bool, expected_tools: dict) -> dict:
     """A zero exit alone is insufficient: validate current-run commit and stages."""
     sys.path.insert(0, str(ROOT / "scripts/evidence"))
     from common import validate_artifact_manifest
@@ -105,6 +105,11 @@ def check_run(work: Path, run_id: str, competition: bool, remapping: bool) -> di
     require(bool(resolved["evidence"]["composite_db"]) == competition, "competition option mismatch")
     require(bool(resolved["evidence"]["panel_index"]) == remapping, "remapping option mismatch")
     require(provenance["parameters"]["run_id"] == run_id, "stale provenance")
+    for name in ("python3", "fastp", "blastn", "bowtie2", "samtools"):
+        require(provenance["tools"][name]["executable"] == expected_tools[name]["executable"],
+                f"{name}: pipeline used a different environment")
+        require(provenance["tools"][name]["sha256"] == expected_tools[name]["sha256"],
+                f"{name}: executable hash changed")
     stages = {stage["id"]: stage["status"] for stage in state["stages"]}
     require(stages["initial_blast"] == "done", "BLAST stage incomplete")
     if competition:
@@ -152,7 +157,11 @@ def main(argv: list[str] | None = None) -> int:
         return 77
 
     env = {key: os.environ[key] for key in ("PATH", "HOME", "LANG", "LC_ALL") if key in os.environ}
-    env.update(PYTHONNOUSERSITE="1", PYTHONDONTWRITEBYTECODE="1", OMP_NUM_THREADS="1")
+    env.update(PYTHONNOUSERSITE="1", PYTHONDONTWRITEBYTECODE="1", OMP_NUM_THREADS="1",
+               GENEIN_ENV_DIR=sys.prefix)
+    # Prevent check_env.sh from probing a pre-existing bundle in the user's home.
+    manifest["runtime_environment"] = {name: env[name] for name in
+                                       ("PATH", "GENEIN_ENV_DIR", "PYTHONNOUSERSITE", "PYTHONDONTWRITEBYTECODE")}
 
     def run(label: str, command: list[str], overrides: dict | None = None, cwd: Path = ROOT,
             input_file: Path | None = None) -> None:
@@ -226,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
                          "SEARCH_PROFILES": "A,B" if competition else "A"}
             run(run_id, ["bash", str(ROOT / "scripts/pipeline/run.sh"), "--sample", run_id,
                          "--analysis-profile", "default", "--assembler", "velvet", "--threads", "1", "--evidence-v2"], overrides)
-            manifest["cases"].append(check_run(case, run_id, competition, remapping))
+            manifest["cases"].append(check_run(case, run_id, competition, remapping, manifest["tools"]))
             write_json(manifest_path, manifest)
             print(f"[PASS] {run_id}: código 0, saídas e recibo íntegros", flush=True)
         for item in manifest["inputs"].values():
