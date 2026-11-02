@@ -5,28 +5,45 @@ function isPlainObject(value) {
 export const ACTIVE_JOB_STORAGE_KEY = "genein.activeJob.v1";
 
 export const OPTIONAL_EVIDENCE_DEFAULTS = {
-  competitionEnabled: false, competitionDb: "", competitionLabels: "",
-  remappingEnabled: false, remappingReference: "", remappingIndex: "", libraryMode: "unknown",
+  competitionEnabled: null, competitionDb: null, competitionLabels: null,
+  remappingEnabled: null, remappingReference: null, remappingIndex: null, libraryMode: null,
+  optionalDefaults: {},
 };
 
+export function effectiveOptionalEvidence(wizard) {
+  const saved = wizard.optionalDefaults || {};
+  const value = (key, field, option) => (wizard[option] == null ? saved[field] : wizard[key] ?? saved[field]) ?? "";
+  return {
+    competitionEnabled: wizard.competitionEnabled ?? saved.competition_enabled ?? false,
+    remappingEnabled: wizard.remappingEnabled ?? saved.remapping_enabled ?? false,
+    competitionDb: value("competitionDb", "competition_db", "competitionEnabled"),
+    competitionLabels: value("competitionLabels", "competition_labels", "competitionEnabled"),
+    remappingReference: value("remappingReference", "remapping_reference", "remappingEnabled"),
+    remappingIndex: value("remappingIndex", "remapping_index", "remappingEnabled"),
+    libraryMode: value("libraryMode", "library_mode", "remappingEnabled") || "unknown",
+  };
+}
+
 export function optionalEvidenceParams(wizard) {
-  const params = { competition_enabled: wizard.competitionEnabled === true, remapping_enabled: wizard.remappingEnabled === true };
-  if (params.competition_enabled) Object.assign(params, { competition_db: (wizard.competitionDb || "").trim(), competition_labels: (wizard.competitionLabels || "").trim() });
-  if (params.remapping_enabled) Object.assign(params, { remapping_reference: (wizard.remappingReference || "").trim(), remapping_index: (wizard.remappingIndex || "").trim(), library_mode: wizard.libraryMode || "unknown" });
+  const params = {}, effective = effectiveOptionalEvidence(wizard);
+  if (typeof wizard.competitionEnabled === "boolean") params.competition_enabled = wizard.competitionEnabled;
+  if (typeof wizard.remappingEnabled === "boolean") params.remapping_enabled = wizard.remappingEnabled;
+  if (params.competition_enabled) Object.assign(params, { competition_db: effective.competitionDb.trim(), competition_labels: effective.competitionLabels.trim() });
+  if (params.remapping_enabled) Object.assign(params, { remapping_reference: effective.remappingReference.trim(), remapping_index: effective.remappingIndex.trim(), library_mode: effective.libraryMode });
   return params;
 }
 
 export function optionalEvidenceIssues(wizard) {
-  const params = optionalEvidenceParams(wizard), issues = [];
-  if (params.competition_enabled && (!params.competition_db || !params.competition_labels)) issues.push("banco competitivo e tabela de rótulos");
-  if (params.remapping_enabled && (!params.remapping_reference || !params.remapping_index)) issues.push("referência e índice de remapeamento");
+  const effective = effectiveOptionalEvidence(wizard), issues = [];
+  if (effective.competitionEnabled && (!effective.competitionDb || !effective.competitionLabels)) issues.push("banco competitivo e tabela de rótulos");
+  if (effective.remappingEnabled && (!effective.remappingReference || !effective.remappingIndex)) issues.push("referência e índice de remapeamento");
   return issues;
 }
 
 export function optionalEvidenceWizard(params = {}) {
   return { ...OPTIONAL_EVIDENCE_DEFAULTS,
-    competitionEnabled: params.competition_enabled === true, competitionDb: params.competition_db || "", competitionLabels: params.competition_labels || "",
-    remappingEnabled: params.remapping_enabled === true, remappingReference: params.remapping_reference || "", remappingIndex: params.remapping_index || "", libraryMode: params.library_mode || "unknown" };
+    competitionEnabled: params.competition_enabled ?? null, competitionDb: params.competition_db ?? null, competitionLabels: params.competition_labels ?? null,
+    remappingEnabled: params.remapping_enabled ?? null, remappingReference: params.remapping_reference ?? null, remappingIndex: params.remapping_index ?? null, libraryMode: params.library_mode ?? null };
 }
 
 export function loadActiveJob(storage = globalThis.sessionStorage) {

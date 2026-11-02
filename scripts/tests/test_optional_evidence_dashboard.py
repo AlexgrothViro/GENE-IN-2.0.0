@@ -39,7 +39,9 @@ class OptionalEvidenceTests(unittest.TestCase):
         binary.parent.mkdir()
         binary.write_text('#!/usr/bin/env python3\nfrom pathlib import Path\nimport sys\nprefix=sys.argv[1]\nassert all(Path(prefix+"."+part+".bt2").is_file() for part in ("1","2","3","4","rev.1","rev.2"))\nprint(Path(prefix+".fixture.fa").read_text(),end="")\n')
         binary.chmod(0o755)
-        patched = patch.dict(os.environ, {"PATH": str(binary.parent) + os.pathsep + os.environ.get("PATH", "")})
+        self.config = self.root / "fixture.env"
+        self.config.write_text("")
+        patched = patch.dict(os.environ, {"PATH": str(binary.parent) + os.pathsep + os.environ.get("PATH", ""), "GENEIN_CONFIG_FILE": str(self.config)})
         patched.start()
         self.addCleanup(patched.stop)
         self.params = {"competition_enabled": True, "competition_db": str(self.prefix), "competition_labels": str(self.labels), "remapping_enabled": True, "remapping_reference": str(self.reference), "remapping_index": str(self.index), "library_mode": "unknown"}

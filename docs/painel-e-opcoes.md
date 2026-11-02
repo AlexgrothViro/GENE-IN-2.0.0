@@ -3,7 +3,10 @@
 [Documentação](README.md)
 
 **Nova análise** conduz a execução individual. Na etapa **Configuração**,
-as verificações adicionais são opcionais e começam desligadas. O
+as verificações adicionais são opcionais e começam em **Usar configuração**.
+O painel mostra o valor efetivo herdado. **Ligado nesta execução** e
+**Desligado nesta execução** são escolhas explícitas; só elas enviam os seletores.
+Voltar a **Usar configuração** remove esses overrides. O
 [manual de decoy e remapeamento](decoy-e-remapeamento.md) descreve os campos,
 os arquivos necessários e o alcance da conferência.
 

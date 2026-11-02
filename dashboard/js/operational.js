@@ -1,7 +1,7 @@
 import { getJSON, postForm, postJSON } from "./api.js";
 import { jobLabel, elapsed, formatDate, normalizeStatus, runIdentity } from "./adapters.js";
 import { analysisDimensions, badge, button, buttonClass, dataTable, field, h, linkButton, metric, openModal, outcomePanel, pageHeader, panel, panelHead, statusPanel, toast } from "./components.js";
-import { activateJob, persistActiveJob, optionalEvidenceParams, optionalEvidenceIssues, optionalEvidenceWizard } from "./state.js";
+import { activateJob, persistActiveJob, optionalEvidenceParams, optionalEvidenceIssues, optionalEvidenceWizard, effectiveOptionalEvidence } from "./state.js";
 
 const WIZARD_STEPS = ["Ambiente", "Banco", "Amostra", "Configuração", "Revisão", "Execução"];
 const CUSTOM_DATABASE = "custom";
@@ -20,37 +20,52 @@ function databaseReady(wizard) {
   return wizard.database !== CUSTOM_DATABASE || Boolean(String(wizard.dbQuery || "").trim());
 }
 
-function optionalEvidenceControls(store) {
-  const wizard = store.get().wizard;
+export function optionalEvidenceControls(store) {
   const result = h("div", { role: "status", "aria-live": "polite" });
   const root = panel("Verificações adicionais (opcionais)", [h("p", { text: "Selecione arquivos locais previamente preparados. Cada escolha vale para esta execução e será registrada com o resultado." })]);
   for (const [key, label, fields] of [
     ["competitionEnabled", "Usar comparação competitiva (decoy)", [["competitionDb", "Prefixo do banco competitivo"], ["competitionLabels", "Tabela de rótulos (TSV)"]]],
     ["remappingEnabled", "Remapear reads para conferir suporte", [["remappingReference", "Referência do remapeamento (FASTA)"], ["remappingIndex", "Prefixo do índice de remapeamento"]]],
   ]) {
-    const checked = h("input", { type: "checkbox", id: `wizard-${key}` });
-    checked.checked = wizard[key] === true;
+    const wizard = store.get().wizard;
+    const inherited = wizard.optionalDefaults?.[key === "competitionEnabled" ? "competition_enabled" : "remapping_enabled"] === true;
+    const selector = h("select", { id: `wizard-${key}` }, [
+      h("option", { value: "", text: `Usar configuração (${inherited ? "ligado" : "desligado"})` }),
+      h("option", { value: "true", text: "Ligado nesta execução" }),
+      h("option", { value: "false", text: "Desligado nesta execução" }),
+    ]);
+    selector.value = wizard[key] == null ? "" : String(wizard[key]);
     const inputs = h("fieldset", {});
-    inputs.disabled = !checked.checked;
-    checked.addEventListener("change", () => { store.set({ wizard: { [key]: checked.checked } }); inputs.disabled = !checked.checked; result.replaceChildren(); });
-    root.append(h("label", { class: "gi-field gi-field--check" }, [h("span", {}, [checked, ` ${label}`])]));
+    const effectiveLabel = h("p", { role: "status" });
+    const controls = [];
+    const refresh = () => {
+      const current = store.get().wizard, effective = effectiveOptionalEvidence(current);
+      inputs.disabled = current[key] !== true;
+      effectiveLabel.textContent = `Valor efetivo: ${effective[key] ? "ligado" : "desligado"}. Origem: ${current[key] == null ? "configuração" : "escolha desta execução"}.`;
+      for (const [name, control] of controls) control.value = effective[name] || "";
+    };
+    selector.addEventListener("change", () => { store.set({ wizard: { [key]: selector.value === "" ? null : selector.value === "true" } }); refresh(); result.replaceChildren(); });
+    root.append(field(label, selector, "Sem alteração, vale a configuração. Para editar os caminhos, escolha Ligado nesta execução."), effectiveLabel);
     for (const [name, text] of fields) {
-      const input = h("input", { id: `wizard-${name}`, type: "text", value: wizard[name] || "" });
+      const input = h("input", { id: `wizard-${name}`, type: "text" });
       input.addEventListener("input", () => { store.set({ wizard: { [name]: input.value.trim() } }); result.replaceChildren(); });
+      controls.push([name, input]);
       inputs.append(field(text, input));
     }
     if (key === "remappingEnabled") {
       const mode = h("select", { id: "wizard-library-mode" }, [["unknown", "Não informado"], ["shotgun", "Shotgun"], ["amplicon", "Amplicon"], ["targeted", "Enriquecimento direcionado"]].map(([value, text]) => h("option", { value, text })));
-      mode.value = wizard.libraryMode || "unknown";
+      controls.push(["libraryMode", mode]);
       mode.addEventListener("change", () => { store.set({ wizard: { libraryMode: mode.value } }); result.replaceChildren(); });
       inputs.append(field("Tipo de biblioteca", mode, "Sem essa informação, a interpretação do suporte permanece limitada. O remapeamento deste fluxo exige reads pareadas."));
     }
     root.append(inputs);
+    refresh();
   }
   root.append(h("p", { text: "Informe os prefixos sem a extensão dos componentes. Caminhos Windows e WSL são aceitos. A conferência verifica estrutura e integridade dos arquivos; não aprova a interpretação biológica." }));
   const verify = button("Conferir arquivos opcionais", async () => {
     const selected = optionalEvidenceParams(store.get().wizard);
-    if (!selected.competition_enabled && !selected.remapping_enabled) { result.replaceChildren(statusPanel("empty", "Nenhuma opção adicional selecionada", "A análise seguirá sem competição e sem remapeamento.")); return; }
+    const effective = effectiveOptionalEvidence(store.get().wizard);
+    if (!effective.competitionEnabled && !effective.remappingEnabled) { result.replaceChildren(statusPanel("empty", "Opções efetivamente desligadas", "A seleção atual e a configuração deixam as duas opções desligadas.")); return; }
     const issues = optionalEvidenceIssues(store.get().wizard);
     if (issues.length) { result.replaceChildren(statusPanel("blocked", "Complete as opções", issues.join("; "))); return; }
     verify.disabled = true;
@@ -234,6 +249,7 @@ export function sampleImportCard(store, { onImported, framed = true } = {}) {
 export async function renderNewAnalysis(store, rerender) {
   const state = store.get();
   const wizard = state.wizard;
+  const optional = effectiveOptionalEvidence(wizard);
   const root = h("div", {}, [pageHeader("Operação guiada", "Nova análise", "Ambiente → banco → amostra → configuração → revisão → execução.")]);
   root.append(wizardNav(wizard, (step) => { store.set({ wizard: { step, visited: { [wizard.step]: true } } }); rerender(); }));
   const card = h("section", { class: "gi-panel" });
@@ -241,12 +257,12 @@ export async function renderNewAnalysis(store, rerender) {
   if (!wizard.loaded) {
     card.append(statusPanel("loading", "Verificando pré-requisitos", "Carregando ambiente, bancos e amostras locais."));
     try {
-      const [environment, databases, samples, targets, config] = await Promise.all([
+      const [environment, databases, samples, targets, config, optional] = await Promise.all([
         getJSON("/api/preflight"), getJSON("/api/dbs"), getJSON("/api/samples"), getJSON("/api/targets"),
-        getJSON("/api/config/env"),
+        getJSON("/api/config/env"), getJSON("/api/evidence/options"),
       ]);
       const dbs = databases.dbs?.length ? databases.dbs : (targets.targets || targets || []);
-      store.set({ wizard: { loaded: true, environment, databases: dbs, samples: samples.samples || [], savedConfig: config.config || {} }, context: { environment: environment.ok ? "Pronto" : "Com pendências" } });
+      store.set({ wizard: { loaded: true, environment, databases: dbs, samples: samples.samples || [], savedConfig: config.config || {}, optionalDefaults: optional.effective || {} }, context: { environment: environment.ok ? "Pronto" : "Com pendências" } });
       return renderNewAnalysis(store, rerender);
     } catch (error) {
       store.set({ wizard: { loaded: true, loadError: error.message }, context: { environment: "Indisponível" } });
@@ -395,13 +411,13 @@ export async function renderNewAnalysis(store, rerender) {
       ["Papel da amostra", ROLE_LABELS[wizard.role || "sample"] || wizard.role], ["Lote", wizard.batchId || "Não informado"],
       ["Adaptador R1", wizard.qcAdapterR1 || "Configuração salva ou busca automática"],
       ["Adaptador R2", wizard.qcAdapterR2 || "Configuração salva ou busca automática"],
-      ["Comparação competitiva (decoy)", wizard.competitionEnabled ? "Selecionada" : "Desligada"],
-      ["Banco competitivo", wizard.competitionEnabled ? wizard.competitionDb || "Não informado" : "Não utilizado"],
-      ["Rótulos competitivos", wizard.competitionEnabled ? wizard.competitionLabels || "Não informado" : "Não utilizados"],
-      ["Remapeamento", wizard.remappingEnabled ? "Selecionado" : "Desligado"],
-      ["Referência do remapeamento", wizard.remappingEnabled ? wizard.remappingReference || "Não informada" : "Não utilizada"],
-      ["Índice do remapeamento", wizard.remappingEnabled ? wizard.remappingIndex || "Não informado" : "Não utilizado"],
-      ["Biblioteca do remapeamento", wizard.remappingEnabled ? wizard.libraryMode || "unknown" : "Não utilizada"],
+      ["Comparação competitiva (decoy)", `${optional.competitionEnabled ? "Ligada" : "Desligada"} (${wizard.competitionEnabled == null ? "configuração" : "esta execução"})`],
+      ["Banco competitivo", optional.competitionEnabled ? optional.competitionDb || "Não informado" : "Não utilizado"],
+      ["Rótulos competitivos", optional.competitionEnabled ? optional.competitionLabels || "Não informado" : "Não utilizados"],
+      ["Remapeamento", `${optional.remappingEnabled ? "Ligado" : "Desligado"} (${wizard.remappingEnabled == null ? "configuração" : "esta execução"})`],
+      ["Referência do remapeamento", optional.remappingEnabled ? optional.remappingReference || "Não informada" : "Não utilizada"],
+      ["Índice do remapeamento", optional.remappingEnabled ? optional.remappingIndex || "Não informado" : "Não utilizado"],
+      ["Biblioteca do remapeamento", optional.remappingEnabled ? optional.libraryMode : "Não utilizada"],
     ];
     card.append(dataTable([{ key: "label", label: "Item" }, { key: "value", label: "Seleção" }], rows.map(([label, value]) => ({ label, value })), "Revisão da análise"));
     if (wizard.hostMode === "none") card.append(statusPanel("warning", "Filtro de hospedeiro desligado", "Leituras e contigs do hospedeiro ou de outros organismos podem permanecer. Um contig longo não estabelece origem viral. Compare os comprimentos com as referências e revise os alinhamentos; use um índice apropriado se desejar filtrar o hospedeiro."));

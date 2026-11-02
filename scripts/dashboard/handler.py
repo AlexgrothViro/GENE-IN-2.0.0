@@ -51,7 +51,7 @@ from dashboard.config import (
 from dashboard.experimental import (
     direct_map_artifact, direct_map_run, list_direct_map_runs,
 )
-from dashboard.evidence_options import optional_evidence_inputs
+from dashboard.evidence_options import optional_evidence_inputs, optional_evidence_defaults
 from contig_comparison import (
     comparison_artifact, finalize_contig_comparison_cancellation,
     import_local_fasta, list_comparisons, list_sources,
@@ -489,6 +489,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 else "text/plain; charset=utf-8"
             )
             return serve_file(self, target, ctype)
+        if parsed.path == "/api/evidence/options":
+            try:
+                return json_response(self, HTTPStatus.OK, optional_evidence_defaults(root=REPO_ROOT))
+            except ValueError as error:
+                return json_response(self, HTTPStatus.BAD_REQUEST, {"error": str(error)})
         if parsed.path == "/api/config/env":
             try:
                 config = load_config_env()
