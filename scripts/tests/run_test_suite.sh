@@ -55,9 +55,7 @@ require_commands() {
 run_engineering() {
   echo "[SCOPE] Integridade, contratos, fixtures, concorrência e regressões."
   step "Python engenharia (sem módulos de otimização)" \
-    python3 -m pytest -q -p no:cacheprovider scripts/tests --ignore=scripts/tests/test_validation_tracks.py \
-      --deselect=scripts/tests/evidence/test_blast_specificity_integrity.py::RealBlastRouterTests \
-      --deselect=scripts/tests/test_candidate_summary.py::test_summary_fills_taxon_from_a_real_blast_database
+    python3 -m pytest -q -rs -p no:cacheprovider scripts/tests --ignore=scripts/tests/test_validation_tracks.py
   step "API, CLI, lote e grafo (tests/, sem repetir scripts/tests)" \
     python3 -m pytest -q -p no:cacheprovider tests
   step "Roteamento/fallback de montagem com executáveis controlados" \

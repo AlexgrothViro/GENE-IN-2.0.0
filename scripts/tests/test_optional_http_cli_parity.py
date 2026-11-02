@@ -37,7 +37,7 @@ class OptionalHttpCliParityTests(unittest.TestCase):
         for name in ("resolve_config.py", "analysis_profiles.py"):
             (pipeline / name).symlink_to(ROOT / "scripts/pipeline" / name)
         steps = (ROOT / "scripts/pipeline/sample_steps.sh").read_text()
-        (pipeline / "sample_steps.sh").write_text(steps[:steps.index("# Preflight de IDs")] + '\ncat "$RESOLVED_CONFIG_JSON"\n')
+        (pipeline / "sample_steps.sh").write_text(steps[:steps.index("# A identidade de DB")] + '\ncat "$RESOLVED_CONFIG_JSON"\n')
         self.work = self.root / "results/dashboard-work/parity-run-0001"
         self.work.mkdir(parents=True)
         self.settings = {

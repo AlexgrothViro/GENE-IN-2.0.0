@@ -62,7 +62,6 @@ python3 "${SCRIPT_DIR}/resolve_config.py" pipeline \
   "${RESOLVE_CONFIG_INCOMING_ARGS[@]}" "${RESOLVE_CONFIG_SOURCED_ARGS[@]}" "${RESOLVE_CONFIG_CLI_ARGS[@]}" \
   --out "$RESOLVED_CONFIG_JSON"
 eval "$(python3 "${SCRIPT_DIR}/resolve_config.py" emit-shell --in "$RESOLVED_CONFIG_JSON")"
-# Preflight de IDs na seção DATABASE_PREFLIGHT, antes do processamento.
 
 # A identidade de DB só muda por ambiente/CLI (nunca pelo config file
 # sozinho); quando isso ocorre, REF_FASTA/BOWTIE2_INDEX de um DB anterior

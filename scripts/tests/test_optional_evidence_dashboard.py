@@ -128,7 +128,7 @@ class OptionalEvidenceTests(unittest.TestCase):
         for name in ("resolve_config.py", "analysis_profiles.py"):
             (pipeline / name).symlink_to(ROOT / "scripts/pipeline" / name)
         steps = (ROOT / "scripts/pipeline/sample_steps.sh").read_text()
-        (pipeline / "sample_steps.sh").write_text(steps[:steps.index("# Preflight de IDs")] + '\ncat "$RESOLVED_CONFIG_JSON"\n')
+        (pipeline / "sample_steps.sh").write_text(steps[:steps.index("# A identidade de DB")] + '\ncat "$RESOLVED_CONFIG_JSON"\n')
         config = shell_root / "fixture.env"
         config.write_text('THREADS=4\nASSEMBLER=velvet\nEVIDENCE_COMPOSITE_DB=previous\nEVIDENCE_SUBJECT_LABELS=previous\nEVIDENCE_PANEL_FASTA=previous\nEVIDENCE_PANEL_INDEX=previous\n')
         work = shell_root / "work"
