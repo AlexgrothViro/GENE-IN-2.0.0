@@ -23,18 +23,9 @@ jobs:
           python -m pip install setuptools wheel
           python -m pip install --no-build-isolation -e '.[dev]'
       - name: Run engineering checks
-        # Author's beta validation scope excludes modules importing optimization*.
-        # These are the engineering commands already verified in all-safe.
         env:
           PYTHONPATH: .:src
-        run: |
-          python -m pytest -q -p no:cacheprovider scripts/tests tests --ignore=scripts/tests/test_validation_tracks.py
-          bash scripts/tests/test_assembly_router_regressions.sh
-          bash scripts/tests/test_assembly_empty_output_regressions.sh
-          bash scripts/tests/evidence/test_map_read_support.sh
-          git ls-files -z '*.sh' | xargs -0 -n 1 bash -n
-          python -m compileall -q scripts
-          node --test dashboard/tests/*.test.mjs
+        run: make test
 
   index-integrity:
     runs-on: ubuntu-latest

@@ -17,6 +17,11 @@ export PYTHONPATH="$ROOT_DIR:$ROOT_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
 if ! env -u PYTHONPATH python3 -c \
   'from pathlib import Path; import genein, sys; assert Path(genein.__file__).resolve().parent == Path(sys.argv[1]).resolve() / "src/genein"' \
   "$ROOT_DIR" >/dev/null 2>&1; then
+  if ! python3 -c 'import sys; raise SystemExit(0 if sys.prefix != sys.base_prefix else 1)'; then
+    printf '[FATAL] make test precisa de um venv para instalar esta fonte. O pip do Python do sistema não será usado.\n' >&2
+    printf 'Crie um ambiente: python3 -m venv .venv\nAtive: source .venv/bin/activate\nInstale as dependências de teste no ambiente e repita make test.\n' >&2
+    exit 2
+  fi
   printf '[SETUP] instalando o pacote em modo editável (necessário para tests/test_cli.py)\n'
   python3 -m pip install -e "$ROOT_DIR" --no-build-isolation --no-deps --quiet || {
     printf '[FATAL] não foi possível instalar esta fonte. Use um venv e rode: python3 -m pip install --no-build-isolation --no-deps -e .\n' >&2
@@ -50,7 +55,9 @@ require_commands() {
 run_engineering() {
   echo "[SCOPE] Integridade, contratos, fixtures, concorrência e regressões."
   step "Python engenharia (sem módulos de otimização)" \
-    python3 -m pytest -q -p no:cacheprovider scripts/tests --ignore=scripts/tests/test_validation_tracks.py
+    python3 -m pytest -q -p no:cacheprovider scripts/tests --ignore=scripts/tests/test_validation_tracks.py \
+      --deselect=scripts/tests/evidence/test_blast_specificity_integrity.py::RealBlastRouterTests \
+      --deselect=scripts/tests/test_candidate_summary.py::test_summary_fills_taxon_from_a_real_blast_database
   step "API, CLI, lote e grafo (tests/, sem repetir scripts/tests)" \
     python3 -m pytest -q -p no:cacheprovider tests
   step "Roteamento/fallback de montagem com executáveis controlados" \

@@ -1,0 +1,31 @@
+FATO - saídas registradas; não são uma nova execução.
+
+MAKE TEST FINAL
+619 passed, 3 deselected, 322 subtests passed in 127.26s (0:02:07)
+138 passed in 62.04s (0:01:02)
+PASS router stale-output, short-contig, symmetric-fallback and SPAdes argument regressions
+PASS montagem concluida sem contigs -> SOFT/exit 0; ausente, invalida ou abortada -> HARD
+# tests 31
+# pass 31
+# fail 0
+[PASS] suíte engineering concluída dentro do escopo declarado.
+
+PYTHON GERENCIADO - FALHA ESPERADA
+bash scripts/tests/run_test_suite.sh engineering
+[FATAL] make test precisa de um venv para instalar esta fonte. O pip do Python do sistema não será usado.
+Crie um ambiente: python3 -m venv .venv
+Ative: source .venv/bin/activate
+Instale as dependências de teste no ambiente e repita make test.
+make: *** [Makefile:299: test-engineering] Error 2
+
+VERIFICAÇÕES FOCADAS
+A_RESOLVER: 75 passed, 29 subtests passed in 8.90s
+B_PARIDADE_FINAL: 16 passed, 27 subtests passed in 13.11s
+C_INDICES: METADATA_ONLY: database hashes and six index hashes recorded; complete processing not executed | 9 passed, 4 subtests passed in 6.83s
+D_IDS_REAIS: 7 passed in 0.79s
+E_REGRESSOES: 17 passed, 6 subtests passed in 13.65s
+
+INSTALAÇÃO INDEPENDENTE
+Venv inicial: pip 24.0; genein e jsonschema ausentes.
+Instalação, identidade da CLI, ausência do Builder e três rotas HTTP: passou.
+(c) completo: não executado. (e) integral: pendente.
