@@ -406,8 +406,8 @@ def resolve_pipeline_config(
     # that asks for nothing still performs A and only A. Selecting B never
     # invents a panel: it requires the composite DB the operator curated.
     requested_profiles = parse_search_profiles(env_first("SEARCH_PROFILES"))
-    if competition_enabled == "false":
-        requested_profiles = [profile for profile in requested_profiles if profile != "B"]
+    if competition_enabled == "false" and "B" in requested_profiles:
+        raise ConfigError("perfil B pedido, mas a competição está desligada")
     if "C" in requested_profiles:
         short_fragment["mode"] = True
         short_fragment["blast"] = True
