@@ -51,6 +51,7 @@ from dashboard.config import (
 from dashboard.experimental import (
     direct_map_artifact, direct_map_run, list_direct_map_runs,
 )
+from dashboard.evidence_options import optional_evidence_inputs
 from contig_comparison import (
     comparison_artifact, finalize_contig_comparison_cancellation,
     import_local_fasta, list_comparisons, list_sources,
@@ -606,6 +607,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
             result = validate_host_index(payload.get("prefix", ""))
             status = HTTPStatus.OK if result["valid"] else HTTPStatus.BAD_REQUEST
             return json_response(self, status, result)
+
+        if parsed.path == "/api/evidence/options/validate":
+            try:
+                _, details = optional_evidence_inputs(payload, root=REPO_ROOT)
+            except ValueError as error:
+                return json_response(self, HTTPStatus.BAD_REQUEST, {"error": str(error), "valid": False})
+            return json_response(self, HTTPStatus.OK, {"valid": True, "options": details})
 
         if parsed.path == "/api/config/env":
             prevalidated_updates = payload.get("config", {})

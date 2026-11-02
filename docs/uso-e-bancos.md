@@ -6,6 +6,11 @@ Instale o [ambiente científico](installation-reproducibility.md) e abra `ABRIR_
 
 ## Utilidades e escolha de entrada
 
+No painel, a análise individual oferece comparação competitiva e remapeamento
+independentes e inicialmente desligados. Consulte o [manual das opções](decoy-e-remapeamento.md)
+para selecionar e conferir arquivos já preparados. As ferramentas complementares
+estão reunidas em **Ferramentas**; veja o [guia do painel](painel-e-opcoes.md).
+
 | Entrada/uso | Caminho disponível | O que conferir |
 |---|---|---|
 | FASTQ paired-end | `--r1` e `--r2` | Pares da mesma amostra, nomes e ordem compatíveis |
@@ -21,7 +26,7 @@ A recuperação curta usa `fragment_recovery_20_100_v1`. As buscas convencionais
 
 A composição do banco deve responder à pergunta da análise. O pacote não inclui referências biológicas ou índices prontos. O gerenciador registra FASTA, hashes, ferramentas e manifestos e promove o banco preparado de forma transacional.
 
-No painel, use **Nova análise → Banco → Preparar banco selecionado** e depois **Continuar nova análise**. A alternativa fica em **Área avançada → Configuração técnica → Preparar banco**. Há perfis históricos e consulta NCBI personalizada. Verifique consulta, fontes, accessions/versões e composição antes do uso; o nome de um perfil não garante especificidade biológica.
+No painel, use **Nova análise → Banco → Preparar banco selecionado** e depois **Continuar nova análise**. A alternativa fica em **Ferramentas → Configuração → Preparar banco**. Há perfis históricos e consulta NCBI personalizada. Verifique consulta, fontes, accessions/versões e composição antes do uso; o nome de um perfil não garante especificidade biológica.
 
 Para listar perfis e preparar o perfil histórico de PTV:
 

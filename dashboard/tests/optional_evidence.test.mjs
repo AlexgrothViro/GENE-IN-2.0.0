@@ -1,0 +1,29 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { OPTIONAL_EVIDENCE_DEFAULTS, optionalEvidenceParams, optionalEvidenceIssues, optionalEvidenceWizard } from "../js/state.js";
+
+test("optional features start off and stale paths are not sent", () => {
+  assert.deepEqual(optionalEvidenceParams({ ...OPTIONAL_EVIDENCE_DEFAULTS, competitionDb: "old", remappingReference: "old" }), { competition_enabled: false, remapping_enabled: false });
+  assert.deepEqual(optionalEvidenceIssues(OPTIONAL_EVIDENCE_DEFAULTS), []);
+});
+
+test("each selected feature requires its own pair of inputs", () => {
+  assert.equal(optionalEvidenceIssues({ competitionEnabled: true }).length, 1);
+  assert.equal(optionalEvidenceIssues({ remappingEnabled: true }).length, 1);
+  assert.equal(optionalEvidenceIssues({ competitionEnabled: true, remappingEnabled: true }).length, 2);
+});
+
+test("selected inputs survive history review and serialize without the other feature", () => {
+  for (const params of [
+    { competition_enabled: true, remapping_enabled: false, competition_db: "/files with spaces/db", competition_labels: "/labels.tsv" },
+    { competition_enabled: false, remapping_enabled: true, remapping_reference: "/ref.fa", remapping_index: "/index", library_mode: "unknown" },
+    { competition_enabled: true, remapping_enabled: true, competition_db: "/db", competition_labels: "/labels.tsv", remapping_reference: "/ref.fa", remapping_index: "/index", library_mode: "shotgun" },
+  ]) {
+    assert.deepEqual(optionalEvidenceParams(optionalEvidenceWizard(params)), params);
+    assert.deepEqual(optionalEvidenceIssues(optionalEvidenceWizard(params)), []);
+  }
+});
+
+test("reviewing an old run clears optional settings left over from another run", () => {
+  assert.deepEqual(optionalEvidenceWizard({}), OPTIONAL_EVIDENCE_DEFAULTS);
+});

@@ -1,8 +1,8 @@
-import { getJSON } from "./api.js";
+import { getJSON, waitForValidation } from "./api.js";
 import { analysisDimensions, badge, button, buttonClass, dataTable, field, h, linkButton, metric, outcomePanel, pageHeader, panel, statusPanel, toast } from "./components.js";
 import { advancedShell } from "./advanced.js";
 import { competitiveChart, comparisonMetricChart, coverageChart, gateMatrixChart, locusIntervalChart, stageTimelineChart, supportChart } from "./charts.js";
-import { elapsed, evidenceLabel, formatDate } from "./adapters.js";
+import { comparisonMetricValue, elapsed, evidenceLabel, formatDate } from "./adapters.js";
 
 const DATASET_LABELS = {
   coverage: "Cobertura 1×/3× e profundidade", read_support: "Suporte por templates",
@@ -21,6 +21,10 @@ function isNumericColumn(rows, key) {
 
 function analyticsStatus(summary) {
   const block = h("div", { class: "stack" });
+  if (summary.validation.status === "VALIDATION_PENDING") {
+    block.append(statusPanel("loading", "Conferindo arquivos", "A conferência ainda está em andamento."));
+    return block;
+  }
   if (!summary.validation.valid) {
     block.append(statusPanel("not_evaluable", "Execução não avaliável", summary.validation.message || "Os artefatos não passaram na validação integral."));
     block.append(outcomePanel("NOT_EVALUABLE"));
@@ -161,21 +165,48 @@ function analyticsNavigation() {
   ]);
 }
 
-export async function renderAnalytics(runId) {
+function historyPending(history) {
+  return (history.runs || []).some((run) => run.evidence_v2 && run.compatibility_status === "VALIDATION_PENDING");
+}
+
+function readError(error, options) {
+  if (error.name === "AbortError") throw error;
+  if (error.name === "ValidationPendingError") return panel("Conferência em andamento", [
+    statusPanel("loading", "Os arquivos continuam sendo conferidos", "A consulta automática foi encerrada para evitar espera indefinida. O resultado ainda não foi interpretado."),
+    button("Consultar novamente", options.onRetry || (() => location.reload()), "secondary"),
+  ]);
+  return statusPanel("error", "Não foi possível carregar os resultados", error.payload?.error || error.message);
+}
+
+async function analysisHistory(options) {
+  return waitForValidation((signal) => getJSON("/api/history", { signal }), { ...options, isPending: historyPending });
+}
+
+export async function renderAnalytics(runId, options = {}) {
   const { root, body } = advancedShell(
-    pageHeader("Área avançada · Evidence V2", "Explorador analítico", "Execuções inválidas são fechadas como NOT_EVALUABLE; gráficos e tabelas usam apenas artefatos promovidos e validados.", true),
+    pageHeader("Resultados", "Explorar resultados", "Gráficos, tabelas e arquivos de análises concluídas, com conferência de integridade."),
     "analytics",
   );
   if (!runId) {
+    try {
+      const history = await analysisHistory(options);
+      const runs = (history.runs || []).filter((run) => run.evidence_v2 && run.valid_alpha2);
+      const select = h("select", { id: "analytics-run" });
+      runs.forEach((run) => select.append(h("option", { value: run.run_id, text: `${run.label || run.sample || "Análise"} · ${run.run_id}` })));
+      if (runs.length) body.append(panel("Abrir análise concluída", [
+        field("Análise", select), button("Abrir resultados", () => { location.hash = `#/analytics?run=${encodeURIComponent(select.value)}`; }),
+      ]));
+      else body.append(statusPanel("empty", "Nenhuma análise concluída disponível", "Execute uma análise ou consulte o histórico para acompanhar os arquivos em preparação."));
+    } catch (error) { body.append(readError(error, options)); }
     const input = h("input", { type: "text", placeholder: "ID da execução", autocomplete: "off", "data-kind": "id" });
-    body.append(panel("", [
-      field("Execução Evidence V2", input, "Informe um run_id promovido."),
+    body.append(h("details", {}, [h("summary", { text: "Buscar por identificador" }),
+      field("Identificador da análise", input, "Para abrir um resultado específico ou conferir sua disponibilidade."),
       button("Carregar execução", () => { if (input.value.trim()) location.hash = `#/analytics?run=${encodeURIComponent(input.value.trim())}`; }),
     ]));
     return root;
   }
   try {
-    const summary = await getJSON(`/api/evidence/analytics?run=${encodeURIComponent(runId)}`);
+    const summary = await waitForValidation((signal) => getJSON(`/api/evidence/analytics?run=${encodeURIComponent(runId)}`, { signal }), options);
     body.append(analyticsStatus(summary));
     const identity = [
       valueCard("Execução", summary.run_id), valueCard("Amostra", summary.metadata.sample_id),
@@ -229,14 +260,16 @@ export async function renderAnalytics(runId) {
     });
     body.append(artifacts);
   } catch (error) {
-    body.append(statusPanel("error", "Não foi possível carregar a execução", error.payload?.error || error.message));
+    body.append(readError(error, options));
   }
   return root;
 }
 
-export async function renderComparison(selected = []) {
-  const { root, body } = advancedShell(pageHeader("Área avançada", "Comparar execuções", "Selecione de duas a quatro execuções. Políticas incompatíveis permanecem lado a lado, sem sobreposição.", true), "compare");
-  const history = await getJSON("/api/history").catch(() => ({ runs: [] }));
+export async function renderComparison(selected = [], options = {}) {
+  const { root, body } = advancedShell(pageHeader("Ferramentas", "Comparar execuções", "Selecione de duas a quatro análises. Políticas incompatíveis permanecem identificadas, sem sobreposição."), "compare");
+  let history;
+  try { history = await analysisHistory(options); }
+  catch (error) { body.append(readError(error, options)); return root; }
   const candidates = (history.runs || []).filter((run) => run.evidence_v2 && run.valid_alpha2);
   const form = h("form", { class: "gi-panel", onsubmit: async (event) => {
     event.preventDefault();
@@ -249,12 +282,17 @@ export async function renderComparison(selected = []) {
     input.checked = selected.includes(run.run_id);
     form.append(h("div", { class: "gi-field gi-field--check" }, [h("label", { for: input.id }, [input, document.createTextNode(` ${run.run_id} · ${run.sample || "sem amostra"}`)])]));
   });
-  form.append(h("button", { class: buttonClass(), type: "submit", text: "Comparar seleção" }));
+  if (candidates.length < 2) form.append(statusPanel("empty", "São necessárias duas análises concluídas", "O histórico mostra os resultados disponíveis e os que ainda precisam de conferência."));
+  const compareButton = h("button", { class: buttonClass(), type: "submit", text: "Comparar seleção" });
+  compareButton.disabled = candidates.length < 2;
+  form.append(compareButton);
   body.append(form);
   if (selected.length >= 2) {
     try {
       const query = selected.map((run) => `run=${encodeURIComponent(run)}`).join("&");
-      const payload = await getJSON(`/api/evidence/analytics/compare?${query}`);
+      const payload = await waitForValidation((signal) => getJSON(`/api/evidence/analytics/compare?${query}`, { signal }), {
+        ...options, isPending: (value) => value.runs.some((run) => run.validation.status === "VALIDATION_PENDING"),
+      });
       body.append(payload.compatibility.overlay_allowed
         ? statusPanel("success", "Execuções compatíveis", "Gráficos lado a lado e sobrepostos estão liberados.")
         : statusPanel("blocked", "Sobreposição bloqueada", payload.compatibility.reason));
@@ -268,10 +306,10 @@ export async function renderComparison(selected = []) {
       const baseline = payload.runs[0];
       const metricRows = metricKeys.map((metric) => {
         const row = { metric };
-        const baseValue = baseline.metrics?.[metric];
+        const baseValue = comparisonMetricValue(baseline, metric);
         payload.runs.forEach((run, index) => {
-          const value = run.metrics?.[metric];
-          row[`run_${index}`] = value ?? "Não medido";
+          const value = comparisonMetricValue(run, metric);
+          row[`run_${index}`] = value;
           if (index > 0) row[`delta_${index}`] = typeof value === "number" && typeof baseValue === "number" ? value - baseValue : "Não avaliável";
         });
         return row;
@@ -313,7 +351,7 @@ export async function renderComparison(selected = []) {
         }
         body.append(section);
       }
-    } catch (error) { body.append(statusPanel("error", "Comparação indisponível", error.payload?.error || error.message)); }
+    } catch (error) { body.append(readError(error, options)); }
   }
   return root;
 }

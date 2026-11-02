@@ -67,7 +67,7 @@ run_engineering() {
   done
   step "Compilação Python" python3 -m compileall -q scripts
   if command -v node >/dev/null 2>&1; then
-    step "Testes JavaScript do dashboard" node --test dashboard/tests/js_modules.test.mjs
+    step "Testes JavaScript do dashboard" node --test dashboard/tests/*.test.mjs
   else
     echo "[SKIP] node ausente; módulos do dashboard não foram verificados nesta execução."
   fi

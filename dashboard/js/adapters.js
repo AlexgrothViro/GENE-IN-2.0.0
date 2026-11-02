@@ -30,6 +30,20 @@ export function evidenceLabel(value) {
   return PUBLIC_REVIEW_LABELS[value] || value || "Não informado";
 }
 
+// Display measurement state without rewriting the frozen values in the artifacts.
+const COVERAGE_METRICS = new Set(["breadth_1x", "breadth_3x", "median_depth_covered", "max_window_depth_fraction"]);
+export function comparisonMetricValue(run, key) {
+  if (COVERAGE_METRICS.has(key)) {
+    const state = run.datasets?.coverage?.status;
+    const labels = { not_measured: "Não medido", missing: "Não medido", not_applicable: "Não aplicável", invalid: "Inválido" };
+    if (labels[state]) return labels[state];
+  }
+  const value = run.metrics?.[key];
+  if (value == null || value === "") return "Não medido";
+  if (value === "NOT_EVALUATED") return "Não avaliado";
+  return value;
+}
+
 export function runIdentity(run = {}) {
   return {
     id: run.run_id || run.id || "",

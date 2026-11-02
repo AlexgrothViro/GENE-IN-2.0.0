@@ -386,7 +386,7 @@ if [[ $blast_missing -eq 1 ]]; then
   BLAST_PARENT="$(dirname "$BLAST_DB")"
   BLAST_BASENAME="$(basename "$BLAST_DB")"
   BLAST_BUILD_DIR="$(mktemp -d "${BLAST_PARENT}/.${BLAST_BASENAME}.build.XXXXXX")"
-  BLAST_TMP_PREFIX="${BLAST_BUILD_DIR}/${BLAST_BASENAME}"
+  BLAST_TMP_PREFIX="${BLAST_BUILD_DIR}/database"
   [[ -n "$BLAST_TMP_PREFIX" && "$BLAST_TMP_PREFIX" != "/" ]] || \
     log_error "Prefixo de saída BLAST vazio; BLAST_DB=${BLAST_DB}, BLAST_BUILD_DIR=${BLAST_BUILD_DIR}"
   log_info "Executando makeblastdb com saída: ${BLAST_TMP_PREFIX}"
@@ -398,11 +398,13 @@ if [[ $blast_missing -eq 1 ]]; then
   (
     set -e
     BLAST_SAFE_DIR="$(mktemp -d /tmp/genein-makeblastdb.XXXXXX)"
-    trap 'rm -f -- "$BLAST_SAFE_DIR"/"$BLAST_BASENAME".*; rmdir -- "$BLAST_SAFE_DIR"' EXIT
+    # The temporary basename must also be free of spaces; BLAST+ reparses -out.
+    BLAST_SAFE_PREFIX="$BLAST_SAFE_DIR/database"
+    trap 'rm -f -- "$BLAST_SAFE_PREFIX".*; rmdir -- "$BLAST_SAFE_DIR"' EXIT
     "$MAKEBLASTDB_BIN" -in - -title "$BLAST_BASENAME" -dbtype nucl \
-      -out "$BLAST_SAFE_DIR/$BLAST_BASENAME" < "$DB_INPUT_FASTA"
-    blastdbcmd -db "$BLAST_SAFE_DIR/$BLAST_BASENAME" -info >/dev/null
-    for index_file in "$BLAST_SAFE_DIR"/"$BLAST_BASENAME".*; do
+      -out "$BLAST_SAFE_PREFIX" < "$DB_INPUT_FASTA"
+    blastdbcmd -db "$BLAST_SAFE_PREFIX" -info >/dev/null
+    for index_file in "$BLAST_SAFE_PREFIX".*; do
       cp -- "$index_file" "$BLAST_BUILD_DIR/"
     done
   )
@@ -411,6 +413,7 @@ if [[ $blast_missing -eq 1 ]]; then
   python3 "$INDEX_CACHE_HELPER" --write --manifest "$BLAST_INDEX_MANIFEST_TMP" \
     --reference "$REF_FASTA" --builder makeblastdb
   python3 "$BLAST_PROMOTION_HELPER" --build-dir "$BLAST_BUILD_DIR" \
+    --build-name database \
     --destination "$BLAST_DB" --reference "$REF_FASTA" --manifest "$BLAST_GENERATION_MANIFEST" \
     --index-manifest-source "$BLAST_INDEX_MANIFEST_TMP"
   BLAST_BUILD_DIR=""

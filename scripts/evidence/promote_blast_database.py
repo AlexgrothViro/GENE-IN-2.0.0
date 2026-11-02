@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import fcntl
+import hashlib
 import json
 import os
 import shutil
@@ -64,20 +65,24 @@ def alias_points_to(alias_path: Path, expected_alias: bytes) -> bool:
 
 def promote(build_dir: Path, destination: Path, reference: Path,
             blastdbcmd: str, alias_tool: str, manifest_path: Path,
-            index_manifest_source: Path | None = None) -> dict:
+            index_manifest_source: Path | None = None, *, build_name: str | None = None) -> dict:
     build_dir = build_dir.resolve()
     destination = destination.resolve()
     reference = reference.resolve()
     if build_dir.parent.stat().st_dev != destination.parent.stat().st_dev:
         raise ValueError("BLAST staging and destination must be on the same filesystem")
-    build_prefix = build_dir / destination.name
+    index_basename = destination.name if build_name is None else build_name
+    if not index_basename or Path(index_basename).name != index_basename or index_basename in {".", ".."}:
+        raise ValueError("invalid BLAST build basename")
+    build_prefix = build_dir / index_basename
     files = produced_files(build_prefix)
     run_checked([blastdbcmd, "-db", blast_db_arg(build_prefix), "-info"], "temporary BLAST database validation")
     index_manifest = None
     if index_manifest_source is not None:
         index_manifest = json.loads(index_manifest_source.read_text(encoding="utf-8", errors="strict"))
 
-    generation_root = destination.parent / f".{destination.name}.generations"
+    storage_name = hashlib.sha256(destination.name.encode("utf-8")).hexdigest() if build_name is not None else destination.name
+    generation_root = destination.parent / f".{storage_name}.generations"
     generation_root.mkdir(parents=True, exist_ok=True)
     generation_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ") + f"-{os.getpid()}-{uuid.uuid4().hex[:8]}"
     generation_dir = generation_root / generation_id
@@ -95,6 +100,8 @@ def promote(build_dir: Path, destination: Path, reference: Path,
             for path in files
         },
     }
+    if build_name is not None:
+        generation_manifest["index_basename"] = index_basename
     write_json_atomic(build_dir / "generation_manifest.json", generation_manifest)
     if os.name != "nt":
         for path in build_dir.iterdir():
@@ -105,8 +112,8 @@ def promote(build_dir: Path, destination: Path, reference: Path,
     os.replace(build_dir, generation_dir)
     fsync_directory(generation_root)
 
-    generation_prefix = generation_dir / destination.name
-    alias_prefix = destination.parent / f".{destination.name}.alias.{uuid.uuid4().hex}"
+    generation_prefix = generation_dir / index_basename
+    alias_prefix = destination.parent / f".genein-alias.{uuid.uuid4().hex}"
     alias_path = Path(f"{alias_prefix}.nal")
     final_alias = Path(f"{destination}.nal")
     with promotion_lock(destination):
@@ -163,6 +170,7 @@ def promote(build_dir: Path, destination: Path, reference: Path,
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build-dir", required=True, type=Path)
+    parser.add_argument("--build-name", help="Physical basename inside staging; defaults to the destination basename")
     parser.add_argument("--destination", required=True, type=Path)
     parser.add_argument("--reference", required=True, type=Path)
     parser.add_argument("--manifest", required=True, type=Path)
@@ -173,6 +181,7 @@ def main() -> None:
     result = promote(
         args.build_dir, args.destination, args.reference, args.blastdbcmd,
         args.alias_tool, args.manifest, args.index_manifest_source,
+        build_name=args.build_name,
     )
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
 

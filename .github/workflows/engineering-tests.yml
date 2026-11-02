@@ -34,4 +34,4 @@ jobs:
           bash scripts/tests/evidence/test_map_read_support.sh
           git ls-files -z '*.sh' | xargs -0 -n 1 bash -n
           python -m compileall -q scripts
-          node --test dashboard/tests/js_modules.test.mjs
+          node --test dashboard/tests/*.test.mjs
