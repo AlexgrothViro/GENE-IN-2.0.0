@@ -35,3 +35,29 @@ jobs:
           git ls-files -z '*.sh' | xargs -0 -n 1 bash -n
           python -m compileall -q scripts
           node --test dashboard/tests/*.test.mjs
+
+  index-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install index tools and this checkout
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ncbi-blast+ bowtie2
+          python -m pip install setuptools wheel
+          python -m pip install --no-build-isolation -e '.[dev]'
+      - name: Check real index metadata only
+        env:
+          PYTHONPATH: .:src
+          GENEIN_TEST_ARTIFACT_ROOT: ${{ runner.temp }}/index-metadata
+        run: |
+          python -m pytest -q -s -p no:cacheprovider scripts/tests/test_real_index_metadata.py scripts/tests/test_db_manager_paths.py scripts/tests/evidence/test_blast_database_promotion.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: index-metadata
+          path: ${{ runner.temp }}/index-metadata
+          if-no-files-found: warn

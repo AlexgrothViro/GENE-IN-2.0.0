@@ -1,4 +1,6 @@
 import json
+import io
+from contextlib import redirect_stderr
 import os
 import sys
 import tempfile
@@ -17,6 +19,25 @@ from verify_blast_database_manifest import verify
 
 
 class BlastDatabasePromotionTests(unittest.TestCase):
+    def test_legacy_orphans_are_warned_and_preserved(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            destination = root / "logical with spaces"
+            old = root / ".logical with spaces.generations/old"
+            old.mkdir(parents=True)
+            output = io.StringIO()
+            with redirect_stderr(output):
+                promote_blast_database.warn_legacy_generations(destination, root / ".new.generations")
+            self.assertIn("total=1", output.getvalue())
+            self.assertIn(str(old.parent), output.getvalue())
+            self.assertTrue(old.is_dir())
+
+    def test_orphan_listing_failure_does_not_raise_after_promotion(self):
+        with tempfile.TemporaryDirectory() as directory, redirect_stderr(io.StringIO()) as output:
+            with patch.object(Path, "iterdir", side_effect=PermissionError("controlled")):
+                promote_blast_database.warn_legacy_generations(Path(directory) / "db", Path(directory) / ".new.generations")
+            self.assertIn("[WARN]", output.getvalue())
+
     def make_build(self, root: Path, name: str, marker: str) -> Path:
         build = root / f".{name}.build-{marker}"
         build.mkdir()

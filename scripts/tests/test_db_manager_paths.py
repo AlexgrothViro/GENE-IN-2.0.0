@@ -17,6 +17,18 @@ from verify_blast_database_manifest import verify
 
 
 class SharedIndexCacheTests(unittest.TestCase):
+    def test_changed_reference_rejects_shared_receipt_with_extra_builders(self):
+        with tempfile.TemporaryDirectory() as directory:
+            reference = Path(directory) / "reference.fa"
+            reference.write_text(">fixture\nACGT\n")
+            timestamp = reference.stat().st_mtime_ns
+            with patch.object(index_cache, "builder_identity", side_effect=lambda name: {"command": name, "version": "unchanged"}):
+                receipt = index_cache.fingerprint(reference, ["makeblastdb", "bowtie2-build"])
+                self.assertTrue(index_cache.matches(receipt, reference, ["makeblastdb"]))
+                reference.write_text(">fixture\nTGCA\n")
+                os.utime(reference, ns=(timestamp, timestamp))
+                self.assertFalse(index_cache.matches(receipt, reference, ["makeblastdb"]))
+
     def test_required_builder_subset_reuses_shared_receipt_and_detects_changes(self):
         with tempfile.TemporaryDirectory() as directory:
             reference = Path(directory) / "reference.fa"
