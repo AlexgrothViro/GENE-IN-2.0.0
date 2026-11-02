@@ -22,7 +22,7 @@ import tempfile
 from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[2]
-TOOLS = ("bash", "flock", "make", "fastp", "velveth", "velvetg", "blastn",
+TOOLS = ("bash", "flock", "make", "gcc", "git", "dos2unix", "fastp", "velveth", "velvetg", "blastn",
          "makeblastdb", "blastdbcmd", "blastdb_aliastool", "bowtie2",
          "bowtie2-build", "bowtie2-inspect", "samtools")
 SEED = 20261102
@@ -170,6 +170,8 @@ def main(argv: list[str] | None = None) -> int:
                                     stdout=stream, stderr=subprocess.STDOUT, timeout=600)
         record["returncode"] = result.returncode
         write_json(manifest_path, manifest)
+        if result.returncode:
+            print(log.read_text(encoding="utf-8", errors="replace")[-4000:], file=sys.stderr, flush=True)
         require(result.returncode == 0, f"{label}: exit {result.returncode}; see {log}")
 
     try:

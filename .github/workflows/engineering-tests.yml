@@ -63,7 +63,7 @@ jobs:
       - name: Install real tools and this checkout
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y ncbi-blast+ bowtie2 samtools fastp velvet
+          sudo apt-get install -y ncbi-blast+ bowtie2 samtools fastp velvet dos2unix
           python -m pip install setuptools wheel
           python -m pip install --no-build-isolation -e .
       - name: Real FASTQ to receipt, four optional configurations
@@ -77,3 +77,4 @@ jobs:
           name: optional-e2e
           path: ${{ runner.temp }}/optional-e2e
           if-no-files-found: error
+          include-hidden-files: true
