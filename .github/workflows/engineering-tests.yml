@@ -54,7 +54,7 @@ jobs:
           PYTHONPATH: .:src
           GENEIN_TEST_ARTIFACT_ROOT: ${{ runner.temp }}/index-metadata
         run: |
-          python -m pytest -q -s -p no:cacheprovider scripts/tests/test_real_index_metadata.py scripts/tests/test_db_manager_paths.py scripts/tests/evidence/test_blast_database_promotion.py
+          python -m pytest -q -s -p no:cacheprovider scripts/tests/test_real_index_metadata.py scripts/tests/test_db_manager_paths.py scripts/tests/evidence/test_blast_database_promotion.py scripts/tests/test_competitive_labels.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

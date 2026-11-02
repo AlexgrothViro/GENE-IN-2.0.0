@@ -77,6 +77,10 @@ A conferência examina:
 
 - Presença do manifesto e integridade dos componentes registrados do banco.
 - Estrutura dos rótulos, identificadores duplicados e categorias aceitas pelo contrato.
+- Igualdade dos conjuntos de IDs do banco e dos rótulos. IDs do banco sem rótulo
+  ou rótulos sem ID no banco interrompem a execução; a mensagem informa o total
+  e até 20 exemplos por categoria. A inspeção usa os IDs de acesso retornados
+  pela interface pública do banco, sem executar busca.
 - Correspondência entre as sequências da referência e as do índice de remapeamento.
 - Tipo de biblioteca informado entre as opções aceitas.
 

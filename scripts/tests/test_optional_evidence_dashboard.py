@@ -39,6 +39,9 @@ class OptionalEvidenceTests(unittest.TestCase):
         binary.parent.mkdir()
         binary.write_text('#!/usr/bin/env python3\nfrom pathlib import Path\nimport sys\nprefix=sys.argv[1]\nassert all(Path(prefix+"."+part+".bt2").is_file() for part in ("1","2","3","4","rev.1","rev.2"))\nprint(Path(prefix+".fixture.fa").read_text(),end="")\n')
         binary.chmod(0o755)
+        database_inspector = binary.parent / "blastdbcmd"
+        database_inspector.write_text('#!/usr/bin/env python3\nprint("fixture-target\\nfixture-other")\n')
+        database_inspector.chmod(0o755)
         self.config = self.root / "fixture.env"
         self.config.write_text("")
         patched = patch.dict(os.environ, {"PATH": str(binary.parent) + os.pathsep + os.environ.get("PATH", ""), "GENEIN_CONFIG_FILE": str(self.config)})
@@ -125,7 +128,7 @@ class OptionalEvidenceTests(unittest.TestCase):
         for name in ("resolve_config.py", "analysis_profiles.py"):
             (pipeline / name).symlink_to(ROOT / "scripts/pipeline" / name)
         steps = (ROOT / "scripts/pipeline/sample_steps.sh").read_text()
-        (pipeline / "sample_steps.sh").write_text(steps[:steps.index("# A identidade de DB")] + '\ncat "$RESOLVED_CONFIG_JSON"\n')
+        (pipeline / "sample_steps.sh").write_text(steps[:steps.index("# Preflight de IDs")] + '\ncat "$RESOLVED_CONFIG_JSON"\n')
         config = shell_root / "fixture.env"
         config.write_text('THREADS=4\nASSEMBLER=velvet\nEVIDENCE_COMPOSITE_DB=previous\nEVIDENCE_SUBJECT_LABELS=previous\nEVIDENCE_PANEL_FASTA=previous\nEVIDENCE_PANEL_INDEX=previous\n')
         work = shell_root / "work"

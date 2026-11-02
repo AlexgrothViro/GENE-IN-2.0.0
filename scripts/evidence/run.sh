@@ -414,6 +414,7 @@ state_stage assembly "done" "Contigs fornecidos pelo fluxo 1.1; conclusão ofici
 state_stage initial_blast running
 if [[ -n "$COMPOSITE_DB" ]]; then
   [[ -n "$SUBJECT_LABELS" && -s "$SUBJECT_LABELS" ]] || { echo "[FATAL] composite DB requires --subject-labels" >&2; false; }
+  python3 "$EVIDENCE_DIR/check_competitive_labels.py" --database "$COMPOSITE_DB" --labels "$SUBJECT_LABELS"
   command -v blastn >/dev/null 2>&1 || { echo "[FATAL] blastn not found" >&2; false; }
   SHORT_RAW="$OUTDIR/blastn-short.tsv"; BLASTN_RAW="$OUTDIR/blastn.tsv"
   BLAST_SHORT_WORD_SIZE=7; BLAST_SHORT_REWARD=1; BLAST_SHORT_PENALTY=-3

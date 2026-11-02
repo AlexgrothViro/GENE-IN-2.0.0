@@ -12,6 +12,7 @@ from common import sha256_file
 from evidence_dashboard import LIBRARY_MODES
 from validate_mapping_reference import validate as validate_mapping_reference
 from verify_blast_database_manifest import verify as verify_database
+from check_competitive_labels import check_subject_labels
 from resolve_config import TIER_A_FIELDS, TIER_B_FIELDS, resolve_pipeline_config
 
 
@@ -101,10 +102,11 @@ def optional_evidence_inputs(params, *, root=None):
                 raise ValueError("Manifesto do banco competitivo ou tabela de rótulos não encontrado.")
             count = verify_database(prefix)
             labels = load_labels(str(labels_path))
+            identifiers = check_subject_labels(prefix, labels)
             categories = {row["category"] for row in labels.values()}
             if "TARGET_VIRUS" not in categories or not categories - {"TARGET_VIRUS", "UNLABELED"}:
                 raise ValueError("Os rótulos precisam identificar alvo e pelo menos uma referência competidora.")
-            details["competition"] = {"database": str(prefix), "index_files": count, "labels": str(labels_path), "labels_sha256": sha256_file(labels_path), "label_count": len(labels)}
+            details["competition"] = {"database": str(prefix), "index_files": count, "labels": str(labels_path), "labels_sha256": sha256_file(labels_path), **identifiers}
         if details["remapping_enabled"]:
             reference = local_path(effective["remapping_reference"], root, "a referência de remapeamento")
             index = local_path(effective["remapping_index"], root, "o índice de remapeamento")

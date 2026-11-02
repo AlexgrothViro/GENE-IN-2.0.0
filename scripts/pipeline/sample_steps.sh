@@ -62,6 +62,8 @@ python3 "${SCRIPT_DIR}/resolve_config.py" pipeline \
   "${RESOLVE_CONFIG_INCOMING_ARGS[@]}" "${RESOLVE_CONFIG_SOURCED_ARGS[@]}" "${RESOLVE_CONFIG_CLI_ARGS[@]}" \
   --out "$RESOLVED_CONFIG_JSON"
 eval "$(python3 "${SCRIPT_DIR}/resolve_config.py" emit-shell --in "$RESOLVED_CONFIG_JSON")"
+# Preflight de IDs na seção DATABASE_PREFLIGHT, antes do processamento.
+
 # A identidade de DB só muda por ambiente/CLI (nunca pelo config file
 # sozinho); quando isso ocorre, REF_FASTA/BOWTIE2_INDEX de um DB anterior
 # ficam obsoletos e não devem sobreviver para os targets do Makefile.
@@ -255,6 +257,11 @@ if [[ -n "$EVIDENCE_COMPOSITE_DB" ]]; then
   if ! python3 "$SCRIPTS_ROOT/evidence/verify_blast_database_manifest.py" "$EVIDENCE_COMPOSITE_DB"; then
     record_database_preflight_failure "Banco composto não corresponde ao manifesto; reconstrua o banco."
   fi
+  if ! COMPETITIVE_LABEL_PREFLIGHT="$(python3 "$SCRIPTS_ROOT/evidence/check_competitive_labels.py" \
+      --database "$EVIDENCE_COMPOSITE_DB" --labels "$EVIDENCE_SUBJECT_LABELS" 2>&1)"; then
+    record_database_preflight_failure "$COMPETITIVE_LABEL_PREFLIGHT"
+  fi
+  printf '%s\n' "$COMPETITIVE_LABEL_PREFLIGHT"
 fi
 export PIPELINE_ETAPA="QC_PREFLIGHT"
 if [[ $AUTO_INSTALL -eq 1 ]]; then
