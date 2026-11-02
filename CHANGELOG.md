@@ -1,5 +1,12 @@
 # Histórico de entregas
 
+## 2026-11-02 — painel, opções por execução e caminhos com espaços
+
+- Comparação competitiva/decoy e remapeamento ficam disponíveis como opções independentes, inicialmente desligadas, na análise individual. O painel confere os arquivos e registra as escolhas; o [manual](docs/decoy-e-remapeamento.md) descreve campos e limites.
+- Ferramentas do painel reunidas por função, inspeção pendente atualizada automaticamente e comparação distinguindo cobertura não medida de zero medido. Montagem individual preserva formato de entrada e relatório próprio.
+- Preparo de índices aceita espaços também no nome do prefixo BLAST, conservando o nome interno dos componentes e um alias para o caminho escolhido. Cache compartilhado permite verificar cada indexador sem reconstrução desnecessária.
+- Integração selecionada diretamente da main, sem Builder. Algoritmos, limiares, versão de software 2.0.2 e contrato Evidence permanecem preservados. Os novos testes reais verificam somente criação, inspeção e integridade de índices artificiais; não demonstram validação biológica integral.
+
 ## 2026-10-27 — correções de primeira execução (QA)
 
 - O diagnóstico de ambiente não anuncia sucesso quando `blastdbcmd` falha, aborta ou o manifesto JSON é inválido/corrompido; encerra com mensagem PT/EN e código diferente de zero.

@@ -1,4 +1,5 @@
 import { h, statusPanel } from "./components.js";
+import { comparisonMetricValue } from "./adapters.js";
 
 function token(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -133,7 +134,7 @@ export function locusIntervalChart(rows = []) {
 
 export function comparisonMetricChart(runs = [], key, label) {
   const COLORS = chartColors();
-  const data = runs.map((run) => ({ run: run.run_id, value: number(run.metrics?.[key]) })).filter((row) => row.value != null);
+  const data = runs.map((run) => ({ run: run.run_id, value: number(comparisonMetricValue(run, key)) })).filter((row) => row.value != null);
   if (!data.length) return statusPanel("unavailable", `${label} não medido`, "Nenhuma execução possui valor numérico para esta métrica.");
   return mountPlot({
     y: { label: label, grid: true, zero: true }, x: { label: "Execução" },

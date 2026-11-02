@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 REPO_ROOT="$(cd "$SCRIPTS_ROOT/.." && pwd)"
 
+# shellcheck disable=SC1091
 source "${SCRIPTS_ROOT}/lib/common.sh"
 
 SAMPLE=""
@@ -70,6 +71,8 @@ done
 if [[ -z "$SAMPLE" ]]; then
   log_error "O parâmetro --sample é obrigatório."
 fi
+[[ "$METHOD" == "auto" || "$METHOD" == "iqtree" || "$METHOD" == "iqtree2" ]] || \
+  log_error "Método da análise complementar inválido: '$METHOD'."
 
 # Carregar arquivo de ambiente
 # shellcheck disable=SC1091
@@ -134,7 +137,7 @@ mkdir -p "$(dirname "$REPORT_PATH")"
 if [[ ! -s "$HITS_FA" ]]; then
   log_warn "Nenhum contig atendeu aos critérios de filtragem (identidade >= ${MIN_PIDENT}%, comprimento >= ${MIN_ALN_LEN} pb)."
   cat <<EOF > "$REPORT_PATH"
-# Relatório de Validação Filogenética Avançada - Amostra: ${SAMPLE}
+# Análise filogenética complementar - Amostra: ${SAMPLE}
 
 **Data da Análise:** $(date '+%Y-%m-%d %H:%M:%S')
 **Foco da Análise:** Recuperação e avaliação de contigs candidatos curtos e ultra-curtos.
@@ -152,8 +155,8 @@ if [[ ! -s "$HITS_FA" ]]; then
 > *   Verifique se o comprimento mínimo (${MIN_ALN_LEN} pb) não está muito alto ou se o alinhamento com a referência possui cobertura suficiente.
 
 ### Próximos Passos Recomendados
-1. Reduza o limiar de comprimento mínimo para 20 pb (se ainda não fez).
-2. Verifique o arquivo original de alinhamento BLAST para conferir a identidade dos hits gerados.
+1. Confira as entradas e a configuração registrada antes de planejar outra execução.
+2. Verifique os alinhamentos e os motivos de exclusão dos candidatos.
 EOF
   log_info "Relatório vazio gerado com sucesso em: $REPORT_PATH"
   exit 0
@@ -186,8 +189,6 @@ fi
 log_info "Alinhamento concluído com sucesso: $ALN_OUT"
 
 TREE_OUT="${OUTDIR}/tree.nwk"
-[[ "$METHOD" == "auto" || "$METHOD" == "iqtree" || "$METHOD" == "iqtree2" ]] || \
-  log_error "Método '$METHOD' indisponível. FastTree não é aceito para posicionamento filogenético V2."
 
 IQTREE_BIN=""
 if command -v iqtree2 >/dev/null 2>&1; then
@@ -215,7 +216,7 @@ Os critérios operacionais de comprimento, sítios informativos, qualidade, pain
 
 Consulte o arquivo de auditoria: \`${PHYLOGENY_GATE}\`.
 
-Este bloqueio não altera a classificação oficial Gene-In 1.1.
+Este bloqueio não altera os resultados da análise principal.
 EOF
   exit 0
 fi
@@ -238,7 +239,7 @@ CHOSEN_METHOD="IQ-TREE ${IQTREE_MAJOR} / ModelFinder / UFBoot 1000"
 log_info "Posicionamento filogenético exploratório gerado: $TREE_OUT"
 
 cat <<EOF > "$REPORT_PATH"
-# Relatório de Validação Filogenética Avançada - Amostra: ${SAMPLE}
+# Análise filogenética complementar - Amostra: ${SAMPLE}
 
 **Data da Análise:** $(date '+%Y-%m-%d %H:%M:%S')
 **Foco Principal:** Recuperação e avaliação filogenética exploratória de fragmentos curtos e ultra-curtos.
@@ -247,7 +248,7 @@ cat <<EOF > "$REPORT_PATH"
 *   **Identidade Mínima:** ${MIN_PIDENT}%
 *   **Comprimento Mínimo:** ${MIN_ALN_LEN} pb (adequado para fragmentos curtos de até 20 pb)
 *   **Método Filogenético Utilizado:** ${CHOSEN_METHOD}
-*   **Total de Contigs Validados:** **$(grep -c "^>" "$HITS_FA" || true)**
+*   **Total de Contigs Incluídos:** **$(grep -c "^>" "$HITS_FA" || true)**
 
 ---
 
@@ -306,7 +307,7 @@ A árvore foi gerada usando **${CHOSEN_METHOD}** após aprovação dos gates ope
 > Para visualizar a árvore Newick filogenética de forma interativa, você pode carregar o arquivo \`${TREE_OUT}\` em plataformas como [iTOL (Interactive Tree Of Life)](https://itol.embl.de/) ou [Phylo.io](https://phylo.io/).
 
 ---
-**Gene-In 1.0 - Módulo de Análise Filogenética Avançada**
+**Gene-In - Análise filogenética complementar**
 EOF
 
 log_info "Relatório gerado com sucesso em: $REPORT_PATH"

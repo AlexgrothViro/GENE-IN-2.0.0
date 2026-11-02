@@ -1,4 +1,4 @@
-import { createStore, loadActiveJob } from "./state.js";
+import { createStore, loadActiveJob, OPTIONAL_EVIDENCE_DEFAULTS } from "./state.js";
 import { startRouter } from "./router.js";
 import { normalizeStatus } from "./adapters.js";
 import { getJSON } from "./api.js";
@@ -12,6 +12,7 @@ export const appStore = createStore({
   context: { environment: "Verificando", database: "Não selecionado", sample: "Não selecionada", job: "Aguardando" },
   activeJob: loadActiveJob(),
   wizard: {
+    ...OPTIONAL_EVIDENCE_DEFAULTS,
     step: 0, loaded: false, environment: null, databases: [], samples: [],
     database: "", dbQuery: "", sample: "", assembler: "consensus", kmer: "31", hostMode: "none",
     qcAdapterR1: "", qcAdapterR2: "",
@@ -20,6 +21,7 @@ export const appStore = createStore({
 
 let routeRequest = 0;
 let currentRoute = { route: "home", params: new URLSearchParams() };
+let routeReadController;
 getJSON("/api/preflight").then((environment) => {
   appStore.set({ context: { environment: environment.ok ? "Pronto" : "Com pendências" }, wizard: { environment } });
 }).catch(() => appStore.set({ context: { environment: "Indisponível" } }));
@@ -44,9 +46,10 @@ function updateContext(state) {
 }
 
 function updateNavigation(route) {
-  const operational = new Set(["home", "new", "track", "results", "history"]);
+  const tools = new Set(["advanced", "analytics", "compare", "research", "contigs", "settings"]);
+  const activeRoute = tools.has(route) ? "advanced" : route;
   document.querySelectorAll("[data-route]").forEach((link) => {
-    if (operational.has(route) && link.dataset.route === route) link.setAttribute("aria-current", "page");
+    if (link.dataset.route === activeRoute) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   });
   const nav = document.getElementById("primary-navigation");
@@ -54,7 +57,7 @@ function updateNavigation(route) {
   document.getElementById("menu-toggle").setAttribute("aria-expanded", "false");
 }
 
-async function viewFor(route, params) {
+async function viewFor(route, params, readOptions) {
   const rerender = () => renderRoute(currentRoute);
   if (route === "home") return renderHome(appStore);
   if (route === "new") return renderNewAnalysis(appStore, rerender);
@@ -62,8 +65,8 @@ async function viewFor(route, params) {
   if (route === "results") return renderResults(appStore, params.get("run") || "");
   if (route === "history") return renderHistory(appStore);
   if (route === "advanced") return renderAdvanced(appStore);
-  if (route === "analytics") return renderAnalytics(params.get("run") || "");
-  if (route === "compare") return renderComparison(params.getAll("run"));
+  if (route === "analytics") return renderAnalytics(params.get("run") || "", readOptions);
+  if (route === "compare") return renderComparison(params.getAll("run"), readOptions);
   if (route === "research") return renderResearch();
   if (route === "contigs") return renderContigs(appStore);
   if (route === "settings") return renderSettings(appStore);
@@ -71,6 +74,8 @@ async function viewFor(route, params) {
 }
 
 export async function renderRoute(routeState) {
+  routeReadController?.abort();
+  routeReadController = new AbortController();
   currentRoute = routeState;
   const request = ++routeRequest;
   const root = document.getElementById("route-view");
@@ -79,7 +84,13 @@ export async function renderRoute(routeState) {
   updateNavigation(routeState.route);
   appStore.set({ route: routeState.route });
   try {
-    const view = await viewFor(routeState.route, routeState.params);
+    const view = await viewFor(routeState.route, routeState.params, {
+      signal: routeReadController.signal,
+      onPending: () => {
+        if (request === routeRequest) root.replaceChildren(statusPanel("loading", "Conferindo arquivos da análise", "A página será atualizada automaticamente quando a conferência terminar."));
+      },
+      onRetry: () => renderRoute(currentRoute),
+    });
     if (request !== routeRequest) return;
     root.replaceChildren(view);
     root.setAttribute("aria-busy", "false");
@@ -87,7 +98,7 @@ export async function renderRoute(routeState) {
     document.getElementById("app-main").focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
   } catch (error) {
-    if (request !== routeRequest) return;
+    if (request !== routeRequest || error.name === "AbortError") return;
     root.replaceChildren(statusPanel("error", "Não foi possível abrir esta área", error.payload?.error || error.payload || error.message));
     root.setAttribute("aria-busy", "false");
   }

@@ -9,6 +9,8 @@
 | Conhecer utilidades e começar | [Guia inicial](../README.md) |
 | Instalar e abrir no Windows/WSL ou Linux | [Instalação e reprodução](installation-reproducibility.md) |
 | Preparar bancos, executar e interpretar arquivos | [Uso e bancos](uso-e-bancos.md) |
+| Selecionar decoy e remapeamento na análise individual | [Manual das opções](decoy-e-remapeamento.md) |
+| Conhecer as ferramentas reunidas no painel | [Painel e opções](painel-e-opcoes.md) |
 | Preparar e informar índice do hospedeiro | [Hospedeiro](HOSPEDEIRO_BETA.md) |
 | Resolver erros | [Solução de problemas](solucao-de-problemas.md) |
 | Entender portas e servidor local | [Portas do painel](dashboard-portas.md) |

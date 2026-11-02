@@ -92,6 +92,7 @@ TIER_A_FIELDS = (
     "EVIDENCE_UMI_MODE", "EVIDENCE_ROLE", "EVIDENCE_EXPECTED_TARGET",
     "EVIDENCE_COMPOSITE_DB", "EVIDENCE_SUBJECT_LABELS", "EVIDENCE_PANEL_FASTA",
     "EVIDENCE_PANEL_INDEX", "EVIDENCE_RUN_ID", "EVIDENCE_BATCH_ID",
+    "EVIDENCE_COMPETITION_ENABLED", "EVIDENCE_REMAPPING_ENABLED",
     "SEARCH_PROFILES",
 )
 
@@ -385,6 +386,18 @@ def resolve_pipeline_config(
         "min_qcov": _int("SHORT_FRAGMENT_MIN_QCOV", env_first("SHORT_FRAGMENT_MIN_QCOV"), minimum=0, maximum=100),
     }
     composite_db = env_first("EVIDENCE_COMPOSITE_DB")
+    subject_labels = env_first("EVIDENCE_SUBJECT_LABELS")
+    panel_fasta = env_first("EVIDENCE_PANEL_FASTA")
+    panel_index = env_first("EVIDENCE_PANEL_INDEX")
+    competition_enabled = env_first("EVIDENCE_COMPETITION_ENABLED").lower()
+    remapping_enabled = env_first("EVIDENCE_REMAPPING_ENABLED").lower()
+    for name, value in (("EVIDENCE_COMPETITION_ENABLED", competition_enabled), ("EVIDENCE_REMAPPING_ENABLED", remapping_enabled)):
+        if value not in {"", "true", "false"}:
+            raise ConfigError(f"{name} deve ser true ou false.")
+    if competition_enabled == "false":
+        composite_db = subject_labels = ""
+    if remapping_enabled == "false":
+        panel_fasta = panel_index = ""
 
     # --- Search profile contract (GEN-013) ---
     # Selecting C is the *only* thing that turns SHORT_FRAGMENT_MODE and
@@ -393,6 +406,8 @@ def resolve_pipeline_config(
     # that asks for nothing still performs A and only A. Selecting B never
     # invents a panel: it requires the composite DB the operator curated.
     requested_profiles = parse_search_profiles(env_first("SEARCH_PROFILES"))
+    if competition_enabled == "false":
+        requested_profiles = [profile for profile in requested_profiles if profile != "B"]
     if "C" in requested_profiles:
         short_fragment["mode"] = True
         short_fragment["blast"] = True
@@ -469,9 +484,9 @@ def resolve_pipeline_config(
             "role": env_first("EVIDENCE_ROLE"),
             "expected_target": env_first("EVIDENCE_EXPECTED_TARGET"),
             "composite_db": composite_db,
-            "subject_labels": env_first("EVIDENCE_SUBJECT_LABELS"),
-            "panel_fasta": env_first("EVIDENCE_PANEL_FASTA"),
-            "panel_index": env_first("EVIDENCE_PANEL_INDEX"),
+            "subject_labels": subject_labels,
+            "panel_fasta": panel_fasta,
+            "panel_index": panel_index,
             "run_id": env_first("EVIDENCE_RUN_ID"),
             "batch_id": env_first("EVIDENCE_BATCH_ID"),
             # Reservation tokens are never read from config/picornavirus.env:
