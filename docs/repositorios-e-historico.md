@@ -1,6 +1,22 @@
 # Gene-In: repositório principal e histórico
 
-O desenvolvimento desta entrega está em [AlexgrothViro/GENE-IN-2.0.0](https://github.com/AlexgrothViro/GENE-IN-2.0.0). O nome anterior `gene-in-estabilizado` não é este repositório. Esta árvore identifica a versão de software **2.0.2**, proposta de integração de memória sobre a distribuição 2.0.1; consulte a [nota da integração](integracao-memoria-22out.md), o [histórico](../CHANGELOG.md), o [guia de uso](../README.md) e os [limites científicos](validacao.md). A rc1 e seus registros permanecem preservados como etapa anterior.
+O desenvolvimento desta entrega está em [AlexgrothViro/GENE-IN-2.0.0](https://github.com/AlexgrothViro/GENE-IN-2.0.0). O nome anterior `gene-in-estabilizado` não é este repositório. Esta árvore identifica a versão de software **2.0.2**, com memória em disco, painel e fechamento de engenharia incorporados à main; consulte a [nota da integração](integracao-memoria-22out.md), o [histórico](../CHANGELOG.md), o [guia de uso](../README.md) e os [limites científicos](validacao.md). A rc1 e seus registros permanecem preservados como etapa anterior.
+
+## Escolha da distribuição — consulta de 03/11/2026
+
+A linha principal é `GENE-IN-2.0.0/main`. A base desta revisão é o commit `42fa5177a6c5f11d4ea3a6bf0f842104c6a7a5d7`, que incorporou o PR #10 em 03/11. Sua árvore coincide com a candidata de engenharia `602d64f`. Os checks dessa base passaram: [Engineering tests](https://github.com/AlexgrothViro/GENE-IN-2.0.0/actions/runs/41728803998), incluindo integridade e E2E de software, e [ShellCheck](https://github.com/AlexgrothViro/GENE-IN-2.0.0/actions/runs/41728803840). A [instalação independente](instalacao-do-zero.md) informa exatamente o pacote e o ambiente ensaiados; ela não é uma instalação repetida a cada commit.
+
+| Linha examinada | Decisão de engenharia |
+|---|---|
+| `GENE-IN-2.0.0/main` | Base da distribuição: reúne painel, memória, instalação, contratos e CI atual. Fixar o commit usado. |
+| `gene-in-estabilizado/main` | Histórico de desenvolvimento; a main de 22/10 antecede as correções posteriores da distribuição. |
+| Linhas 1.0/1.1 e Alpha | Histórico de maio–julho; não substituem a distribuição atual. |
+| `trabalho/software-builder` / PR #6 | Proposta separada em rascunho, divergente da main. Inclui Builder 0.4.0 e mudanças adicionais; não foi integrada em bloco. |
+| `genein-builder` e `REA_GENE-IN_Geneious` | Produtos complementares, com escopo próprio; não são versões completas do Gene-In. |
+
+Dessa comparação foram aproveitadas apenas melhorias independentes de identidade e empacotamento: commit nos arquivos gerados por Git, fallback de identificação pelo `RELEASE.json` e tratamento de metadados que não são objetos JSON. O empacotador grava a identidade dentro dos arquivos ZIP/TAR sem alterar a fonte. As demais mudanças das branches não estão implicitamente aprovadas ou incluídas.
+
+O número **2.0.2** identifica o software; `VERSION=2.0.0-alpha.2` identifica o contrato Evidence congelado. Para distinguir revisões, registre o commit de `genein --version`/`SOURCE_COMMIT` e o hash do pacote. A conferência de engenharia não altera o status da validação científica.
 
 ## Endereços atuais
 
