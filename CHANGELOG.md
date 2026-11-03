@@ -1,5 +1,12 @@
 # Histórico de entregas
 
+## 2026-11-03 — fechamento de engenharia e identidade dos pacotes
+
+- PR #10 incorporado à main: herança das opções do painel, recusa de configurações incompatíveis, conferência de IDs, cobertura restaurada e evidências de instalação/E2E de software. Resultados científicos não são reclassificados.
+- Integração selecionada de melhorias de distribuição das candidatas: `git archive` preenche `SOURCE_COMMIT`; o empacotador inclui o mesmo commit em `RELEASE.json` e preserva a fonte original.
+- Identificação rejeita marcadores não expandidos e tokens inválidos; metadados JSON não objetos conservam o fallback para a versão em `pyproject.toml`, sem exceção inesperada.
+- Índice de repositórios e READMEs atualizados. Software 2.0.2 e contrato Evidence preservados; Builder continua separado.
+
 ## 2026-11-02 — painel, opções por execução e caminhos com espaços
 
 - Comparação competitiva/decoy e remapeamento ficam disponíveis como opções independentes, inicialmente desligadas, na análise individual. O painel confere os arquivos e registra as escolhas; o [manual](docs/decoy-e-remapeamento.md) descreve campos e limites.

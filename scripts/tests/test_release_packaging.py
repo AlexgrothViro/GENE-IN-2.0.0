@@ -44,6 +44,7 @@ class ReleasePackagingTests(unittest.TestCase):
         out = Path(self.tmp.name) / 'delivery'
         record = build_release(self.root, out)
         self.assertEqual(record['source_commit'], self.git('rev-parse', 'HEAD').decode().strip())
+        self.assertNotIn('source_commit', json.loads((self.root / 'RELEASE.json').read_text()))
         with zipfile.ZipFile(out / record['source_archive_name']) as archive:
             names = archive.namelist()
             self.assertIn('Gene-In-2.0.0rc1/fixture.fa', names)
@@ -52,6 +53,8 @@ class ReleasePackagingTests(unittest.TestCase):
                 record['source_commit'],
             )
             self.assertFalse(any(s in n for n in names for s in ('config.env', 'untracked', '__pycache__', '.git/')))
+            packaged_release = json.loads(archive.read('Gene-In-2.0.0rc1/RELEASE.json'))
+            self.assertEqual(packaged_release['source_commit'], record['source_commit'])
             self.assertEqual(archive.getinfo('Gene-In-2.0.0rc1/nested/run.sh').external_attr >> 16 & 0o777, 0o755)
             manifest = archive.read('Gene-In-2.0.0rc1/SOURCE_MANIFEST.sha256').decode()
             for line in manifest.splitlines():

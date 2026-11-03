@@ -31,6 +31,15 @@ def git(root: Path, *args: str) -> bytes:
     return subprocess.check_output(['git', '-c', 'core.autocrlf=true', *args], cwd=root)
 
 
+def stamp_release_json(data: bytes, sha: str) -> bytes:
+    """Record the packaged commit inside RELEASE.json without editing the checkout."""
+    payload = json.loads(data.decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("RELEASE.json must be an object")
+    payload["source_commit"] = sha
+    return (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+
+
 def build_release(root: Path, output: Path, name: str | None = None) -> dict:
     root, output = root.resolve(), output.resolve()
     version = tomllib.loads((root / 'pyproject.toml').read_text(encoding='utf-8'))['project']['version']
@@ -45,6 +54,7 @@ def build_release(root: Path, output: Path, name: str | None = None) -> dict:
     sha = git(root, 'rev-parse', 'HEAD').decode().strip()
     epoch = int(git(root, 'show', '-s', '--format=%ct', 'HEAD'))
     entries = []
+    original_release = None
     for record in git(root, 'ls-files', '--stage', '-z').split(b'\0'):
         if not record:
             continue
@@ -62,6 +72,9 @@ def build_release(root: Path, output: Path, name: str | None = None) -> dict:
             # descarte/ keeps internal notes in Git without shipping them.
             continue
         data = path.read_bytes()
+        if rel == 'RELEASE.json':
+            original_release = data
+            data = stamp_release_json(data, sha)
         # Zip extraction on Windows can lose execute bits. Preserve all nested
         # shell entry points in both archives, including scripts added later.
         permission = 0o755 if mode == '100755' or rel.endswith('.sh') else 0o644
@@ -110,6 +123,10 @@ def build_release(root: Path, output: Path, name: str | None = None) -> dict:
     # Refuse a package if source content changed while it was being archived.
     for rel, data, _ in entries:
         if rel in {MANIFEST, 'SOURCE_COMMIT'}:
+            continue
+        if rel == 'RELEASE.json':
+            if original_release is None or (root / rel).read_bytes() != original_release:
+                raise ValueError(f'source changed during packaging: {rel}')
             continue
         if (root / rel).read_bytes() != data:
             raise ValueError(f'source changed during packaging: {rel}')

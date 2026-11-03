@@ -6,7 +6,9 @@ O Gene-In recupera e organiza sequências candidatas de dados de sequenciamento 
 
 **2.0.2 — integração de memória sobre a distribuição 2.0.1, na main desde o PR #2 (`572a827`); o instalador (PR #3) também já está na main.** O contrato Evidence continua `2.0.0-alpha.2`, com recuperação `fragment_recovery_20_100_v1` e revisão `scientific_review_20261005_v1`. A [nota da integração](docs/integracao-memoria-22out.md) explica o processamento em disco, as saídas preservadas e o alcance das verificações. Parâmetros, perfis e locks científicos permanecem os mesmos.
 
-Este é o [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Entregas publicadas ficam em [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). O [índice de repositórios e histórico](docs/repositorios-e-historico.md) guarda os nomes anteriores.
+**Atualização de engenharia de 03/11/2026:** a main também incorpora o painel e os caminhos com espaços do [PR #9](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pull/9) e o fechamento de configuração, testes e instalação do [PR #10](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pull/10). A versão de software continua **2.0.2**; identifique a revisão pelo commit, pois há várias revisões com esse número. Os testes de software e a instalação têm evidências próprias; o estudo científico continua separado.
+
+Este é o [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Entregas publicadas ficam em [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). O [índice de repositórios e histórico](docs/repositorios-e-historico.md) explica a escolha da distribuição e guarda os nomes anteriores.
 
 ## Começo rápido
 
