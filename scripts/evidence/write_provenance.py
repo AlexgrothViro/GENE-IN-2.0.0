@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import platform
 import shutil
 import subprocess
@@ -48,6 +49,38 @@ def tool_record(command: str) -> dict[str, str]:
     }
 
 
+EFFECTIVE_BLAST_KEYS = (
+    "blast_evalue",
+    "blastn_word_size",
+    "blast_gapopen",
+    "blast_gapextend",
+    "blastn_reward",
+    "blastn_penalty",
+    "blast_max_target_seqs",
+    "blast_database_sequence_count",
+)
+
+
+def apply_effective_blast(values: dict, manifest: Path) -> None:
+    """Fill blast parameters that are still unresolved from the search profile.
+
+    The profile is the same artifact written at
+    ``results/blast/<sample>_search_profile.json``. Existing concrete values
+    are kept.
+    """
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    effective = payload.get("effective_blast")
+    if not isinstance(effective, dict):
+        return
+    for key in EFFECTIVE_BLAST_KEYS:
+        current = values.get(key)
+        incoming = effective.get(key)
+        if incoming in (None, ""):
+            continue
+        if current in (None, "", "unknown"):
+            values[key] = str(incoming)
+
+
 def distribution_identity() -> dict[str, str]:
     """Software version and commit, kept apart from the Evidence contract."""
     root = Path(__file__).resolve().parents[2]
@@ -63,6 +96,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Write reproducible evidence-v2 provenance")
     parser.add_argument("--out", required=True)
     parser.add_argument("--config", required=True)
+    parser.add_argument("--search-profile", default="", help="results/blast/<sample>_search_profile.json")
     parser.add_argument("--value", action="append", default=[], metavar="KEY=VALUE")
     parser.add_argument("--artifact", action="append", default=[], metavar="KEY=PATH")
     args = parser.parse_args()
@@ -74,6 +108,16 @@ def main() -> None:
             parser.error("--value must use KEY=VALUE")
         key, value = item.split("=", 1)
         values[key] = value
+    if args.search_profile:
+        profile = Path(args.search_profile)
+        if not profile.is_file():
+            parser.error(f"search profile does not exist: {profile}")
+        apply_effective_blast(values, profile)
+    missing = [key for key in EFFECTIVE_BLAST_KEYS if values.get(key) in (None, "", "unknown")]
+    if args.search_profile and missing:
+        parser.error(
+            "search profile did not resolve blast parameters: " + ", ".join(missing)
+        )
     artifacts = {}
     for item in args.artifact:
         if "=" not in item:

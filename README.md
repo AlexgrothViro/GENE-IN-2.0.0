@@ -66,7 +66,7 @@ O pacote não inclui bancos biológicos nem dados de amostras. Consulte o [guia 
 | **SPAdes** | Opção individual de montagem |
 | **metaSPAdes** | Opção individual para entradas compatíveis |
 | **MULTI** | Reúne Velvet, SPAdes e metaSPAdes |
-| **Gene-In Builder** | Opção adicional, instalada separadamente; integração com a versão 0.4.0 |
+| **Gene-In Builder** | Opção adicional. Não pode ser instalada sem acesso concedido ao repositório privado |
 
 O Builder é selecionável no painel e na CLI. Ele não substitui os componentes do MULTI. Consulte [instalação, seleção e limitações do Builder](docs/guia/montadores.md).
 
@@ -82,11 +82,24 @@ A [referência de uso](docs/guia/uso.md) explica a relação entre painel, CLI e
 
 ## Saídas
 
+Os arquivos `candidate_*` só existem com `--evidence-v2`. Eles ficam em `results/evidence/runs/<run_id>/`, dentro da pasta de saída da execução.
+
+```bash
+bash bundle/run.sh genein run \
+  --sample amostra \
+  --r1 /dados/R1.fastq.gz \
+  --r2 /dados/R2.fastq.gz \
+  --blast-db /dados/blastdb/banco \
+  --output-root /dados/saida_nova \
+  --assembler velvet \
+  --evidence-v2
+```
+
 | Arquivo | Conteúdo |
 |---|---|
-| `candidate_sequences.fa` | Sequências candidatas |
+| `candidate_sequences.fa` | Sequências candidatas (`results/evidence/runs/<run_id>/`) |
 | `candidate_sequences.tsv` | Alinhamentos reportados |
-| `candidate_summary.tsv` | Resumo por candidato |
+| `candidate_summary.tsv` | Resumo por candidato. Registros do Builder com menos de 200 pb trazem `fragmento_curto=true` e `rotulo=REVIEW` |
 | `candidate_queries.json` | Proveniência das sequências consultadas |
 | `execution.json` | Recibo técnico da execução iniciada pela CLI |
 

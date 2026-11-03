@@ -95,7 +95,7 @@ def force_evidence_state_terminal(run_id, status, message, failure_type=None, fa
     service = get_evidence_service()
     state_path = service.evidence_root / "state" / f"{run_id}.json"
     state = read_evidence_job_state(run_id)
-    resource_failure = failure_type in {"MEMORY_EXHAUSTED", "PROCESS_KILLED", "PROCESS_TERMINATED"}
+    resource_failure = failure_type in {"MEMORY_EXHAUSTED", "DISK_FULL", "PROCESS_KILLED", "PROCESS_TERMINATED"}
     if not state or (state["status"] in TERMINAL_RUN_STATUSES and not (state["status"] in {"failed", "cancelled"} and resource_failure)):
         return
     job_metadata = jobs.get(run_id, {})
@@ -292,7 +292,11 @@ def mark_cancellation_failure(job_id, action, message) -> None:
 def classify_evidence_failure(output, returncode=None):
     """Map early process failures to stable machine-readable categories."""
     full_text = "\n".join(output or []).lower()
-    if any(token in full_text for token in ("out of memory", "out-of-memory", "memoryerror", "cannot allocate memory", "std::bad_alloc", "oom-kill")):
+    if returncode == 134 or any(token in full_text for token in ("std::bad_alloc", "bad_alloc")):
+        return "MEMORY_EXHAUSTED"
+    if any(token in full_text for token in ("errno 27", "errno 28", "enospc", "efbig", "no space left on device", "database or disk is full")):
+        return "DISK_FULL"
+    if any(token in full_text for token in ("out of memory", "out-of-memory", "memoryerror", "cannot allocate memory", "oom-kill")):
         return "MEMORY_EXHAUSTED"
     if returncode in {-9, 137} or "sigkill" in full_text:
         return "PROCESS_KILLED"
@@ -1191,7 +1195,8 @@ def run_job(job_id, action, params):
             else:
                 failure_type = classify_evidence_failure(output_buf, rc)
                 failure_message = {
-                    "MEMORY_EXHAUSTED": "Falta de memória durante o processamento. Libere memória antes de repetir.",
+                    "MEMORY_EXHAUSTED": "Falta de memória (std::bad_alloc ou saída 134). Próximo passo: libere memória e repita a execução.",
+                    "DISK_FULL": "Falta de espaço em disco (Errno 27 ou 28). Próximo passo: libere espaço em disco e repita a execução.",
                     "PROCESS_KILLED": "Processo morto por SIGKILL. Pode ter sido encerrado pelo sistema por falta de memória ou por uma ação externa; confira o log do sistema.",
                     "PROCESS_TERMINATED": "Processo interrompido por SIGTERM (sinal de término externo).",
                 }.get(failure_type, f"Processo encerrou com código de erro {rc}")

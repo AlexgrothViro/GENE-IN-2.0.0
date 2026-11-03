@@ -1,3 +1,4 @@
+import json
 import sys
 import tempfile
 import unittest
@@ -61,8 +62,9 @@ class SyntheticBenchmarkTests(unittest.TestCase):
                     False,
                 )
                 candidate = result["candidates"][0]
-                self.assertEqual(result["evidence_level"], "DETECTED")
-                self.assertEqual(result["reported_conclusion"], "EVIDENCE_RECOVERED")
+                self.assertEqual(result["evidence_level"], "REVIEW")
+                self.assertEqual(result["reported_conclusion"], "CANDIDATES_FOR_REVIEW")
+                self.assertNotIn("DETECTED", json.dumps(result))
                 self.assertEqual(
                     candidate["candidate_class"],
                     "EXPLORATORY_FRAGMENT" if length < 50 else "LOCUS_CANDIDATE",

@@ -1,4 +1,5 @@
 """Commit identity for a Git checkout and for a package without .git."""
+import json
 from pathlib import Path
 
 import pytest
@@ -22,6 +23,28 @@ def test_checkout_reports_head():
 def test_package_without_git_reads_source_commit_file(tmp_path):
     (tmp_path / "SOURCE_COMMIT").write_text("42a2c135666337b025b9cd1cdde5b8ae208831f6\n", encoding="utf-8")
     assert source_commit(tmp_path) == "42a2c135666337b025b9cd1cdde5b8ae208831f6"
+
+
+def test_package_without_git_reads_release_json_commit(tmp_path):
+    payload = {"software_version": "2.0.2", "source_commit": "af7cb088b3013df07fd3abfaa23ba89dba42cf6b"}
+    (tmp_path / "RELEASE.json").write_text(json.dumps(payload), encoding="utf-8")
+    assert source_commit(tmp_path) == payload["source_commit"]
+
+
+def test_git_archive_fills_source_commit():
+    import subprocess
+    import tarfile
+    import io
+    blob = subprocess.check_output(["git", "-C", str(ROOT), "archive", "HEAD", "SOURCE_COMMIT"])
+    with tarfile.open(fileobj=io.BytesIO(blob)) as archive:
+        text = archive.extractfile("SOURCE_COMMIT").read().decode()
+    assert source_commit_text_is_head(text)
+
+
+def source_commit_text_is_head(text: str) -> bool:
+    import subprocess
+    head = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
+    return text.strip() == head and "$Format" not in text
 
 
 def test_missing_identity_is_explicit(tmp_path):

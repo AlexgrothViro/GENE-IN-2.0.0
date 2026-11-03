@@ -51,6 +51,8 @@ class ReleasePackagingTests(unittest.TestCase):
                 archive.read('Gene-In-2.0.0rc1/SOURCE_COMMIT').decode().strip(),
                 record['source_commit'],
             )
+            packaged_release = json.loads(archive.read('Gene-In-2.0.0rc1/RELEASE.json'))
+            self.assertEqual(packaged_release['source_commit'], record['source_commit'])
             self.assertFalse(any(s in n for n in names for s in ('config.env', 'untracked', '__pycache__', '.git/')))
             self.assertEqual(archive.getinfo('Gene-In-2.0.0rc1/nested/run.sh').external_attr >> 16 & 0o777, 0o755)
             manifest = archive.read('Gene-In-2.0.0rc1/SOURCE_MANIFEST.sha256').decode()

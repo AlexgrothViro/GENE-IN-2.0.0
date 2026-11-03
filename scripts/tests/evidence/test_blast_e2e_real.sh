@@ -78,8 +78,10 @@ if provenance["parameters"]["blast_database_sequence_count"] != "2":
     raise SystemExit("BLAST database sequence count is incorrect")
 if not competitive or competitive[0]["specificity_status"] != "TARGET_SPECIFIC":
     raise SystemExit("complete synthetic panel did not produce TARGET_SPECIFIC")
-if evidence["analysis_outcome"] != "EVIDENCE_RECOVERED" or not evidence["candidates"]:
+if evidence["analysis_outcome"] != "CANDIDATES_FOR_REVIEW" or evidence["evidence_level"] != "REVIEW" or not evidence["candidates"]:
     raise SystemExit("real BLAST candidate was lost from canonical evidence")
+if "DETECTED" in json.dumps(evidence):
+    raise SystemExit("uncontrolled BLAST run must not carry DETECTED")
 candidate = evidence["candidates"][0]
 if candidate["candidate_class"] != "LOCUS_CANDIDATE":
     raise SystemExit("real BLAST candidate has an unexpected candidate class")

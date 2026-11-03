@@ -45,7 +45,7 @@ class SoftwareVersionTests(unittest.TestCase):
                 self.assertNotIn(phrase, text, relative)
         leia = (ROOT / "LEIA_PRIMEIRO.md").read_text(encoding="utf-8")
         self.assertIn("SOURCE_COMMIT", leia)
-        self.assertIn("não inclui banco BLAST", leia)
+        self.assertIn("não inclui bancos biológicos", leia)
         self.assertIn("build_release.py", leia)
 
 

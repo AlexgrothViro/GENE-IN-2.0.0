@@ -10,7 +10,7 @@
 | SPAdes | Montador individual |
 | metaSPAdes | Montador individual, com requisitos próprios de entrada |
 | MULTI | Combinação de Velvet, SPAdes e metaSPAdes |
-| Gene-In Builder | Montador adicional, instalado separadamente |
+| Gene-In Builder | Montador adicional. Não pode ser instalado sem acesso concedido ao repositório privado |
 
 O Builder não é acrescentado automaticamente ao MULTI. A seleção é explícita, no painel ou na CLI.
 
@@ -24,7 +24,7 @@ bash bundle/install_builder.sh
 
 O instalador cria `builder-env` dentro do diretório definido por `GENEIN_BUNDLE_DIR`, ou em `~/.gene-in-bundle/builder-env` no padrão. Esse ambiente é separado do ambiente principal: os locks e as dependências científicas existentes não são substituídos.
 
-O código do Builder está fixado no commit `af7cb088b3013df07fd3abfaa23ba89dba42cf6b`. O repositório é privado; a conta usada pelo Git deve ter acesso. Não coloque tokens em arquivos do projeto.
+A 0.4.0 fixada é o commit `af7cb088b3013df07fd3abfaa23ba89dba42cf6b`, na branch main do Builder. A tag `genein-builder-0.4.0` aponta para `4e44b68`, outro commit. A instalação usa o commit da main, não essa tag. O repositório é privado; sem acesso concedido, o Builder não pode ser instalado. Não coloque tokens em arquivos do projeto.
 
 As dependências Python do ambiente opcional são resolvidas pelo pip. O commit fixa a fonte do Builder, não um lock completo de suas dependências transitivas. Registre o ambiente usado quando precisar reproduzir uma execução.
 

@@ -13,7 +13,9 @@ try:
         load_public_activation_policy,
         policy_identity,
     )
-    from .evidence_contract import PIPELINE_VERSION, SCHEMA_VERSION, validate_document
+    from .evidence_contract import (
+        PIPELINE_VERSION, SCHEMA_VERSION, labels_for_control, validate_document,
+    )
 except ImportError:
     from common import as_float, as_int, format_intervals, interval_size, parse_intervals, read_tsv, write_json_atomic
     from activation_policy import (
@@ -22,7 +24,9 @@ except ImportError:
         load_public_activation_policy,
         policy_identity,
     )
-    from evidence_contract import PIPELINE_VERSION, SCHEMA_VERSION, validate_document
+    from evidence_contract import (
+        PIPELINE_VERSION, SCHEMA_VERSION, labels_for_control, validate_document,
+    )
 
 
 def _required_section(thresholds: dict, name: str) -> dict:
@@ -142,13 +146,49 @@ def reference_coverage(candidates):
     return output
 
 
+_SHORT_BUILDER_BP = 200
+
+
+def only_short_builder_evidence(
+    candidates: list[dict],
+    fragments: list[dict] | None,
+) -> bool:
+    """True when every candidate query is a Builder sequence shorter than 200 bp."""
+    if not candidates or not fragments:
+        return False
+    lengths: dict[str, int] = {}
+    builder_only: dict[str, bool] = {}
+    for row in fragments:
+        query = str(row.get("qseqid") or "")
+        if not query:
+            continue
+        try:
+            length = int(float(row.get("qlen") or 0))
+        except (TypeError, ValueError):
+            length = 0
+        lengths[query] = max(lengths.get(query, 0), length)
+        tokens = {part.strip() for part in str(row.get("assembly_method") or "").lower().split(",") if part.strip()}
+        is_builder = "builder" in tokens
+        builder_only[query] = is_builder if query not in builder_only else builder_only[query] and is_builder
+    queries = [query for candidate in candidates for query in (candidate.get("query_ids") or [])]
+    if not queries:
+        return False
+    for query in queries:
+        if query not in lengths or not builder_only.get(query):
+            return False
+        if lengths[query] < 1 or lengths[query] >= _SHORT_BUILDER_BP:
+            return False
+    return True
+
+
 def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str, str]],
              read_support: list[dict[str, str]], coverage: list[dict[str, str]],
              control_status: str, library_mode: str, shadow: bool = False,
              provenance: dict | None = None, run_id: str | None = None,
              policy: dict | None = None,
              assembly_concordance: dict | None = None,
-             historical_compatibility: str | None = None) -> dict:
+             historical_compatibility: str | None = None,
+             fragments: list[dict] | None = None) -> dict:
     if not isinstance(shadow, bool):
         raise ValueError("shadow_mode must be boolean")
     if historical_compatibility is not None:
@@ -281,10 +321,26 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         coverage_status = "COVERAGE_AVAILABLE" if coverage_passes else "INSUFFICIENT_COVERAGE"
     else:
         coverage_status = "COVERAGE_UNAVAILABLE"
-    analysis_outcome = "EVIDENCE_RECOVERED" if candidates else "NO_EVIDENCE_RECOVERED"
+    short_builder_only = only_short_builder_evidence(candidates, fragments)
+    analysis_outcome, evidence_level = labels_for_control(
+        control_status,
+        has_candidates=bool(candidates),
+        only_short_builder=short_builder_only,
+    )
     caveats = [*support_caveats, *coverage_caveats]
     if candidates:
-        caveats.append("Candidatos recuperados para triagem humana; DETECTED é o código de recuperação, não confirmação de origem viral ou espécie.")
+        if evidence_level == "DETECTED":
+            caveats.append("Candidatos recuperados para triagem humana; DETECTED é o código de recuperação, não confirmação de origem viral ou espécie.")
+        elif short_builder_only:
+            caveats.append(
+                "A única evidência é de fragmento curto do Builder, abaixo de 200 pb. "
+                "O rótulo da execução permanece REVIEW."
+            )
+        else:
+            caveats.append(
+                "Candidatos recuperados para triagem humana. "
+                "O rótulo da execução permanece REVIEW."
+            )
         if specificity_status == "NON_TARGET_BEST":
             caveats.append("O melhor alinhamento competitivo é de um não alvo; os candidatos permanecem disponíveis como sinais não confirmados.")
         elif specificity_status != "TARGET_SPECIFIC":
@@ -293,7 +349,7 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
             caveats.append("Suporte por reads não foi medido para todos os candidatos; zero em métricas indisponíveis não representa uma medição.")
         if any(c["support"]["status"] == "SUPPORT_AVAILABLE" and c["support"]["unique_templates"] == 0 for c in candidates):
             caveats.append("Há candidato com suporte medido e zero templates independentes registrados.")
-        if control_status not in {"CONTROL_BELOW_SAMPLE", "CONTROL_NOT_DETECTED", "CONTROL_NOT_APPLICABLE"}:
+        if control_status not in {"CONTROL_BELOW_SAMPLE", "CONTROL_NOT_DETECTED"}:
             caveats.append("Controles ausentes ou com ressalvas; a recuperação não constitui confirmação biológica.")
         caveats.append("A atribuição taxonômica é condicionada ao painel e aos hits reportados; preferência no painel não confirma espécie.")
         if any(r["status"] != "AVAILABLE" for r in aligned_references):
@@ -340,7 +396,7 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         "run_id": resolved_run_id,
         "execution_status": "done",
         "analysis_outcome": analysis_outcome,
-        "evidence_level": "DETECTED" if candidates else "NO_SIGNAL",
+        "evidence_level": evidence_level,
         "shadow_mode": shadow,
         "reported_conclusion": (
             analysis_outcome
@@ -361,7 +417,11 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         "controls": {"status": control_status, "metrics": {}},
         "provenance": provenance,
         "scientific_revision": SCIENCE_REVISION,
-        "evidence_label": "Candidatos recuperados" if candidates else "Nenhum candidato recuperado",
+        "evidence_label": (
+            "Candidatos para revisão" if evidence_level == "REVIEW"
+            else "Candidatos recuperados" if candidates
+            else "Nenhum candidato recuperado"
+        ),
         "reference_coverage": {
             "unit": "UNION_REFERENCE_POSITIONS_PER_REFERENCE_SEGMENT",
             "biological_origin_confirmed": False,
@@ -410,6 +470,7 @@ def main() -> None:
     policy_group.add_argument("--experimental-activation-policy")
     parser.add_argument("--profiles")
     parser.add_argument("--assembly-concordance")
+    parser.add_argument("--fragments")
     args = parser.parse_args()
     read_support = read_tsv(args.read_support) if args.read_support and Path(args.read_support).stat().st_size else []
     coverage = read_tsv(args.coverage) if args.coverage and Path(args.coverage).stat().st_size else []
@@ -428,10 +489,12 @@ def main() -> None:
     if args.assembly_concordance:
         with open(args.assembly_concordance, "r", encoding="utf-8", errors="strict") as handle:
             assembly_concordance = json.load(handle)
+    fragments = read_tsv(args.fragments) if args.fragments and Path(args.fragments).stat().st_size else None
     result = classify(
         args.sample, read_tsv(args.loci), read_tsv(args.competitive), read_support, coverage,
         args.control_status, args.library_mode, policy["shadow_mode"],
         provenance, args.run_id, policy, assembly_concordance,
+        fragments=fragments,
     )
     write_json_atomic(args.out, result)
 

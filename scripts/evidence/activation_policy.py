@@ -155,7 +155,9 @@ def validate_policy_identity(
 
 
 def conclusion_for(policy: dict, analysis_outcome: str) -> str:
-    if analysis_outcome not in {"EVIDENCE_RECOVERED", "NO_EVIDENCE_RECOVERED", "NOT_EVALUABLE"}:
+    if analysis_outcome not in {
+        "EVIDENCE_RECOVERED", "CANDIDATES_FOR_REVIEW", "NO_EVIDENCE_RECOVERED", "NOT_EVALUABLE",
+    }:
         raise ValueError(f"unsupported analysis outcome: {analysis_outcome}")
     return analysis_outcome
 

@@ -70,7 +70,7 @@ def fastq(tmp_path, name):
 def test_r1_without_r2_is_rejected(cli_repo, tmp_path):
     args = build_args(r1=fastq(tmp_path, "r1.fq"), output_root=tmp_path / "out",
                        blast_db=blast_db(tmp_path), sample="s1")
-    with pytest.raises(ValueError, match="--r1 and --r2"):
+    with pytest.raises(ValueError, match=r"junto com --r2|--r1 requires --r2"):
         pipeline_cli.prepare(args, cli_repo)
 
 
