@@ -103,10 +103,23 @@ def _identifier(root: Path, kind: str, value: str) -> str:
 
 _OOM_TOKENS = (
     "out of memory", "out-of-memory", "memoryerror",
-    "cannot allocate memory", "std::bad_alloc", "oom-kill",
+    "cannot allocate memory", "std::bad_alloc", "bad_alloc", "oom-kill",
+)
+_DISK_TOKENS = (
+    "errno 27", "errno 28", "enospc", "efbig",
+    "no space left on device", "file too large", "database or disk is full",
+)
+_MEMORY_NEXT = (
+    "Falta de memória (std::bad_alloc ou saída 134). "
+    "Próximo passo: libere memória e repita a execução."
+)
+_DISK_NEXT = (
+    "Falta de espaço em disco (Errno 27 ou 28). "
+    "Próximo passo: libere espaço em disco e repita a execução."
 )
 _KILLED_MESSAGES = {
-    "MEMORY_EXHAUSTED": "Falta de memória durante o processamento. Libere memória antes de repetir.",
+    "MEMORY_EXHAUSTED": _MEMORY_NEXT,
+    "DISK_FULL": _DISK_NEXT,
     "PROCESS_KILLED": "Processo morto por SIGKILL. Pode ter sido encerrado pelo sistema por falta de memória ou por uma ação externa; confira o log do sistema.",
     "PROCESS_TERMINATED": "Processo interrompido por SIGTERM (sinal de término externo).",
 }
@@ -144,6 +157,10 @@ def classify_launcher_failure(code: int, excerpt: str = "") -> tuple[str, str | 
     when a wrapper collapses the signal into exit code 1.
     """
     lowered = excerpt.lower()
+    if code == 134 or "std::bad_alloc" in lowered or "bad_alloc" in lowered:
+        return "MEMORY_EXHAUSTED", None, _KILLED_MESSAGES["MEMORY_EXHAUSTED"]
+    if any(token in lowered for token in _DISK_TOKENS):
+        return "DISK_FULL", None, _KILLED_MESSAGES["DISK_FULL"]
     if any(token in lowered for token in _OOM_TOKENS):
         return "MEMORY_EXHAUSTED", None, _KILLED_MESSAGES["MEMORY_EXHAUSTED"]
     if code == 137 or "sigkill" in lowered:
@@ -194,7 +211,10 @@ def prepare(args, root: Path) -> tuple[Path, list[str], dict[str, str], str]:
     if os.name != "posix":
         raise ValueError("genein run requires Linux/WSL and the Gene-In bioinformatics environment.")
     if bool(args.r1) != bool(args.r2):
-        raise ValueError("--r1 and --r2 must be supplied together.")
+        raise ValueError(
+            "Informe --r1 junto com --r2. Os dois arquivos da biblioteca pareada são necessários. "
+            "/ --r1 requires --r2."
+        )
     if args.batch_manifest:
         if any((args.r1, args.r2, args.single, args.contigs, args.library_mode, args.umi_mode, args.role, args.expected_target)):
             raise ValueError("Batch inputs and sample metadata must come from the batch manifest.")
@@ -209,9 +229,15 @@ def prepare(args, root: Path) -> tuple[Path, list[str], dict[str, str], str]:
     _host_arguments(args)
     output = Path(args.output_root).expanduser().resolve()
     if output.is_relative_to(root):
-        raise ValueError("--output-root must be outside the Gene-In source tree.")
+        raise ValueError(
+            "A pasta de saída precisa ficar fora da fonte do Gene-In. "
+            "/ --output-root must be outside the Gene-In source tree."
+        )
     if output.exists():
-        raise ValueError(f"Output directory already exists; choose a new execution directory: {output}")
+        raise ValueError(
+            f"A pasta de saída já existe; escolha um diretório novo: {output} "
+            f"/ Output directory already exists; choose a new one: {output}"
+        )
     run_id = _identifier(root, "run-id", args.run_id or str(uuid.uuid4()))
     db = str(Path(args.blast_db).expanduser().resolve())
     try:
@@ -298,6 +324,18 @@ def _command_sample(command: list) -> str:
     return ""
 
 
+def _remove_pipeline_locks(output: Path) -> None:
+    """Drop tmp/*.pipeline.lock left behind when the run is cancelled."""
+    scratch = output / "tmp"
+    if not scratch.is_dir():
+        return
+    for path in scratch.glob("*.pipeline.lock"):
+        try:
+            path.unlink()
+        except OSError:
+            pass
+
+
 def run(args) -> int:
     try:
         root = source_root()
@@ -347,6 +385,9 @@ def run(args) -> int:
             receipt["failed_stage"] = failed_stage
         if failure_message:
             receipt["failure_message"] = failure_message
+            print(f"[FATAL] {failure_message}", file=sys.stderr)
+        if code == 130:
+            _remove_pipeline_locks(output)
         if code != 130:
             print(
                 f"[AVISO] Diretório de saída criado e preservado (não reutilizado): {output} / "
