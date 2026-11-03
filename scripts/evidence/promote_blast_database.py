@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import fcntl
 import hashlib
+import sys
 import json
 import os
 import shutil
@@ -32,6 +33,21 @@ def produced_files(prefix: Path) -> list[Path]:
     if not files or any(path.stat().st_size == 0 for path in files):
         raise ValueError("makeblastdb produced no complete non-empty file set")
     return files
+
+
+def warn_legacy_generations(destination: Path, active_root: Path) -> None:
+    legacy = destination.parent / f".{destination.name}.generations"
+    if legacy == active_root:
+        return
+    try:
+        count = sum(path.is_dir() for path in legacy.iterdir())
+    except FileNotFoundError:
+        return
+    except OSError as error:
+        print(f"[WARN] Não foi possível listar gerações antigas em {legacy}: {error}", file=sys.stderr)
+        return
+    if count:
+        print(f"[WARN] Gerações antigas órfãs: total={count}; diretório={legacy}. Arquivos preservados; revise a limpeza manual.", file=sys.stderr)
 
 
 def restore_bytes(path: Path, previous: bytes | None) -> None:
@@ -155,6 +171,7 @@ def promote(build_dir: Path, destination: Path, reference: Path,
                 # Cleanup is non-transactional housekeeping after a validated commit;
                 # it must never roll back or invalidate the newly active database.
                 pass
+            warn_legacy_generations(destination, generation_root)
             return generation_manifest
         except Exception:
             alias_path.unlink(missing_ok=True)

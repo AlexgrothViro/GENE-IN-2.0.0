@@ -292,8 +292,11 @@ smoke-test: test-env ptv-fasta-legacy blastdb bowtie2-index
 	BLAST_DB="$(BLAST_DB)" BOWTIE2_INDEX="$(BOWTIE2_INDEX)" \
 	$(SCRIPTS_DIR)/ops/smoke_test.sh
 
-.PHONY: test test-engineering test-operational test-validation
+.PHONY: test test-engineering test-operational test-validation e2e
 test: test-engineering
+
+e2e:
+	python3 scripts/tests/run_optional_e2e.py
 
 test-engineering:
 	bash scripts/tests/run_test_suite.sh engineering

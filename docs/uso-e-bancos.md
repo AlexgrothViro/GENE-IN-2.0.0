@@ -7,7 +7,7 @@ Instale o [ambiente científico](installation-reproducibility.md) e abra `ABRIR_
 ## Utilidades e escolha de entrada
 
 No painel, a análise individual oferece comparação competitiva e remapeamento
-independentes e inicialmente desligados. Consulte o [manual das opções](decoy-e-remapeamento.md)
+independentes, inicialmente herdados da configuração. Consulte o [manual das opções](decoy-e-remapeamento.md)
 para selecionar e conferir arquivos já preparados. As ferramentas complementares
 estão reunidas em **Ferramentas**; veja o [guia do painel](painel-e-opcoes.md).
 

@@ -13,8 +13,8 @@ biológicos nem uma validação dos resultados produzidos por esses métodos.
 | Comparação competitiva (decoy) | Permite examinar correspondências com referências que representam explicações alternativas para o resultado |
 | Remapeamento de reads | Acrescenta informações sobre o suporte das leituras originais à referência selecionada |
 
-As opções são independentes e começam desligadas. Cada escolha vale para
-a execução atual. O programa não seleciona automaticamente referências,
+As opções são independentes e começam em **Usar configuração**. Cada escolha
+explícita vale para a execução atual. O programa não seleciona automaticamente referências,
 contaminantes, tipo de biblioteca ou identificadores moleculares.
 
 ## Arquivos que precisam estar disponíveis
@@ -37,8 +37,22 @@ explícita. A escolha não cria UMI nem substitui controles de lote.
 ## Onde preencher
 
 Abra **Nova análise** e vá à etapa **Configuração**. A seção
-**Verificações adicionais (opcionais)** contém as duas caixas de seleção.
-Ao selecionar uma opção, seus campos ficam disponíveis.
+**Verificações adicionais (opcionais)** oferece três estados para cada opção:
+
+| Estado | Efeito |
+|---|---|
+| Usar configuração | Não envia um seletor de presença; herda o arquivo e o ambiente na mesma prioridade da CLI. O painel mostra o valor efetivo e os caminhos herdados |
+| Ligado nesta execução | Envia `true`; permite editar os caminhos da execução. Caminhos ainda não editados usam os valores exibidos da configuração |
+| Desligado nesta execução | Envia `false` e desliga explicitamente a opção, mesmo quando o arquivo a habilita |
+
+Ao voltar para **Usar configuração**, alterações locais dos campos deixam de
+ser overrides. Os campos herdados ficam somente para leitura. A revisão mostra
+o valor efetivo e a origem da escolha. Configuração sem seletores continua
+usando a presença dos caminhos como nas chamadas anteriores.
+
+Se `SEARCH_PROFILES` pedir B e a competição estiver explicitamente desligada,
+a execução é rejeitada com `perfil B pedido, mas a competição está desligada`.
+O pedido B não é retirado em silêncio.
 
 | Campo | O que informar |
 |---|---|
@@ -56,13 +70,17 @@ conferidas na instalação utilizada, inclusive quanto a espaços.
 ## Conferir antes de continuar
 
 Use **Conferir arquivos opcionais** depois de preencher os campos selecionados.
-Se a opção estiver desligada, seus caminhos não são enviados como seleção
-ativa, mesmo que tenham sido preenchidos anteriormente.
+Se houver desligamento explícito, os caminhos não são enviados como seleção
+ativa. Se a opção não for alterada, a conferência usa os caminhos herdados.
 
 A conferência examina:
 
 - Presença do manifesto e integridade dos componentes registrados do banco.
 - Estrutura dos rótulos, identificadores duplicados e categorias aceitas pelo contrato.
+- Igualdade dos conjuntos de IDs do banco e dos rótulos. IDs do banco sem rótulo
+  ou rótulos sem ID no banco interrompem a execução; a mensagem informa o total
+  e até 20 exemplos por categoria. A inspeção usa os IDs de acesso retornados
+  pela interface pública do banco, sem executar busca.
 - Correspondência entre as sequências da referência e as do índice de remapeamento.
 - Tipo de biblioteca informado entre as opções aceitas.
 
@@ -100,7 +118,7 @@ ele pode estar vazio ou registrar indisponibilidade.
 
 **Revisar antes de repetir** recupera as escolhas da execução. Confira os
 caminhos novamente, pois os arquivos podem ter mudado. Na revisão de uma
-execução antiga sem os novos seletores, as novas opções começam desligadas.
+execução antiga sem os novos seletores, as opções começam em **Usar configuração**.
 
 Preserve parâmetros, versões, manifestos, rótulos, referências e logs junto dos
 resultados. A interpretação continua condicionada às entradas e às referências;

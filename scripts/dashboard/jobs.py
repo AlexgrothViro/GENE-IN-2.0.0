@@ -46,7 +46,7 @@ from dashboard.config import (
     LOG_DIR, RUNS_DIR, REPO_ROOT, iso_now, _DB_ALIAS, host_env_from_params,
     runtime_environment,
     load_config_env, validate_config_updates, save_config_env,
-    get_repo_root, get_runs_dir, user_config_env_path,
+    get_repo_root, get_runs_dir, user_config_env_path, get_config_env_path,
 )
 from genein.paths import resolve_blast_db
 
@@ -846,7 +846,7 @@ def build_command(action, params):
         if params.get("expected_target"):
             env["EVIDENCE_EXPECTED_TARGET"] = str(params["expected_target"])
         if "GENEIN_CONFIG_FILE" not in os.environ:
-            env["GENEIN_CONFIG_FILE"] = str(user_config_env_path())
+            env["GENEIN_CONFIG_FILE"] = str(get_config_env_path())
         # The per-run directory below is only the output root. The database is
         # resolved before that swap. DB came from the panel, so BLAST_DB in
         # picornavirus.env (the example ships blastdb/custom) is ignored, the

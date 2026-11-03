@@ -39,7 +39,12 @@ class OptionalEvidenceTests(unittest.TestCase):
         binary.parent.mkdir()
         binary.write_text('#!/usr/bin/env python3\nfrom pathlib import Path\nimport sys\nprefix=sys.argv[1]\nassert all(Path(prefix+"."+part+".bt2").is_file() for part in ("1","2","3","4","rev.1","rev.2"))\nprint(Path(prefix+".fixture.fa").read_text(),end="")\n')
         binary.chmod(0o755)
-        patched = patch.dict(os.environ, {"PATH": str(binary.parent) + os.pathsep + os.environ.get("PATH", "")})
+        database_inspector = binary.parent / "blastdbcmd"
+        database_inspector.write_text('#!/usr/bin/env python3\nprint("fixture-target\\nfixture-other")\n')
+        database_inspector.chmod(0o755)
+        self.config = self.root / "fixture.env"
+        self.config.write_text("")
+        patched = patch.dict(os.environ, {"PATH": str(binary.parent) + os.pathsep + os.environ.get("PATH", ""), "GENEIN_CONFIG_FILE": str(self.config)})
         patched.start()
         self.addCleanup(patched.stop)
         self.params = {"competition_enabled": True, "competition_db": str(self.prefix), "competition_labels": str(self.labels), "remapping_enabled": True, "remapping_reference": str(self.reference), "remapping_index": str(self.index), "library_mode": "unknown"}
@@ -59,7 +64,7 @@ class OptionalEvidenceTests(unittest.TestCase):
 
     def test_off_overrides_previous_config_and_does_not_read_inactive_paths(self):
         env, _ = optional_evidence_inputs({"competition_enabled": False, "remapping_enabled": False, "competition_db": "/missing"})
-        old = {"SEARCH_PROFILES": "B", "EVIDENCE_COMPOSITE_DB": "old", "EVIDENCE_SUBJECT_LABELS": "old", "EVIDENCE_PANEL_FASTA": "old", "EVIDENCE_PANEL_INDEX": "old"}
+        old = {"EVIDENCE_COMPOSITE_DB": "old", "EVIDENCE_SUBJECT_LABELS": "old", "EVIDENCE_PANEL_FASTA": "old", "EVIDENCE_PANEL_INDEX": "old"}
         resolved = resolve_pipeline_config(repo_root=str(ROOT), sample_name="fixture", incoming=env, sourced=old, cli={})
         self.assertEqual(resolved["search_profile"]["selected"], "A")
         for name in ("composite_db", "subject_labels", "panel_fasta", "panel_index"):
@@ -125,7 +130,7 @@ class OptionalEvidenceTests(unittest.TestCase):
         steps = (ROOT / "scripts/pipeline/sample_steps.sh").read_text()
         (pipeline / "sample_steps.sh").write_text(steps[:steps.index("# A identidade de DB")] + '\ncat "$RESOLVED_CONFIG_JSON"\n')
         config = shell_root / "fixture.env"
-        config.write_text('THREADS=4\nASSEMBLER=velvet\nSEARCH_PROFILES=B\nEVIDENCE_COMPOSITE_DB=previous\nEVIDENCE_SUBJECT_LABELS=previous\nEVIDENCE_PANEL_FASTA=previous\nEVIDENCE_PANEL_INDEX=previous\n')
+        config.write_text('THREADS=4\nASSEMBLER=velvet\nEVIDENCE_COMPOSITE_DB=previous\nEVIDENCE_SUBJECT_LABELS=previous\nEVIDENCE_PANEL_FASTA=previous\nEVIDENCE_PANEL_INDEX=previous\n')
         work = shell_root / "work"
         work.mkdir()
         for selected in (False, True):

@@ -8,6 +8,7 @@
 |---|---|
 | Conhecer utilidades e começar | [Guia inicial](../README.md) |
 | Instalar e abrir no Windows/WSL ou Linux | [Instalação e reprodução](installation-reproducibility.md) |
+| Consultar o ensaio independente de instalação | [Registro de instalação](instalacao-do-zero.md) |
 | Preparar bancos, executar e interpretar arquivos | [Uso e bancos](uso-e-bancos.md) |
 | Selecionar decoy e remapeamento na análise individual | [Manual das opções](decoy-e-remapeamento.md) |
 | Conhecer as ferramentas reunidas no painel | [Painel e opções](painel-e-opcoes.md) |
