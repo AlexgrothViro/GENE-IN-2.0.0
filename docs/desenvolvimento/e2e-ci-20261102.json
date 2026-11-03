@@ -1,0 +1,92 @@
+{
+  "head_sha": "6f7639f6f1c11f0505a5a91ae0ba8be8093de5f0",
+  "run_id": 41548793609,
+  "jobs": [
+    {
+      "id": 125630858606,
+      "name": "optional-e2e",
+      "conclusion": "success"
+    },
+    {
+      "id": 125630858925,
+      "name": "engineering",
+      "conclusion": "success"
+    },
+    {
+      "id": 125630859030,
+      "name": "index-integrity",
+      "conclusion": "success"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 13189847233,
+      "name": "index-metadata",
+      "size_in_bytes": 998,
+      "url": "https://api.github.com/repos/AlexgrothViro/GENE-IN-2.0.0/actions/artifacts/13189847233",
+      "archive_download_url": "https://api.github.com/repos/AlexgrothViro/GENE-IN-2.0.0/actions/artifacts/13189847233/zip",
+      "expired": false,
+      "created_at": "2026-11-02T23:53:42Z",
+      "expires_at": "2027-01-31T23:53:15Z",
+      "updated_at": "2026-11-02T23:53:42Z",
+      "digest": "sha256:f12e8905e01e9d40194cff0ea2f04fe7f97907d285b5a5a65286db2f6a61c520",
+      "workflow_run": {
+        "id": 41548793609,
+        "repository_id": 1427177626,
+        "head_repository_id": 1427177626,
+        "head_branch": "codex/fechamento-engenharia-20261102",
+        "head_sha": "6f7639f6f1c11f0505a5a91ae0ba8be8093de5f0"
+      }
+    },
+    {
+      "id": 13188759780,
+      "name": "optional-e2e",
+      "size_in_bytes": 135117008,
+      "url": "https://api.github.com/repos/AlexgrothViro/GENE-IN-2.0.0/actions/artifacts/13188759780",
+      "archive_download_url": "https://api.github.com/repos/AlexgrothViro/GENE-IN-2.0.0/actions/artifacts/13188759780/zip",
+      "expired": false,
+      "created_at": "2026-11-02T23:54:36Z",
+      "expires_at": "2027-01-31T23:53:15Z",
+      "updated_at": "2026-11-02T23:54:36Z",
+      "digest": "sha256:7c68eda12fa671dae3f4a147d865c92d74e6e9b59dd13b950baddd3acee95ab7",
+      "workflow_run": {
+        "id": 41548793609,
+        "repository_id": 1427177626,
+        "head_repository_id": 1427177626,
+        "head_branch": "codex/fechamento-engenharia-20261102",
+        "head_sha": "6f7639f6f1c11f0505a5a91ae0ba8be8093de5f0"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "job_id": 125630858606,
+      "lines": [
+        "2026-11-02T23:53:45.1484810Z [PASS] software-c0-r0: código 0, saídas e recibo íntegros",
+        "2026-11-02T23:53:59.4417523Z [PASS] software-c0-r1: código 0, saídas e recibo íntegros",
+        "2026-11-02T23:54:10.4930579Z [PASS] software-c1-r0: código 0, saídas e recibo íntegros",
+        "2026-11-02T23:54:26.1929764Z [PASS] software-c1-r1: código 0, saídas e recibo íntegros",
+        "2026-11-02T23:54:26.2018179Z [PASS] E2E de software: quatro execuções reais; sem avaliação de desempenho biológico.",
+        "2026-11-02T23:54:36.5891605Z Artifact download URL: https://github.com/AlexgrothViro/GENE-IN-2.0.0/actions/runs/41548793609/artifacts/13188759780"
+      ]
+    },
+    {
+      "job_id": 125630858925,
+      "lines": [
+        "2026-11-02T23:53:53.9187641Z 610 passed, 15 skipped, 320 subtests passed in 23.49s",
+        "2026-11-02T23:54:11.8362257Z 138 passed in 17.69s",
+        "2026-11-02T23:54:19.8849760Z # tests 31",
+        "2026-11-02T23:54:19.8850134Z # pass 31",
+        "2026-11-02T23:54:19.8850314Z # fail 0",
+        "2026-11-02T23:54:19.8850700Z # skipped 0"
+      ]
+    },
+    {
+      "job_id": 125630859030,
+      "lines": [
+        "2026-11-02T23:53:41.4604215Z 16 passed, 4 subtests passed in 3.13s",
+        "2026-11-02T23:53:42.5606101Z Artifact download URL: https://github.com/AlexgrothViro/GENE-IN-2.0.0/actions/runs/41548793609/artifacts/13189847233"
+      ]
+    }
+  ]
+}

@@ -1,84 +1,99 @@
-# Instalação independente: registro de ensaio
+# Instalação do zero: sequência executada
 
-## FATO
+## FATO — ensaio de 02/11/2026
 
-A aplicação foi instalada a partir do pacote identificado abaixo em um venv
-novo, sem herança de site-packages e com user site desabilitado. Antes da
-instalação, somente `pip 24.0` estava presente. O carregamento de `genein` e
-`jsonschema` estava indisponível nesse ambiente inicial.
+Instalação a partir do pacote do commit `6f7639f6f1c11f0505a5a91ae0ba8be8093de5f0`, em bundle novo: `/tmp/genein-pr10-package-clean-vjmjuo_q/bundle`. O diretório do bundle e o prefixo não existiam antes. O instalador do pacote baixou o micromamba e provisionou as ferramentas externas e dependências Python fixadas; não reutilizou ferramentas ou bibliotecas do ambiente Gene-In anterior. O SO e seus utilitários básicos já existiam: este ensaio não representa a instalação de um SO novo.
 
-- Sistema: Ubuntu 24.04.3 LTS, WSL2, x86_64.
-- Kernel/plataforma registrada: `Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39`.
-- Python: `3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]`.
-- Origem: pacote ZIP extraído em diretório com espaços; instalação editável
-  pelo pip do venv, com dependências obtidas do registro oficial PyPI.
-- Commit do código ensaiado: `a0d70f67d881c13cdf6bf03de7586f7f351bd9a0` (quarto commit da revisão).
-- Abertura do painel e leitura de `/`, `/api/evidence/options` e `/js/state.js`:
-  HTTP 200 nas três rotas. Nenhuma análise foi iniciada.
-- Identidade da CLI igual ao commit do pacote; módulo Gene-In Builder ausente.
+- SO: Ubuntu 24.04.3 LTS, WSL2, Linux x86_64.
+- Plataforma registrada: `Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39`.
+- User site Python desabilitado; identidade do prefixo verificada; módulo Gene-In Builder ausente.
+- Lock Conda: `environment.linux-64.explicit.txt`, SHA-256 `9b9f528479b493c8f1cc024e455ddd710ae87ccb59f1cf1731370781bff5d60d`.
+- Lock Python: `requirements.lock.txt`, SHA-256 `99b784404e6bb614589ab62c02802b492a0760c2024bb83fadd2b0b8fef23d3e`.
+- Instalação, `pip check`, painel HTTP e **quatro execuções de `make e2e` passaram**. Não houve validação científica.
 
-### Versões das ferramentas externas
-
-| Ferramenta | Saída de versão |
+| Ferramenta | Versão instalada no prefixo novo |
 |---|---|
-| blastn | `blastn: 2.12.0+` |
-| bowtie2 | `/usr/bin/bowtie2-align-s version 2.5.2` |
-| samtools | `samtools 1.19.2` |
-| fastp | `fastp 0.23.4` |
+| Python | `3.11.15` |
+| BLAST+ | `2.17.0` |
+| Bowtie2 | `2.5.5` |
+| samtools | `1.24` |
+| fastp | `1.3.6` |
+| Velvet | `1.2.10` |
 
-Essas ferramentas já estavam disponíveis no host e foram apenas consultadas.
-O venv não herdou bibliotecas Python do host. Este ensaio não representa a
-provisão de um sistema operacional novo com todas as ferramentas externas.
+As saídas brutas de versão, caminhos e hashes dos executáveis estão no [manifesto E2E](desenvolvimento/e2e-manifest-20261102.json). Os builds Conda e pacotes Python estão no [recibo de instalação](desenvolvimento/instalacao-independente-e2e.json).
 
-### Dependências Python após a instalação
+### Pacote efetivamente instalado
 
-| Pacote | Versão |
-|---|---|
-| attrs | 26.1.0 |
-| genein | 2.0.2 |
-| jsonschema | 4.26.0 |
-| jsonschema-specifications | 2025.9.1 |
-| pip | 24.0 |
-| referencing | 0.37.0 |
-| rpds-py | 2026.9.1 |
-| typing_extensions | 4.16.0 |
+- `Gene-In-2.0.2-PR10-e2e-isolado.zip`: `6e8f3918e629872d0ffb598e855e4f9e59804d756420b9a804fa46a7afa9187f`
+- `Gene-In-2.0.2-PR10-e2e-isolado.tar.gz`: `0d4cb876c20f40cdc282f0b3fd239fb1cff49256e15d7f2f30d6725dbdee2bf2`
 
-### Hashes dos pacotes de ensaio
+ZIP e TAR tiveram todos os membros conferidos por hash; o ZIP também teve CRC conferido. O manifesto de fonte foi verificado antes da instalação e novamente depois do E2E: **516 arquivos passaram nas duas verificações**. Os relatórios deste ensaio entraram em commit posterior; os hashes acima identificam o pacote ensaiado, não um arquivo contendo seu próprio hash. Nenhuma tag ou Release foi criada.
 
-- `Gene-In-2.0.2-fechamento-ensaio.zip`: `034ee5d734c2dd0bf863867763b38146bf45c740725446192c3a1dfa6f16b257`
-- `Gene-In-2.0.2-fechamento-ensaio.tar.gz`: `3d2268c156c54302c38563e176839be68a0421aa05d9337467a3150e102d4f09`
+### Pré-requisitos do SO usados neste ensaio
 
-Os hashes foram lidos do manifesto externo e reconferidos após a instalação.
-Este documento registra o pacote do quarto commit. O quinto commit acrescenta
-este registro, a proteção de ambiente para `make test` e sua entrada no CI;
-os hashes acima não se referem a um pacote posterior contendo este próprio
-documento. Nenhuma tag ou Release foi criada nesta revisão.
+Já presentes no host: `bash`, `make`, `python3`, `curl`, `tar`, `bzip2`, `install`, `find`, `chmod`, `unzip`, `sha256sum`, compilador e Git. A lista e os caminhos estão no recibo. O teste começou sem bundle ou prefixo de ferramentas no diretório escolhido. O instalador verificou os arquivos de lock existentes no pacote; nenhum parâmetro científico foi editado.
+
+### Comandos efetivamente executados, na ordem
+
+Ambiente do instalador: `PATH=/usr/bin:/bin`, `PYTHONNOUSERSITE=1`, `PYTHONDONTWRITEBYTECODE=1` e `GENEIN_BUNDLE_DIR=/tmp/genein-pr10-package-clean-vjmjuo_q/bundle`. Os diretórios abaixo identificam o ensaio encerrado; para repetir, use diretórios novos e preserve as evidências anteriores.
+
+```bash
+# cwd: /mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/pacote-6f7639f
+sha256sum -c SHA256SUMS
+
+# cwd: /mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO
+unzip -q '/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/pacote-6f7639f/Gene-In-2.0.2-PR10-e2e-isolado.zip' -d '/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0'
+
+# cwd: /mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado
+sha256sum -c SOURCE_MANIFEST.sha256
+
+# cwd: /mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado
+bash bundle/install_wsl.sh
+
+# cwd: /mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado
+/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/python -m pip check
+
+# cwd: /mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado
+/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/genein --version
+```
+
+Depois da instalação, o PATH passou a ser `/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin:/usr/bin:/bin`. Todos os comandos acima retornaram 0. O instalador usou micromamba 2.9.0 e conferiu o SHA-256 do arquivo de bootstrap antes de extrair, conforme o script distribuído.
+
+### Abertura real do painel
+
+No diretório `/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado`, o processo dedicado foi iniciado com:
+
+```bash
+/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/python scripts/ux_dashboard.py --host 127.0.0.1 --port 39965 --ready-file '/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/dashboard.url'
+```
+
+Ambiente adicional: `GENEIN_WORK_ROOT=/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/panel work with spaces` e `GENEIN_CONFIG_FILE` apontando para `not-present.env` nesse diretório. A prontidão foi lida de `dashboard.url`. As requisições HTTP foram feitas com `urllib.request.urlopen` no mesmo ensaio:
+
+| Rota | HTTP | Bytes |
+|---|---|---|
+| `/` | 200 | 2822 |
+| `/api/evidence/options` | 200 | 443 |
+| `/js/state.js` | 200 | 4540 |
+
+O processo do painel usado no teste foi encerrado após essas leituras. A instância habitual do usuário não foi alterada. O E2E abaixo usa a entrada individual canônica da CLI; esta etapa do painel verifica instalação e rotas, não um disparo de análise pelo navegador.
+
+### E2E após a instalação
+
+Com o Python e as ferramentas do prefixo novo, no diretório do pacote extraído:
+
+```bash
+GENEIN_TEST_ARTIFACT_ROOT='/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA' make e2e
+sha256sum -c SOURCE_MANIFEST.sha256
+```
+
+Resultado: código 0; quatro combinações PASSED. Cada uma percorreu FASTQ → QC → montagem → BLAST → Evidence → recibo final, com busca competitiva e/ou Bowtie2 executados quando ligados. O executor fixa `GENEIN_ENV_DIR` no ambiente ativo, impedindo a consulta automática de um bundle anterior. Os caminhos e hashes dos executáveis no manifesto e na proveniência de cada caso precisam ser iguais. Os dados são strings aleatórias sem origem em organismos. Os detalhes e as saídas estão no [relatório E2E](desenvolvimento/RELATORIO_E2E_20261102.md).
 
 ### Entrada de testes e Python gerenciado
 
-`make test` passou no ambiente de engenharia: 619 testes em `scripts/tests`,
-138 em `tests`, 322 subtestes e 31 JavaScript. Três testes operacionais foram
-explicitamente excluídos do escopo de engenharia, além do módulo de otimização.
-As fronteiras shell com executáveis controlados, sintaxe Bash e compilação
-Python também passaram.
+`make test` exige a fonte instalada ou prepara a instalação somente dentro de um venv. Em Python de sistema sem a fonte instalada, a mensagem orienta criar um venv e retorna 2, sem chamar o pip de sistema. Os três testes reais antes excluídos foram reintegrados; as ausências de ferramentas aparecem com motivo em `pytest -rs`. O módulo de otimização `test_validation_tracks.py` permanece fora da suíte de engenharia, sem execução da validação científica.
 
-No Python de sistema com marcador `EXTERNALLY-MANAGED`, a tentativa sem a fonte
-instalada retornou o código esperado 2 e a mensagem `make test precisa de um
-venv`. Não houve chamada ao pip de sistema. A entrada só tenta instalar a fonte
-quando estiver em venv; no CI a fonte já é instalada antes de `make test`.
-
-### Pendências de aceite
-
-O ensaio completo de (c) não foi executado. A parte de (e) que exige repetir
-esse percurso após a instalação permanece pendente. Os testes reais de índices
-registram somente metadados e hashes; não são o recibo final de uma análise.
-O item (e) é, portanto, parcial. Não houve execução de validação científica.
-
-Saídas e recibo resumido: [saídas](desenvolvimento/fechamento-saidas.txt) e
-[registro de instalação](desenvolvimento/instalacao-independente.json).
+O [registro inicial de venv](desenvolvimento/instalacao-independente.json) é histórico e era parcial. O recibo atual, com ferramentas externas provisionadas e E2E, é [instalacao-independente-e2e.json](desenvolvimento/instalacao-independente-e2e.json).
 
 ## OPINIÃO
 
-O venv sem bibliotecas herdadas reduz a dúvida sobre dependências Python da
-aplicação. Para o aceite integral solicitado, ainda falta o percurso completo
-de (c) e, se desejada, a provisão independente das ferramentas externas.
+O ensaio fecha o aceite de instalação e do percurso mecânico no ambiente registrado. Compatibilidade com outros SOs e o resultado científico precisam de evidências próprias; não decorrem deste teste.

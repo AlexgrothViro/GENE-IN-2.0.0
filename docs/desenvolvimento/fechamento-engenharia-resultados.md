@@ -2,42 +2,25 @@
 
 ## FATO
 
-Base: main `1a9ea5d`. Branch `codex/fechamento-engenharia-20261102`.
-Um commit por item; PR sem merge. Builder, config/, src/, VERSION, algoritmos,
-limiares e perfis científicos preservados. Nenhuma validação científica.
+Base: main `1a9ea5d`. Branch `codex/fechamento-engenharia-20261102`, PR #10, sem merge. Os cinco commits iniciais preservam um commit por item (a)–(e); complementos de cobertura, E2E, CI, pré-registro e evidências estão separados em commits posteriores. Builder, config/, src/, VERSION, algoritmos, limiares e perfis científicos preservados. Nenhuma validação científica executada.
 
-| Item | Arquivo/linha principal | Teste | Resultado real |
+| Item | Arquivo principal | Teste | Resultado real |
 |---|---|---|---|
-| (a) | `scripts/pipeline/resolve_config.py:410` | `test_optional_profile_conflict.py` | Passou: false gera ConfigError; true e vazio preservam B. Grupo: 75 passed, 29 subtests passed. |
-| (b) | `dashboard/js/state.js:7` | `test_optional_http_cli_parity.py; optional_evidence.test.mjs` | Passou: seis paridades antes do processamento; grupo 16 passed, 27 subtests passed; JS 31 passed. |
-| (c) | `scripts/tests/test_real_index_metadata.py:22` | `test_real_index_metadata.py` | Parcial: índices/metadados passaram. Grupo com extras: 9 passed, 4 subtests passed. E2E integral não executado. |
-| (d) | `scripts/evidence/check_competitive_labels.py:13` | `test_competitive_labels.py` | Passou: 7 passed; igualdade, faltante, órfão, duplicado, limite e falha da ferramenta; leitura real de IDs. |
-| (e) | `scripts/tests/run_test_suite.sh:21` | `test_test_environment.py; ensaio de instalação` | Parcial: instalação e painel passaram; guard do Python de sistema retornou 2 como esperado. Percurso integral de (c) não executado. |
+| (a) conflito B/desligado | `scripts/pipeline/resolve_config.py` | `test_optional_profile_conflict.py` | Passou: false gera erro explícito; true e vazio preservam B. Coberto pela suíte completa. |
+| (b) painel × CLI | `dashboard/js/state.js; scripts/dashboard/evidence_options.py` | `test_optional_http_cli_parity.py; optional_evidence.test.mjs` | Passou: seis paridades de configuração e proveniência, três estados × duas opções. |
+| (c) E2E real | `scripts/tests/run_optional_e2e.py; Makefile` | `make e2e` | Passou localmente e no CI: quatro combinações reais, FASTQ artificial de 20–100 caracteres, caminhos com espaços, recibos e hashes. |
+| (d) rótulos × banco | `scripts/evidence/check_competitive_labels.py` | `test_competitive_labels.py` | Passou: igualdade, IDs faltantes, órfãos, duplicados, contagem e limite de exemplos. E2E exercita o preflight real. |
+| (e) instalação | `bundle/install_wsl.sh; scripts/tests/run_test_suite.sh` | instalador do pacote, HTTP e `make e2e` | Passou: ferramentas externas provisionadas, painel HTTP200 e E2E após instalação; guard de Python gerenciado permanece coberto. |
+| cobertura restaurada | `scripts/tests/run_test_suite.sh` | `make test` | RealBlastRouterTests e teste real de resumo voltaram à coleta; sem --deselect; skips condicionais mostram motivo. |
+| comentário solto | `scripts/pipeline/sample_steps.sh` | regressões de configuração/paridade | Removido; testes usam o marcador estável seguinte. |
+| plano científico | `docs/validacao/PROJETO_VALIDACAO_DECOY_REMAP.md` | revisão documental | Proposta criada, sem execução, N ou margem inventados; decisões pendentes explicitadas. |
 
-Saída integral resumida dos grupos e dos checks de entrada:
-[fechamento-saidas.txt](fechamento-saidas.txt).
-Os grupos focados são subconjuntos/repetições e não devem ser somados ao total
-de 757 testes Python, 322 subtestes e 31 JavaScript de `make test`.
+Os extras continuam cobertos: referência alterada com builders extras recusa o recibo de cache; gerações antigas geram aviso e permanecem preservadas. A suíte de engenharia não executa `test_validation_tracks.py`, que pertence à otimização/validação e está fora desta revisão.
 
-Os extras passaram: referência alterada com builders extras recusa o recibo;
-gerações antigas geram aviso e permanecem preservadas. O job de índices do CI
-instala ferramentas reais apenas para criação/inspeção de metadados; a suíte
-de engenharia não executa os três testes operacionais explicitamente excluídos.
+Resultados e saídas atuais: [relatório E2E](RELATORIO_E2E_20261102.md), [instalação](../instalacao-do-zero.md), [saídas resumidas](fechamento-saidas.txt), [manifesto E2E](e2e-manifest-20261102.json), [CI](e2e-ci-20261102.json) e [recibo de instalação](instalacao-independente-e2e.json). Grupos focados e repetições se sobrepõem; não somar seus contadores ao total da suíte.
 
-A primeira suíte teve duas falhas de compatibilidade. A conferência dos IDs
-foi posicionada no preflight existente, mantendo a falha de banco em código 65
-e sua etapa registrada. O teste de configuração agora fornece um arquivo real
-no diretório de trabalho e o leitor respeita esse arquivo antes do caminho
-armazenado em memória. Após as correções, `make test` passou.
-
-Leia o [registro de instalação](../instalacao-do-zero.md) para versões e hashes,
-e o [alcance de (c)](alcance-fechamento-engenharia.md) para a parte não executada.
-Logs completos permanecem na pasta local FECHAMENTO_ENGENHARIA_20261102.
+Os registros iniciais de (c)/(e) eram parciais. A revisão atual acrescenta o percurso completo de software e a instalação com ferramentas externas provisionadas. Isso não altera resultados científicos históricos, nem constitui evidência de desempenho em dados biológicos.
 
 ## OPINIÃO
 
-Para (a), erro explícito é a alternativa de menor complexidade: evita alterar
-silenciosamente o pedido B e dispensa um segundo contrato para pedido removido.
-Para gerações antigas, aviso preserva arquivos cujo uso externo não é conhecido.
-Esta revisão não fecha o aceite integral de (c)/(e); o PR deve permanecer em
-revisão até a decisão do autor sobre essas pendências.
+Erro explícito no conflito B evita substituir silenciosamente o pedido com menor complexidade. Avisar sobre gerações antigas preserva arquivos com possível uso externo. A decisão de merge continua exclusivamente com o autor; o estudo exige aprovação dos portões do pré-registro.

@@ -1,8 +1,8 @@
-FATO - saídas registradas; não são uma nova execução.
+FATO — saídas reais da revisão; grupos sobrepostos não devem ser somados.
 
-MAKE TEST FINAL
-619 passed, 3 deselected, 322 subtests passed in 127.26s (0:02:07)
-138 passed in 62.04s (0:01:02)
+MAKE TEST FINAL LOCAL
+625 passed, 322 subtests passed in 133.70s (0:02:13)
+138 passed in 68.11s (0:01:08)
 PASS router stale-output, short-contig, symmetric-fallback and SPAdes argument regressions
 PASS montagem concluida sem contigs -> SOFT/exit 0; ausente, invalida ou abortada -> HARD
 # tests 31
@@ -10,22 +10,35 @@ PASS montagem concluida sem contigs -> SOFT/exit 0; ausente, invalida ou abortad
 # fail 0
 [PASS] suíte engineering concluída dentro do escopo declarado.
 
-PYTHON GERENCIADO - FALHA ESPERADA
-bash scripts/tests/run_test_suite.sh engineering
-[FATAL] make test precisa de um venv para instalar esta fonte. O pip do Python do sistema não será usado.
-Crie um ambiente: python3 -m venv .venv
-Ative: source .venv/bin/activate
-Instale as dependências de teste no ambiente e repita make test.
-make: *** [Makefile:299: test-engineering] Error 2
+INSTALAÇÃO DO PACOTE COM AMBIENTE ISOLADO
+python3 scripts/tests/run_optional_e2e.py
+[ARTIFACTS] /mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh
+[PASS] software-c0-r0: código 0, saídas e recibo íntegros
+[PASS] software-c0-r1: código 0, saídas e recibo íntegros
+[PASS] software-c1-r0: código 0, saídas e recibo íntegros
+[PASS] software-c1-r1: código 0, saídas e recibo íntegros
+[PASS] E2E de software: quatro execuções reais; sem avaliação de desempenho biológico.
 
-VERIFICAÇÕES FOCADAS
-A_RESOLVER: 75 passed, 29 subtests passed in 8.90s
-B_PARIDADE_FINAL: 16 passed, 27 subtests passed in 13.11s
-C_INDICES: METADATA_ONLY: database hashes and six index hashes recorded; complete processing not executed | 9 passed, 4 subtests passed in 6.83s
-D_IDS_REAIS: 7 passed in 0.79s
-E_REGRESSOES: 17 passed, 6 subtests passed in 13.65s
+PAINEL: /, /api/evidence/options e /js/state.js: HTTP200 nas três rotas.
+Fonte do pacote: 516 hashes íntegros antes e depois. Sem validação científica.
 
-INSTALAÇÃO INDEPENDENTE
-Venv inicial: pip 24.0; genein e jsonschema ausentes.
-Instalação, identidade da CLI, ausência do Builder e três rotas HTTP: passou.
-(c) completo: não executado. (e) integral: pendente.
+CI DO CÓDIGO ENSAIADO
+job 125630858606
+2026-11-02T23:53:45.1484810Z [PASS] software-c0-r0: código 0, saídas e recibo íntegros
+2026-11-02T23:53:59.4417523Z [PASS] software-c0-r1: código 0, saídas e recibo íntegros
+2026-11-02T23:54:10.4930579Z [PASS] software-c1-r0: código 0, saídas e recibo íntegros
+2026-11-02T23:54:26.1929764Z [PASS] software-c1-r1: código 0, saídas e recibo íntegros
+2026-11-02T23:54:26.2018179Z [PASS] E2E de software: quatro execuções reais; sem avaliação de desempenho biológico.
+2026-11-02T23:54:36.5891605Z Artifact download URL: https://github.com/AlexgrothViro/GENE-IN-2.0.0/actions/runs/41548793609/artifacts/13188759780
+job 125630858925
+2026-11-02T23:53:53.9187641Z 610 passed, 15 skipped, 320 subtests passed in 23.49s
+2026-11-02T23:54:11.8362257Z 138 passed in 17.69s
+2026-11-02T23:54:19.8849760Z # tests 31
+2026-11-02T23:54:19.8850134Z # pass 31
+2026-11-02T23:54:19.8850314Z # fail 0
+2026-11-02T23:54:19.8850700Z # skipped 0
+job 125630859030
+2026-11-02T23:53:41.4604215Z 16 passed, 4 subtests passed in 3.13s
+2026-11-02T23:53:42.5606101Z Artifact download URL: https://github.com/AlexgrothViro/GENE-IN-2.0.0/actions/runs/41548793609/artifacts/13189847233
+
+HISTÓRICO: Python de sistema sem a fonte instalada retornou 2 com mensagem de venv, sem pip de sistema. Proteção permanece nos testes de regressão.
