@@ -66,8 +66,18 @@ class AllSizeQueryTests(unittest.TestCase):
             self.assertEqual(entry["source_counts"], {"contig": 1, "long_read": 4})
             self.assertEqual({s["pair_id"] for s in entry["sources"] if "pair_id" in s}, {"pair"})
             self.assertEqual({s["mate"] for s in entry["sources"] if "mate" in s}, {1, 2})
+            self.assertEqual(len(entry["sources"]), 3)
+            self.assertEqual(
+                {s["mate"]: s["occurrences"] for s in entry["sources"] if "mate" in s},
+                {1: 2, 2: 2},
+            )
             self.assertNotIn("unique_templates", entry)
             self.assertEqual(manifest["routing_summary"]["merged_occurrences"], 4)
+            self.assertEqual(manifest["routing_summary"]["resource_precheck"]["status"], "PASSED")
+            with self.assertRaisesRegex(RuntimeError, "disco insuficiente"):
+                module.precheck_collection_resources(paths, base, free_disk_bytes=1024)
+            with self.assertRaisesRegex(RuntimeError, "Memória RAM insuficiente"):
+                module.precheck_collection_resources(paths, base, available_ram_bytes=1024)
 
     def test_complete_genome_and_legacy_sub20_fasta_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
