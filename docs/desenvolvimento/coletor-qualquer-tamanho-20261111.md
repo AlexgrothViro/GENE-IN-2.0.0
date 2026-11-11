@@ -2,8 +2,8 @@
 
 Data: 11/11/2026 (America/Sao_Paulo). Base B0: `18c686310e52ca87ee3a5ca46d9ff73952914263`, branch `trabalho/software-builder` (PR #6, integração com testes). `trabalho/software-documentado` é distribuição sem a suíte; main não é destino desta mudança. AGENTS.md, CLAUDE.md e CONTEXTO não existem nesta base; lidos os guias de desenvolvimento e correções científicas disponíveis.
 
-## Motivo e escopo aprovados
-O coletor anterior ignorava FASTQ >100 pb e <20 pb silenciosamente. Decisão de Alexsander: sequências longas, contigs e genomas completos não podem ser ignorados. Não fatiar nem aparar. Preservar identidade original de read/par na proveniência, sem transformar ocorrências em templates independentes.
+## Motivo e escopo encaminhados
+O coletor anterior ignorava FASTQ >100 pb e <20 pb silenciosamente. Decisão atribuída a Alexsander no recado do Orientador ao coordenador: sequências longas, contigs e genomas completos não podem ser ignorados. Não fatiar nem aparar. Preservar identidade original de read/par na proveniência, sem transformar ocorrências em templates independentes.
 
 ## Plano antes de alterar código
 - Preservar IDs hash, deduplicação, parâmetros, níveis, suporte e empates da rota 20–100 pb (B0).
@@ -19,3 +19,44 @@ O coletor anterior ignorava FASTQ >100 pb e <20 pb silenciosamente. Decisão de 
 4. Suíte de engenharia inteira; ferramentas ausentes registradas como não executadas. Nenhuma carga pesada.
 
 Resultados e limitações serão acrescentados em commit posterior. Sem merge, tag ou alteração de main/Builder/Desktop.
+
+## Resultados (11/11/2026, America/Sao_Paulo)
+
+Implementação executada no WSL do MICRO-001, sem alterar Builder, Desktop, main, tags ou sessões interativas. Fonte de implementação `63684a0`; recibo estruturado [ao lado](coletor-qualquer-tamanho-20261111.recibo.json).
+
+| Verificação | B0 | Novo |
+|---|---:|---:|
+| Queries 20–100 pb | 10 | 10 |
+| Candidatos, painel sintético com alvos empatados | 30 | 30 |
+| Linhas com dois táxons alvo concorrentes | 18 | 18 |
+| Nível | REVIEW | REVIEW |
+| Diferenças científicas da rota curta | — | 0 |
+| Queries longas, sintéticas | 2 (só contigs) | 4 (150,150,350,1770 pb) |
+| SRR17241648: reads não montadas reconhecidas | 0 | 3.078 |
+| SRR17241648: queries únicas totais | 12.205 | 14.985 |
+
+Nove artefatos científicos idênticos byte a byte na rota curta, incluindo BLAST de ambos os perfis, fragmentos, loci, HSPs, competição, suporte, cobertura e linhagem. JSONs de candidatos, nível, especificidade, resultado e cobertura idênticos. Referências alvo idênticas e de táxons distintos tornam explícita a ambiguidade. O remapeamento curto mede zero templates com MAPQ suficiente nesse painel ambíguo; isso não é demonstração de suporte positivo.
+
+No painel longo com remapeamento não ambíguo, os dois mates de 150 pb entram inteiros, além do contig de 350 pb e do genoma sintético completo de 1.770 pb. Duplicar as ocorrências do mesmo par mantém **1 template e 2 inícios**, iguais ao par sem duplicação: dois inícios de mates são legítimos no contrato existente, mas não satisfazem o critério de pelo menos dois templates. Bowtie2 pode marcar nomes repetidos como discordantes: nessa fixture reduz proper-pair support (1 para 0), sem inflar templates/inícios; não alteramos essa semântica.
+
+A coleta real aceitou 17.294 ocorrências longas no conjunto contigs+fragmentos+reads, reuniu 2.309 ocorrências idênticas e produziu 14.985 queries únicas; zero exclusões por comprimento nessa entrada. A execução real aqui é de **coleta**, não busca completa contra banco biológico nem validação científica.
+
+Suíte final: 629 testes de scripts passaram, 1 pulado (Builder real opcional 0.4.0 não solicitado), 140 testes de API/CLI/grafo passaram, 17 testes JavaScript passaram; regressões shell, 69 verificações de sintaxe Bash e compileall passaram. A primeira execução encontrou uma falha de fixture de lote causada pela configuração preexistente do HOME (THREADS 4 em vez do 6 da fixture). A mesma fixture e a suíte inteira passaram com HOME isolado; configuração pessoal não foi alterada. Trilhas de otimização científica não executadas, conforme o guia do repositório.
+
+Comandos reproduzíveis (ambiente científico e checkout Git com B0):
+
+```bash
+python scripts/tests/verify_query_sizes_real.py \
+  --artifact-root /pasta/nova_ab \
+  --builder-manifest /saida_builder/manifesto_execucao.json
+HOME=/pasta/home_testes_vazia bash scripts/tests/run_test_suite.sh engineering
+```
+
+Artefatos completos locais: `/home/mestradoalex/genein-coletor-auditoria-20261111/ab_release` e `engineering-final.log` na pasta pai (cerca de 109 MB incluindo tentativas anteriores). Versões: Python 3.12.3, BLAST 2.12.0+, Bowtie2 2.5.2, samtools 1.19.2, Node 18.19.1. Não houve download nem execução pesada.
+
+## Pendências e publicação
+
+- FASTQ <20 pb continua excluída com contagem; eventual aceitação exige decisão científica.
+- Adaptador/instalador Builder 0.4.0 não foi migrado para 3.0.0b1; a importação nova é explícita pelo coletor. Evidence desligado mantém o caminho legado.
+- O Desktop em main `5418bf966f444cb643a9b5f74a9a4bcbfa7f247f` tem coletor **idêntico byte a byte ao B0** e precisará de port equivalente. Apenas leitura remota, sem mudanças.
+- A atribuição da decisão científica chegou por outro bot; a autorização direta disponível para abrir PR era a do Builder. Nenhum push/PR do Gene-In foi feito nesta execução. Confirmar diretamente o escopo desta mudança científica antes da publicação. Destino proposto: PR de `trabalho/coletor-qualquer-tamanho` para `trabalho/software-builder`, aberto, sem merge/tag.

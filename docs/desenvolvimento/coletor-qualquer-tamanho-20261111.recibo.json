@@ -1,0 +1,87 @@
+{
+  "date_local": "2026-11-11 America/Sao_Paulo",
+  "implementation_commit": "63684a0",
+  "ab": {
+    "tied_rows_before": 18,
+    "tied_rows_after": 18,
+    "base_sha": "18c686310e52ca87ee3a5ca46d9ff73952914263",
+    "short_queries_before": 10,
+    "short_queries_after": 10,
+    "identical_files": [
+      "blastn-short.tsv",
+      "blastn.tsv",
+      "fragment_evidence.tsv",
+      "locus_evidence.tsv",
+      "competitive_hits.tsv",
+      "read_support.tsv",
+      "coverage.tsv",
+      "hsp_evidence.tsv",
+      "template_lineage.tsv"
+    ],
+    "candidate_count_before": 30,
+    "candidate_count_after": 30,
+    "level_before": "REVIEW",
+    "level_after": "REVIEW",
+    "short_scientific_differences": 0,
+    "long_queries_before": 2,
+    "long_queries_after": 4,
+    "long_lengths": [
+      150,
+      150,
+      350,
+      1770
+    ],
+    "long_read_occurrences": 4,
+    "long_max_templates": 1,
+    "long_max_starts": 2,
+    "real_queries_before": 12205,
+    "real_queries_after": 14985,
+    "real_unassembled_reads_before": 0,
+    "real_unassembled_reads_after": 3078,
+    "real_balance": {
+      "accepted_occurrences": {
+        "short_20_100": 0,
+        "long_above_100": 17294,
+        "legacy_fasta_below_20": 0
+      },
+      "discarded_occurrences": {
+        "fastq_below_20_legacy_exclusion": 0,
+        "rescue_not_selected": 0
+      },
+      "unique_queries": 14985,
+      "merged_occurrences": 2309,
+      "restricted_occurrences": 0
+    }
+  },
+  "engineering": {
+    "python_scripts_passed": 629,
+    "python_scripts_skipped": 1,
+    "python_tests_passed": 140,
+    "javascript_passed": 17,
+    "skip_reason": "optional real Builder not requested (GENEIN_BUILDER_REAL_BIN unset)",
+    "shell_regressions": "passed; Bash syntax 69 scripts; Python compileall passed",
+    "scope": "engineering; optimization/validation tracks excluded per repository guide",
+    "environment": "isolated venv with system site packages; HOME isolated to avoid existing config/picornavirus settings"
+  },
+  "versions": {
+    "python": "3.12.3",
+    "blastn": "2.12.0+",
+    "bowtie2": "2.5.2",
+    "samtools": "1.19.2",
+    "node": "18.19.1"
+  },
+  "desktop": {
+    "repo": "AlexgrothViro/GENE-IN-Desktop-Windows",
+    "ref": "main",
+    "sha": "5418bf966f444cb643a9b5f74a9a4bcbfa7f247f",
+    "collector_identical_to_B0": true,
+    "collector_sha256": "b1f69429456206d660496d2411afff5f9a4d16bfac887d5e3ce5cf49b94de9be",
+    "modified": false
+  },
+  "artifacts": "/home/mestradoalex/genein-coletor-auditoria-20261111",
+  "logs_sha256": {
+    "engineering-final.log": "20406c551a5ec41df2f31e2c4c5dbd1dd7e219093f84bc1be25943b1018a96e0",
+    "ab_release/commands.log": "0bebb6c368d0ab17498eb840bd00c8b17b8af02a5a640758602354b44d3099ed",
+    "ab_release/summary.json": "1e00bd6177a94700516ab9ef7c4be347d7eeff5990a48952976be170db9ff854"
+  }
+}
