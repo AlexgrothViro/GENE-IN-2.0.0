@@ -181,6 +181,36 @@ def only_short_builder_evidence(
     return True
 
 
+def only_unsupported_read_level_evidence(
+    candidates: list[dict],
+    fragments: list[dict] | None,
+    minimum_distinct_starts: int = 2,
+) -> bool:
+    """True when every candidate query is read_level and no candidate has >=2 templates and >=minimum_distinct_starts."""
+    if not candidates or not fragments:
+        return False
+    read_level_only: dict[str, bool] = {}
+    for row in fragments:
+        query = str(row.get("qseqid") or "")
+        if not query:
+            continue
+        tokens = {part.strip() for part in str(row.get("assembly_method") or "").lower().split(",") if part.strip()}
+        is_read_level = tokens == {"read_level"}
+        read_level_only[query] = is_read_level if query not in read_level_only else read_level_only[query] and is_read_level
+    queries = [query for candidate in candidates for query in (candidate.get("query_ids") or [])]
+    if not queries or any(not read_level_only.get(query, False) for query in queries):
+        return False
+    for candidate in candidates:
+        support = candidate.get("support") or {}
+        if (
+            support.get("status") == "SUPPORT_AVAILABLE"
+            and as_int(support.get("unique_templates")) >= 2
+            and as_int(support.get("distinct_starts")) >= minimum_distinct_starts
+        ):
+            return False
+    return True
+
+
 def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str, str]],
              read_support: list[dict[str, str]], coverage: list[dict[str, str]],
              control_status: str, library_mode: str, shadow: bool = False,
@@ -210,6 +240,7 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
     thresholds = active_policy["thresholds"]
     locus_cfg = _required_section(thresholds, "locus")
     evidence_cfg = _required_section(thresholds, "sample_evidence")
+    support_cfg = _required_section(thresholds, "support")
     parameters = provenance.get("parameters", {}) if isinstance(provenance, dict) else {}
     resolved_run_id = str(run_id or parameters.get("run_id") or provenance.get("run_id") or f"untracked-{sample}")
     comp_by_query = _reference_competition(competitive)
@@ -322,10 +353,16 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
     else:
         coverage_status = "COVERAGE_UNAVAILABLE"
     short_builder_only = only_short_builder_evidence(candidates, fragments)
+    unsupported_read_only = only_unsupported_read_level_evidence(
+        candidates,
+        fragments,
+        minimum_distinct_starts=as_int(support_cfg.get("minimum_distinct_starts_shotgun"), 2),
+    )
     analysis_outcome, evidence_level = labels_for_control(
         control_status,
         has_candidates=bool(candidates),
         only_short_builder=short_builder_only,
+        only_unsupported_read_level=unsupported_read_only,
     )
     caveats = [*support_caveats, *coverage_caveats]
     if candidates:
@@ -334,6 +371,11 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         elif short_builder_only:
             caveats.append(
                 "A única evidência é de fragmento curto do Builder, abaixo de 200 pb. "
+                "O rótulo da execução permanece REVIEW."
+            )
+        elif unsupported_read_only:
+            caveats.append(
+                "A única evidência vem de leitura não montada sem múltiplos templates independentes confirmados por remapeamento. "
                 "O rótulo da execução permanece REVIEW."
             )
         else:

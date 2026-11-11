@@ -194,6 +194,32 @@ class LabelRegressionTests(unittest.TestCase):
         )
         self.assertEqual(kept["evidence_level"], "DETECTED")
 
+    def test_single_long_read_without_multi_template_support_stays_review(self):
+        long_read_frag = [{"qseqid": "q", "qlen": "150", "assembly_method": "read_level"}]
+        one_template = [{
+            "reference_id": "A", "category": "TARGET_VIRUS", "locus_id": "L1",
+            "support_status": "SUPPORT_AVAILABLE", "unique_templates": "1",
+            "distinct_starts": "2", "proper_pair_templates": "1",
+        }]
+        without_support = classify(
+            "sample", [_panel_locus()], [], one_template, [], "CONTROL_BELOW_SAMPLE", "shotgun",
+            fragments=long_read_frag,
+        )
+        self.assertEqual(without_support["evidence_level"], "REVIEW")
+        self.assertEqual(without_support["analysis_outcome"], "CANDIDATES_FOR_REVIEW")
+        self.assertIn("leitura não montada sem múltiplos templates", "\n".join(without_support["caveats"]))
+        two_templates = [{
+            "reference_id": "A", "category": "TARGET_VIRUS", "locus_id": "L1",
+            "support_status": "SUPPORT_AVAILABLE", "unique_templates": "2",
+            "distinct_starts": "2", "proper_pair_templates": "2",
+        }]
+        with_support = classify(
+            "sample", [_panel_locus()], [], two_templates, [], "CONTROL_BELOW_SAMPLE", "shotgun",
+            fragments=long_read_frag,
+        )
+        self.assertEqual(with_support["evidence_level"], "DETECTED")
+        self.assertEqual(with_support["analysis_outcome"], "EVIDENCE_RECOVERED")
+
     def test_report_follows_control_status_and_evidence_label(self):
         import subprocess
         script = ROOT / "scripts/pipeline/report_minimal.sh"

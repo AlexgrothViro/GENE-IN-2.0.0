@@ -67,6 +67,7 @@ def labels_for_control(
     *,
     has_candidates: bool,
     only_short_builder: bool = False,
+    only_unsupported_read_level: bool = False,
 ) -> tuple[str, str]:
     """Return ``(analysis_outcome, evidence_level)`` for one execution.
 
@@ -74,11 +75,12 @@ def labels_for_control(
     that state, candidates stay available for review and the execution label
     is ``REVIEW``. ``CONTROL_NOT_APPLICABLE`` is not a validated control.
     A sample whose only evidence is a Builder fragment shorter than 200 bp
-    also stays at ``REVIEW``, including inside a batch.
+    or an unassembled read without multi-template remapping support also
+    stays at ``REVIEW``, including inside a batch.
     """
     if not has_candidates:
         return "NO_EVIDENCE_RECOVERED", "NO_SIGNAL"
-    if only_short_builder or control_status not in CONTROL_PASS:
+    if only_short_builder or only_unsupported_read_level or control_status not in CONTROL_PASS:
         return "CANDIDATES_FOR_REVIEW", "REVIEW"
     return "EVIDENCE_RECOVERED", "DETECTED"
 
