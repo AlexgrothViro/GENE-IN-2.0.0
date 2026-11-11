@@ -32,10 +32,12 @@ from pathlib import Path
 
 MIN_PUBLISHED_BP = 20
 EXPECTED_DISTRIBUTION = "genein-builder"
-EXPECTED_VERSION = "0.4.0"
+EXPECTED_VERSION = "3.0.0b1"
+LEGACY_VERSION = "0.4.0"
+SUPPORTED_VERSIONS = (EXPECTED_VERSION, LEGACY_VERSION)
 PINNED_BUILDER_COMMIT = "af7cb088b3013df07fd3abfaa23ba89dba42cf6b"
 MOTORS = ("v1", "megahit")
-# O adaptador não passa -k: o v1 monta com k = 31. O MEGAHIT usa a própria lista de k.
+# O adaptador não passa -k: o v1 monta com k = 31. O MEGAHIT (padrão 3.0.0b1) usa a própria lista de k.
 BUILDER_K = {"v1": "31", "megahit": "NA"}
 INSTALL_URL = (
     "git+https://github.com/AlexgrothViro/genein-builder.git@"
@@ -51,6 +53,7 @@ STATUS_BY_MANIFEST = {
     "sem_registros": "SEM_REGISTROS",
 }
 STATUS_CODE_0 = ("ok", "so_fragmentos")
+STATUS_CODE_0_V3 = ("ok", "so_fragmentos", "sem_registros")
 STATUS_CODE_3 = ("sem_kmer_valido", "sem_registros")
 FRAGMENT_TABLES = (
     ("fragmentos.tsv", "fragmentos.fasta"),
@@ -136,6 +139,8 @@ def locate_builder() -> list[str]:
         return [found]
     if importlib.util.find_spec("genein_builder_cli") is not None:
         return [sys.executable, "-m", "genein_builder_cli.cli"]
+    if importlib.util.find_spec("genein_builder") is not None:
+        return [sys.executable, "-m", "genein_builder.cli"]
     raise BuilderNotInstalled(install_message())
 
 
@@ -363,21 +368,33 @@ def builder_argv(
     output: Path,
     read1: Path,
     read2: Path | None,
-    motor: str = "v1",
+    motor: str = "megahit",
     threads: int | None = None,
+    version: str = EXPECTED_VERSION,
 ) -> list[str]:
-    """Chamada da 0.2.0: ``-t`` só com o motor megahit; sem ``--single``."""
+    """Constrói a linha de comando do Builder.
+
+    - Contrato 3.0.0b1 (padrão): ``genein-builder run -1 R1 -2 R2 -o SAIDA [-t N]``
+      (usa MEGAHIT nativamente, sem ``--motor``, e exige R1 e R2).
+    - Contrato legado 0.4.0: ``genein-builder run --r1 R1 [--r2 R2] --saida SAIDA --motor {v1,megahit} [-t N]``.
+    """
     if motor not in MOTORS:
         raise ValueError(f"motor desconhecido: {motor}")
-    if threads is not None and motor != "megahit":
-        raise ValueError("threads so vale com o motor megahit")
-    argv = [*executable, "run", "--r1", str(read1)]
-    if read2 is not None:
-        argv.extend(["--r2", str(read2)])
-    argv.extend(["--saida", str(output), "--motor", motor])
+    if version == LEGACY_VERSION:
+        if threads is not None and motor != "megahit":
+            raise ValueError("threads so vale com o motor megahit")
+        argv = [*executable, "run", "--r1", str(read1)]
+        if read2 is not None:
+            argv.extend(["--r2", str(read2)])
+        argv.extend(["--saida", str(output), "--motor", motor])
+        if threads is not None:
+            argv.extend(["-t", str(threads)])
+        return argv
+    if read2 is None:
+        raise ValueError("genein-builder 3.0.0b1 exige leituras pareadas (-1 e -2)")
+    argv = [*executable, "run", "-1", str(read1), "-2", str(read2), "-o", str(output)]
     if threads is not None:
         argv.extend(["-t", str(threads)])
-    # O Gene-In aceita qualquer hospedeiro; não declarar um hospedeiro presumido.
     return argv
 
 
@@ -432,19 +449,27 @@ def run_builder(
         return 2
 
     version = query_builder_version(executable)
-    if version != EXPECTED_VERSION:
+    if version not in SUPPORTED_VERSIONS:
         write_atomic(provenance_path, provenance_text("FAILED", version=version, motor=motor))
         print(
             f"genein-builder instalado: {version}. Este adaptador segue o contrato da "
-            f"{EXPECTED_VERSION} (status, faixa, --motor). Nenhum outro montador sera acionado.\n"
+            f"{EXPECTED_VERSION} (-1/-2/-o) e o contrato da {LEGACY_VERSION}. Nenhum outro montador sera acionado.\n"
             "  bash bundle/install_builder.sh",
             file=sys.stderr,
         )
         return 2
-    raw = Path(tempfile.mkdtemp(prefix="genein-builder-"))
+    effective_motor = "megahit" if version == EXPECTED_VERSION else motor
+    raw_parent = Path(tempfile.mkdtemp(prefix="genein-builder-"))
+    raw = raw_parent / "saida" if version == EXPECTED_VERSION else raw_parent
     try:
         argv = builder_argv(
-            executable, output=raw, read1=read1, read2=read2, motor=motor, threads=threads,
+            executable,
+            output=raw,
+            read1=read1,
+            read2=read2,
+            motor=effective_motor,
+            threads=threads,
+            version=version,
         )
         print("[INFO] genein-builder " + " ".join(argv[1:]), file=sys.stderr)
         completed = subprocess.run(argv, check=False, text=True, capture_output=True)
@@ -458,7 +483,7 @@ def run_builder(
             write_atomic(
                 provenance_path,
                 provenance_text(
-                    STATUS_BY_MANIFEST[builder_status], version=version, commit=commit, motor=motor,
+                    STATUS_BY_MANIFEST[builder_status], version=version, commit=commit, motor=effective_motor,
                 ),
             )
             print(
@@ -470,7 +495,7 @@ def run_builder(
         if completed.returncode != 0:
             write_atomic(
                 provenance_path,
-                provenance_text("FAILED", version=version, commit=commit, motor=motor),
+                provenance_text("FAILED", version=version, commit=commit, motor=effective_motor),
             )
             print(
                 f"genein-builder encerrou com codigo {completed.returncode}. "
@@ -482,26 +507,27 @@ def run_builder(
             return 1
         contigs = raw / "contigs.fasta"
         fragment_dir = raw / "fragmentos"
+        allowed_ok_statuses = STATUS_CODE_0_V3 if version == EXPECTED_VERSION else STATUS_CODE_0
         try:
-            if builder_status not in STATUS_CODE_0:
-                raise ValueError(f"{MANIFEST_NAME} sem status ok ou so_fragmentos ({builder_status!r})")
+            if builder_status not in allowed_ok_statuses:
+                raise ValueError(f"{MANIFEST_NAME} sem status esperado ({builder_status!r})")
             if not fragment_dir.is_dir():
                 raise ValueError("fragmentos/ ausente")
             fasta_text, counts = convert_builder_products(
                 contigs if contigs.is_file() else None,
                 fragment_dir,
-                k=BUILDER_K[motor],
+                k=BUILDER_K[effective_motor],
             )
         except (OSError, ValueError) as exc:
             write_atomic(
                 provenance_path,
-                provenance_text("FAILED", version=version, commit=commit, motor=motor),
+                provenance_text("FAILED", version=version, commit=commit, motor=effective_motor),
             )
             print(f"saida do genein-builder invalida: {exc}", file=sys.stderr)
             return 1
         _preserve_raw(raw, outdir)
         status = STATUS_BY_MANIFEST[builder_status]
-        publish_converted(outdir, fasta_text, provenance_text(status, counts, version, commit, motor))
+        publish_converted(outdir, fasta_text, provenance_text(status, counts, version, commit, effective_motor))
         if not fasta_text:
             print(
                 "Builder concluiu sem sequencias de 20 pb ou mais. "
@@ -510,7 +536,7 @@ def run_builder(
             )
         return 0
     finally:
-        shutil.rmtree(raw, ignore_errors=True)
+        shutil.rmtree(raw_parent, ignore_errors=True)
 
 
 def _positive_int(value: str) -> int:
@@ -550,8 +576,10 @@ def main(argv: list[str] | None = None) -> int:
         try:
             executable = locate_builder()
             version = query_builder_version(executable)
-            if version != EXPECTED_VERSION:
-                raise BuilderFailed(f"Builder {version}; esta integração exige {EXPECTED_VERSION}.")
+            if version not in SUPPORTED_VERSIONS:
+                raise BuilderFailed(
+                    f"Builder {version}; esta integração exige {EXPECTED_VERSION} (ou {LEGACY_VERSION})."
+                )
         except (BuilderNotInstalled, BuilderFailed, OSError) as exc:
             print(str(exc), file=sys.stderr)
             return 2

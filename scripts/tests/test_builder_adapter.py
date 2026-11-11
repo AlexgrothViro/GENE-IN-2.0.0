@@ -269,12 +269,36 @@ class BuilderConversionTests(unittest.TestCase):
             self.assertIn('BUILDER_COMMIT="unavailable"', text)
             self.assertIn('BUILDER_VERSION="unavailable"', text)
 
-    def test_argv_matches_0_4_0_contract_without_assumed_host(self):
+    def test_argv_matches_3_0_0b1_and_0_4_0_contracts_without_assumed_host(self):
         common = dict(output=Path("/tmp/out"), read1=Path("/tmp/R1.fq.gz"))
-        paired = builder_adapter.builder_argv(["genein-builder"], read2=Path("/tmp/R2.fq.gz"), **common)
-        single = builder_adapter.builder_argv(["genein-builder"], read2=None, **common)
+        paired_v3 = builder_adapter.builder_argv(["genein-builder"], read2=Path("/tmp/R2.fq.gz"), **common)
+        paired_v3_t = builder_adapter.builder_argv(
+            ["genein-builder"], read2=Path("/tmp/R2.fq.gz"), threads=4, **common,
+        )
+        self.assertEqual(paired_v3, [
+            "genein-builder", "run",
+            "-1", "/tmp/R1.fq.gz",
+            "-2", "/tmp/R2.fq.gz",
+            "-o", "/tmp/out",
+        ])
+        self.assertEqual(paired_v3_t, [
+            "genein-builder", "run",
+            "-1", "/tmp/R1.fq.gz",
+            "-2", "/tmp/R2.fq.gz",
+            "-o", "/tmp/out",
+            "-t", "4",
+        ])
+        with self.assertRaises(ValueError):
+            builder_adapter.builder_argv(["genein-builder"], read2=None, **common)
+
+        paired = builder_adapter.builder_argv(
+            ["genein-builder"], read2=Path("/tmp/R2.fq.gz"), motor="v1", version="0.4.0", **common,
+        )
+        single = builder_adapter.builder_argv(
+            ["genein-builder"], read2=None, motor="v1", version="0.4.0", **common,
+        )
         megahit = builder_adapter.builder_argv(
-            ["genein-builder"], read2=Path("/tmp/R2.fq.gz"), motor="megahit", threads=3, **common,
+            ["genein-builder"], read2=Path("/tmp/R2.fq.gz"), motor="megahit", threads=3, version="0.4.0", **common,
         )
         self.assertEqual(paired, [
             "genein-builder", "run",
@@ -294,14 +318,16 @@ class BuilderConversionTests(unittest.TestCase):
         ])
         for argv in (paired, single):
             self.assertNotIn("-t", argv)
-        for argv in (paired, single, megahit):
+        for argv in (paired_v3, paired_v3_t, paired, single, megahit):
             self.assertNotIn("--hospedeiro", argv)
             self.assertNotIn("--threads", argv)
             self.assertNotIn("--single", argv)
             self.assertNotIn("--fragmentos", argv)
         self.assertNotIn("--r2", single)
         with self.assertRaises(ValueError):
-            builder_adapter.builder_argv(["genein-builder"], read2=None, threads=2, **common)
+            builder_adapter.builder_argv(
+                ["genein-builder"], read2=None, motor="v1", threads=2, version="0.4.0", **common,
+            )
         with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
             builder_adapter.main([
                 "run", "--sample", "S", "--outdir", "/tmp/x", "--r1", "/tmp/R1.fq.gz", "--threads", "2",
@@ -362,7 +388,7 @@ class BuilderInstallTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 2)
         self.assertIn("bash bundle/install_builder.sh", completed.stderr)
         self.assertIn(PIN, completed.stderr)
-        self.assertIn("genein-builder 0.4.0", completed.stderr)
+        self.assertIn("genein-builder 3.0.0b1", completed.stderr)
         self.assertIn("nao troca para", completed.stderr)
 
 
