@@ -45,6 +45,9 @@ def render(
     validated: bool = False,
     compatibility_mode: str | None = None,
     run_dir=None,
+    confirmations=None,
+    negative_support=None,
+    control_metrics=None,
 ) -> str:
     if not validated:
         data = promote_for_public_output(data, compatibility_mode=compatibility_mode)
@@ -84,6 +87,22 @@ def render(
         if not detailed_artifacts
         else "## Candidatos\n\nOs candidatos recuperados e suas métricas aparecem na tabela por locus abaixo."
     )
+    try:
+        from .graded_evidence import render_grades
+    except ImportError:
+        from graded_evidence import render_grades
+    if confirmations is None and run_dir is not None:
+        confirmation_path = Path(run_dir) / "external_confirmation.json"
+        if confirmation_path.is_file():
+            confirmations = json.loads(confirmation_path.read_text(encoding="utf-8"))
+            if not isinstance(confirmations, list):
+                raise ValueError("Registro externo precisa ser uma lista.")
+    graded = render_grades(
+        data,
+        confirmations or [],
+        negative_support=negative_support,
+        control_metrics=control_metrics,
+    )
     collection_summary = ""
     if run_dir is not None:
         manifest_path = Path(run_dir) / "candidate_queries.json"
@@ -111,6 +130,8 @@ def render(
 | Controles | `{controls}` |
 
 {candidate_section}
+
+{graded}
 
 ## Observações técnicas
 

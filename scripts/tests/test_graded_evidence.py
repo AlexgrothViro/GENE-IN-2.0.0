@@ -50,3 +50,50 @@ def test_report_collapses_similarity_and_uses_measured_support_from_the_same_ref
     assert 'também no controle negativo' in collapsed
     assert 'NA (sem correspondência do alvo por accession ou rótulo)' in report
     assert 'suporte sem controle negativo no lote' in render_grades({'candidates': [supported]})
+
+
+def test_export_evidence_renders_graded_evidence_section(tmp_path):
+    import json
+    from scripts.evidence.classify_sample import classify
+    from scripts.evidence.export_evidence import render
+
+    locus = {
+        'locus_id': 'L1',
+        'sseqid': 'ref_virus',
+        'taxon': 'taxon-v',
+        'query_ids': 'q1',
+        'category': 'TARGET_VIRUS',
+        'reference_intervals': '1-120',
+        'reference_length': '500',
+        'covered_reference_bp': '120',
+        'max_query_length': '120',
+        'max_query_covered_bp': '120',
+        'orientation': '+',
+        'task': 'blastn',
+    }
+    comp = [{
+        'qseqid': 'q1',
+        'task': 'blastn',
+        'target_sseqid': 'ref_virus',
+        'specificity_status': 'TARGET_SPECIFIC',
+        'target_evidence_json': json.dumps([{
+            'reference_id': 'ref_virus',
+            'specificity_status': 'TARGET_SPECIFIC',
+            'taxonomic_status': 'PANEL_TAXON_PREFERRED',
+            'taxonomic_flags': [],
+        }]),
+    }]
+    support = [{
+        'reference_id': 'ref_virus',
+        'category': 'TARGET_VIRUS',
+        'locus_id': 'L1',
+        'support_status': 'SUPPORT_AVAILABLE',
+        'unique_templates': '3',
+        'distinct_starts': '2',
+        'proper_pair_templates': '3',
+    }]
+    doc = classify('amostra1', [locus], comp, support, [], 'CONTROL_BELOW_SAMPLE', 'shotgun')
+    md = render(doc, validated=True, run_dir=tmp_path)
+    assert '## Evidência graduada' in md
+    assert 'SUPORTADO_POR_READS' in md
+    assert 'ref_virus' in md
