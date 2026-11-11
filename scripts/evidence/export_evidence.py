@@ -93,7 +93,7 @@ def render(
             except ImportError:
                 from query_accounting import render_collection_summary
             collection_summary = render_collection_summary(json.loads(manifest_path.read_text(encoding="utf-8")))
-    return collection_summary + f"""# Gene-In 2.0 — relatório de evidência — {data['sample_id']}
+    return f"""# Gene-In 2.0 — relatório de evidência — {data['sample_id']}
 
 > {mode_notice}
 
@@ -118,6 +118,7 @@ def render(
 
 {details}
 
+{collection_summary}
 """
 
 

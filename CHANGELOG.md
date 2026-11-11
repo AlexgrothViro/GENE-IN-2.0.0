@@ -1,5 +1,12 @@
 # Histórico de entregas
 
+## Não publicado — coletor por comprimento (11/11/2026)
+
+- FASTQ >100 pb deixam de ser ignoradas pelo coletor: sequências inteiras seguem a rota longa já existente, sem mudar a rota 20–100 pb, perfis, níveis ou critérios de suporte.
+- Manifesto preserva IDs de read/par, origens e restrições; resumo/laudo mostram balanço por rota e descartes. FASTQ <20 pb continuam excluídas, agora com contagem explícita; FASTA <20 pb mantém o comportamento legado não validado.
+- Importação explícita de resultados concluídos do Builder 3.0.0b1, inclusive `ESPECIFICIDADE_NAO_VALIDADA`; adaptador/instalador 0.4.0 não são atualizados. Sem alegação de validação biológica ponta a ponta.
+- Plano e comparação B0 em [registro científico](docs/desenvolvimento/coletor-qualquer-tamanho-20261111.md).
+
 ## 2026-10-27 — correções de primeira execução (QA)
 
 - O diagnóstico de ambiente não anuncia sucesso quando `blastdbcmd` falha, aborta ou o manifesto JSON é inválido/corrompido; encerra com mensagem PT/EN e código diferente de zero.

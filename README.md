@@ -70,6 +70,8 @@ O pacote não inclui bancos biológicos nem dados de amostras. Consulte o [guia 
 
 O Builder é selecionável no painel e na CLI. Ele não substitui os componentes do MULTI. Consulte [instalação, seleção e limitações do Builder](docs/guia/montadores.md).
 
+O coletor de Evidence inclui reads >100 pb inteiras pela rota longa e registra exclusões <20 pb. A importação explícita de resultados do Builder 3.0 beta é separada do adaptador 0.4.0: veja [comprimentos, balanço e importação](docs/guia/coletor-tamanhos.md).
+
 ## Comandos úteis
 
 ```bash

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Union assembled sequences and short/read rescue queries with provenance.
+"""Union assembled sequences and whole-read rescue queries with provenance.
 
 Contig IDs are preserved for assembly concordance. Additional exact sequences
 reuse an existing query; no reverse complement conversion changes coordinates.
