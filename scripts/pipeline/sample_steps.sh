@@ -754,7 +754,10 @@ case "${EVIDENCE_V2,,}" in
       COLLECT_ARGS+=("${SHORT_READ_INPUTS[@]}")
     fi
     [[ -z "$RESCUE_QUERY_FASTA" ]] || COLLECT_ARGS+=(--rescue-fasta "$RESCUE_QUERY_FASTA" --rescue-candidates "$RESCUE_QUERY_BLAST")
-    python3 "$SCRIPT_DIR/collect_candidate_queries.py" "${COLLECT_ARGS[@]}"
+    COLLECTION_SUMMARY="${WORK_ROOT}/results/short_fragments/${SAMPLE_NAME}_collection_summary.md"
+    python3 "$SCRIPT_DIR/collect_candidate_queries.py" "${COLLECT_ARGS[@]}" --summary "$COLLECTION_SUMMARY"
+    printf '\n' >> "$REPORT"
+    while IFS= read -r line; do printf '%s\n' "$line"; done < "$COLLECTION_SUMMARY" >> "$REPORT"
     EVIDENCE_ARGS=(
       --sample "$SAMPLE_NAME" --queries "$CANDIDATE_QUERIES" --query-manifest "$CANDIDATE_MANIFEST"
       --profiles "$EVIDENCE_PROFILES" --evidence-root "$EVIDENCE_ROOT"

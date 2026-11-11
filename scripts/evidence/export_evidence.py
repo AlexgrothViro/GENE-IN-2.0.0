@@ -84,7 +84,16 @@ def render(
         if not detailed_artifacts
         else "## Candidatos\n\nOs candidatos recuperados e suas métricas aparecem na tabela por locus abaixo."
     )
-    return f"""# Gene-In 2.0 — relatório de evidência — {data['sample_id']}
+    collection_summary = ""
+    if run_dir is not None:
+        manifest_path = Path(run_dir) / "candidate_queries.json"
+        if manifest_path.is_file():
+            try:
+                from .query_accounting import render_collection_summary
+            except ImportError:
+                from query_accounting import render_collection_summary
+            collection_summary = render_collection_summary(json.loads(manifest_path.read_text(encoding="utf-8")))
+    return collection_summary + f"""# Gene-In 2.0 — relatório de evidência — {data['sample_id']}
 
 > {mode_notice}
 
