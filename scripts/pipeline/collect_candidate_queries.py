@@ -24,7 +24,7 @@ from query_accounting import render_collection_summary
 MAX_SOURCES_PER_QUERY = 64
 MIN_FREE_DISK_BYTES = 64 * 1024 * 1024
 MIN_AVAILABLE_RAM_BYTES = 128 * 1024 * 1024
-BUILDER_COMPLETED_STATUSES = {"ok", "so_fragmentos", "sem_registros"}
+BUILDER_COMPLETED_STATUSES = {"ok", "so_fragmentos"}
 
 
 def _available_ram_bytes() -> int | None:
@@ -78,7 +78,7 @@ def precheck_collection_resources(
 def collect(contigs: Path, short_fasta: Path | None = None,
             fastqs: list[Path] | None = None, rescue_fasta: Path | None = None,
             rescue_candidates: Path | None = None, restricted_fasta: Path | None = None,
-            target_dir: Path | None = None):
+            target_dir: Path | None = None, warnings: list[str] | None = None):
     all_paths = [contigs, short_fasta, restricted_fasta, *(fastqs or []), rescue_fasta, rescue_candidates]
     precheck = precheck_collection_resources([p for p in all_paths if p is not None], target_dir=target_dir)
     sequences = {}
@@ -86,6 +86,8 @@ def collect(contigs: Path, short_fasta: Path | None = None,
     metadata = {}
     source_index: dict[str, dict[tuple, dict]] = {}
     inputs = []
+    recorded_warnings: list[str] = list(warnings or [])
+    overflow_queries: list[str] = []
 
     accepted = {"short_20_100": 0, "long_above_100": 0, "legacy_fasta_below_20": 0}
     discarded = {"fastq_below_20_legacy_exclusion": 0, "rescue_not_selected": 0}
@@ -120,17 +122,21 @@ def collect(contigs: Path, short_fasta: Path | None = None,
         if key in by_key:
             by_key[key]["occurrences"] = by_key[key].get("occurrences", 1) + 1
             return
-        sources = entry.setdefault("sources", [])
-        if len(sources) >= MAX_SOURCES_PER_QUERY:
-            entry["omitted_sources"] = entry.get("omitted_sources", 0) + 1
-            return
         origin = {"id": name, "path": resolved_path, "kind": kind, "occurrences": 1}
         if kind in {"short_read", "long_read", "rescue_read"}:
             origin.update(read_id=name, pair_id=_pair_id(name), mate=mate)
         if restriction:
             origin["restriction"] = restriction
-        sources.append(origin)
         by_key[key] = origin
+        sources = entry.setdefault("sources", [])
+        if len(sources) >= MAX_SOURCES_PER_QUERY:
+            overflow = entry.setdefault("overflow_sources", [])
+            overflow.append(origin)
+            entry["omitted_sources"] = len(overflow)
+            if query_id not in overflow_queries:
+                overflow_queries.append(query_id)
+            return
+        sources.append(origin)
 
     def fasta(path, kind, preserve_id=False, restriction=None):
         inputs.append({"path": str(path.resolve()), "kind": kind, "sha256": sha256_file(path)})
@@ -172,6 +178,11 @@ def collect(contigs: Path, short_fasta: Path | None = None,
                 discarded["rescue_not_selected"] += 1
         if found != hit_ids:
             raise ValueError("rescue selection contains query IDs absent from rescue FASTA")
+    if overflow_queries:
+        recorded_warnings.append(
+            f"PROVENANCE_OVERFLOW_RECORDED: {len(overflow_queries)} query(ies) excederam "
+            f"{MAX_SOURCES_PER_QUERY} origens distintas; origens adicionais preservadas em overflow_sources."
+        )
     return sequences, {"schema_version": "1.0", "deduplication": "exact_same_orientation",
                        "count_unit": "source_occurrence_not_independent_template",
                        "inputs": inputs, "queries": metadata,
@@ -181,19 +192,44 @@ def collect(contigs: Path, short_fasta: Path | None = None,
                            "unique_queries": len(sequences),
                            "merged_occurrences": sum(accepted.values()) - len(sequences),
                            "restricted_occurrences": restricted_count,
+                           "queries_with_overflow_sources": overflow_queries,
+                           "warnings": recorded_warnings,
                            "resource_precheck": precheck}}
 
 
-def builder_inputs(manifest_path: Path) -> dict:
+def builder_inputs(manifest_path: Path, *, allow_sem_registros: bool = False) -> dict:
     """Explicit import of completed Builder 3.0.0b1 outputs, not its old CLI adapter.
 
     Read only fixed published paths under the manifest directory. Do not execute
-    commands or follow paths provided by the manifest.
+    commands or follow paths provided by the manifest. ``sem_registros`` is
+    refused by default unless ``allow_sem_registros=True``, in which case an
+    explicit warning is emitted and recorded in the manifest.
     """
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if (manifest.get("genein_builder") != "3.0.0b1" or
-            manifest.get("estado") != "concluido" or
-            manifest.get("status") not in BUILDER_COMPLETED_STATUSES):
+    status = manifest.get("status")
+    if manifest.get("genein_builder") != "3.0.0b1" or manifest.get("estado") != "concluido":
+        raise ValueError("Requer manifesto concluído e válido do Builder 3.0.0b1")
+    warnings: list[str] = []
+    if status == "sem_registros":
+        if not allow_sem_registros:
+            raise ValueError(
+                "Manifesto do Builder 3.0.0b1 com status 'sem_registros' (nenhum contig nem fragmento); "
+                "recusado por padrão. Use --allow-sem-registros para importar com aviso explícito."
+            )
+        msg = (
+            "BUILDER_SEM_REGISTROS: manifesto concluído sem contigs nem fragmentos; "
+            "coleta prosseguindo apenas com reads não montadas por autorização explícita."
+        )
+        print(f"AVISO: {msg}", file=sys.stderr)
+        warnings.append(msg)
+    elif status == "so_fragmentos":
+        msg = (
+            "BUILDER_SO_FRAGMENTOS: manifesto concluído sem contigs >=200 pb; "
+            "coleta a partir de fragmentos curtos e reads não montadas."
+        )
+        print(f"AVISO: {msg}", file=sys.stderr)
+        warnings.append(msg)
+    elif status not in BUILDER_COMPLETED_STATUSES:
         raise ValueError("Requer manifesto concluído e válido do Builder 3.0.0b1")
     root = manifest_path.resolve().parent
     def published(relative):
@@ -204,13 +240,16 @@ def builder_inputs(manifest_path: Path) -> dict:
     return {"contigs": published("contigs.fasta"),
             "short_fasta": published("fragmentos/fragmentos.fasta"),
             "restricted_fasta": published("fragmentos/fragmentos_restritos.fasta"),
-            "fastqs": [published(f"nao_montadas_R{mate}.fq.gz") for mate in (1, 2)]}
+            "fastqs": [published(f"nao_montadas_R{mate}.fq.gz") for mate in (1, 2)],
+            "warnings": warnings}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--contigs", type=Path)
     parser.add_argument("--builder-manifest", type=Path)
+    parser.add_argument("--allow-sem-registros", action="store_true",
+                        help="Permitir manifesto Builder 3.0.0b1 com status sem_registros emitindo aviso explícito")
     parser.add_argument("--restricted-fasta", type=Path)
     parser.add_argument("--summary", type=Path)
     parser.add_argument("--short-fasta", type=Path)
@@ -226,7 +265,8 @@ def main():
         if any((args.contigs, args.short_fasta, args.fastq, args.restricted_fasta,
                 args.rescue_fasta, args.rescue_candidates)):
             parser.error("--builder-manifest não pode ser combinado com entradas manuais")
-        sequences, manifest = collect(**builder_inputs(args.builder_manifest), target_dir=args.out.parent)
+        b_inputs = builder_inputs(args.builder_manifest, allow_sem_registros=args.allow_sem_registros)
+        sequences, manifest = collect(**b_inputs, target_dir=args.out.parent)
         manifest["inputs"].append({"path": str(args.builder_manifest.resolve()),
                                    "kind": "builder_manifest",
                                    "sha256": sha256_file(args.builder_manifest)})

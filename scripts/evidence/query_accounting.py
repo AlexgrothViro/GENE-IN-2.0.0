@@ -21,5 +21,12 @@ def render_collection_summary(manifest: dict) -> str:
               "<20 pb em FASTQ: excluídas como em B0; decisão científica futura. "
               "FASTA <20 pb mantém a rota legada, sem validação de especificidade.",
               "IDs de read/par são proveniência, nunca suporte independente. "
-              "Suporte exige o remapeamento original; sequências não são fatiadas nem aparadas.", ""]
+              "Suporte exige o remapeamento original; sequências não são fatiadas nem aparadas."]
+    warnings = counts.get("warnings") or []
+    if warnings:
+        lines.append("")
+        lines.append("### Avisos de coleta e proveniência")
+        for item in warnings:
+            lines.append(f"- {item}")
+    lines.append("")
     return "\n".join(lines)

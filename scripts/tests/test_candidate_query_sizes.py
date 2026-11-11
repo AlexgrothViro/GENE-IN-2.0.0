@@ -112,6 +112,37 @@ class AllSizeQueryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "concluído"):
                 module.builder_inputs(manifest_path)
 
+            data = {"genein_builder": "3.0.0b1", "estado": "concluido", "status": "sem_registros"}
+            manifest_path.write_text(json.dumps(data))
+            with self.assertRaisesRegex(ValueError, "sem_registros"):
+                module.builder_inputs(manifest_path)
+            allowed = module.builder_inputs(manifest_path, allow_sem_registros=True)
+            _, sem_reg_manifest = module.collect(**allowed)
+            self.assertTrue(
+                any("BUILDER_SEM_REGISTROS" in w for w in sem_reg_manifest["routing_summary"]["warnings"])
+            )
+            self.assertIn("BUILDER_SEM_REGISTROS", render_collection_summary(sem_reg_manifest))
+
+    def test_overflow_sources_above_64_preserve_full_provenance_and_occurrences(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            contigs = base / "contigs.fa"
+            seq = "ACGT" * 30
+            contigs.write_text(f">c1\n{seq}\n")
+            reads = base / "reads.fq"
+            records = [(f"read_{i}/1", seq) for i in range(70)]
+            records.append(("read_69/1", seq))
+            fastq(reads, records)
+            _, manifest = module.collect(contigs, fastqs=[reads])
+            entry = manifest["queries"]["c1"]
+            self.assertEqual(len(entry["sources"]), 64)
+            self.assertEqual(entry["omitted_sources"], 7)
+            self.assertEqual(len(entry["overflow_sources"]), 7)
+            self.assertEqual(entry["overflow_sources"][-1]["id"], "read_69/1")
+            self.assertEqual(entry["overflow_sources"][-1]["occurrences"], 2)
+            self.assertEqual(manifest["routing_summary"]["queries_with_overflow_sources"], ["c1"])
+            self.assertIn("PROVENANCE_OVERFLOW_RECORDED", render_collection_summary(manifest))
+
     def test_builder_manifest_rejects_escape_symlink(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
