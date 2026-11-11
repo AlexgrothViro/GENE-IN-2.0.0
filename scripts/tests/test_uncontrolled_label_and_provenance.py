@@ -50,10 +50,18 @@ class UncontrolledLabelTests(unittest.TestCase):
 
     def test_validated_control_can_carry_detected(self):
         value = classify(
-            "sample", [_panel_locus()], [], [], [], "CONTROL_BELOW_SAMPLE", "shotgun",
+            "sample",
+            [_panel_locus(length="80")],
+            [_panel_competition()],
+            [_panel_support(templates="3", starts="2")],
+            [],
+            "CONTROL_BELOW_SAMPLE",
+            "shotgun",
         )
         self.assertEqual(value["evidence_level"], "DETECTED")
         self.assertEqual(value["analysis_outcome"], "EVIDENCE_RECOVERED")
+        self.assertEqual(value["retention_status"], "PROMOTED_TO_DETECTED")
+        self.assertEqual(value["candidates"][0]["retention_status"], "PROMOTED_TO_DETECTED")
 
     def test_random_synthetic_input_has_zero_detected(self):
         rng = random.Random(20261029)
@@ -143,24 +151,51 @@ def _hit(subject, taxon, score, category="TARGET_VIRUS", task="blastn"):
     }
 
 
-def _panel_locus():
+def _panel_locus(length: str = "20", category: str = "TARGET_VIRUS"):
     return {
         "locus_id": "L1", "sseqid": "A", "taxon": "taxon-A", "query_ids": "q",
-        "category": "TARGET_VIRUS", "reference_intervals": "1-20",
-        "reference_length": "100", "covered_reference_bp": "20",
-        "max_query_length": "20", "max_query_covered_bp": "20",
+        "category": category, "reference_intervals": f"1-{length}",
+        "reference_length": "500", "covered_reference_bp": length,
+        "max_query_length": length, "max_query_covered_bp": length,
         "orientation": "+", "task": "blastn",
     }
 
 
+def _panel_competition(status: str = "TARGET_SPECIFIC"):
+    return {
+        "qseqid": "q",
+        "task": "blastn",
+        "target_sseqid": "A",
+        "specificity_status": status,
+    }
+
+
+def _panel_support(templates: str = "3", starts: str = "2", category: str = "TARGET_VIRUS"):
+    return {
+        "reference_id": "A",
+        "category": category,
+        "locus_id": "L1",
+        "support_status": "SUPPORT_AVAILABLE",
+        "unique_templates": templates,
+        "distinct_starts": starts,
+        "proper_pair_templates": templates,
+    }
+
+
 class LabelRegressionTests(unittest.TestCase):
-    def test_detected_label_keeps_non_target_and_other_caveats(self):
+    def test_non_target_best_is_retained_in_review_with_caveats(self):
         competitive = evaluate([
             _hit("A", "taxon-A", 20),
             _hit("host", "host", 40, "HOST"),
         ])
-        value = classify("sample", [_panel_locus()], competitive, [], [], "CONTROL_BELOW_SAMPLE", "shotgun")
-        self.assertEqual(value["evidence_level"], "DETECTED")
+        value = classify("sample", [_panel_locus(length="80")], competitive, [], [], "CONTROL_BELOW_SAMPLE", "shotgun")
+        self.assertEqual(value["evidence_level"], "REVIEW")
+        self.assertEqual(value["retention_status"], "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE")
+        self.assertEqual(
+            value["candidates"][0]["retention_status"],
+            "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE",
+        )
+        self.assertIn("SPECIFICITY_NOT_TARGET_SPECIFIC", value["candidates"][0]["retention_reasons"])
         text = "\n".join(value["caveats"])
         self.assertIn("não alvo", text)
         self.assertIn("Suporte por reads não foi medido", text)
@@ -181,44 +216,95 @@ class LabelRegressionTests(unittest.TestCase):
     def test_only_short_builder_evidence_stays_review_in_a_validated_batch(self):
         fragments = [{"qseqid": "q", "qlen": "80", "assembly_method": "builder"}]
         value = classify(
-            "sample", [_panel_locus()], [], [], [], "CONTROL_BELOW_SAMPLE", "shotgun",
+            "sample",
+            [_panel_locus(length="80")],
+            [_panel_competition()],
+            [_panel_support(templates="3", starts="2")],
+            [],
+            "CONTROL_BELOW_SAMPLE",
+            "shotgun",
             fragments=fragments,
         )
         self.assertEqual(value["evidence_level"], "REVIEW")
         self.assertEqual(value["analysis_outcome"], "CANDIDATES_FOR_REVIEW")
+        self.assertEqual(value["retention_status"], "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE")
         self.assertIn("fragmento curto do Builder", "\n".join(value["caveats"]))
         longer = [{"qseqid": "q", "qlen": "240", "assembly_method": "builder"}]
         kept = classify(
-            "sample", [_panel_locus()], [], [], [], "CONTROL_BELOW_SAMPLE", "shotgun",
+            "sample",
+            [_panel_locus(length="240")],
+            [_panel_competition()],
+            [_panel_support(templates="3", starts="2")],
+            [],
+            "CONTROL_BELOW_SAMPLE",
+            "shotgun",
             fragments=longer,
         )
         self.assertEqual(kept["evidence_level"], "DETECTED")
+        self.assertEqual(kept["retention_status"], "PROMOTED_TO_DETECTED")
 
     def test_single_long_read_without_multi_template_support_stays_review(self):
         long_read_frag = [{"qseqid": "q", "qlen": "150", "assembly_method": "read_level"}]
-        one_template = [{
-            "reference_id": "A", "category": "TARGET_VIRUS", "locus_id": "L1",
-            "support_status": "SUPPORT_AVAILABLE", "unique_templates": "1",
-            "distinct_starts": "2", "proper_pair_templates": "1",
-        }]
+        two_templates = [_panel_support(templates="2", starts="2")]
         without_support = classify(
-            "sample", [_panel_locus()], [], one_template, [], "CONTROL_BELOW_SAMPLE", "shotgun",
+            "sample",
+            [_panel_locus(length="150")],
+            [_panel_competition()],
+            two_templates,
+            [],
+            "CONTROL_BELOW_SAMPLE",
+            "shotgun",
             fragments=long_read_frag,
         )
         self.assertEqual(without_support["evidence_level"], "REVIEW")
         self.assertEqual(without_support["analysis_outcome"], "CANDIDATES_FOR_REVIEW")
+        self.assertEqual(without_support["retention_status"], "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE")
+        self.assertIn("INSUFFICIENT_TEMPLATE_SUPPORT", without_support["candidates"][0]["retention_reasons"])
         self.assertIn("leitura não montada sem múltiplos templates", "\n".join(without_support["caveats"]))
-        two_templates = [{
-            "reference_id": "A", "category": "TARGET_VIRUS", "locus_id": "L1",
-            "support_status": "SUPPORT_AVAILABLE", "unique_templates": "2",
-            "distinct_starts": "2", "proper_pair_templates": "2",
-        }]
+        three_templates = [_panel_support(templates="3", starts="2")]
         with_support = classify(
-            "sample", [_panel_locus()], [], two_templates, [], "CONTROL_BELOW_SAMPLE", "shotgun",
+            "sample",
+            [_panel_locus(length="150")],
+            [_panel_competition("TARGET_BEST")],
+            three_templates,
+            [],
+            "CONTROL_BELOW_SAMPLE",
+            "shotgun",
             fragments=long_read_frag,
         )
         self.assertEqual(with_support["evidence_level"], "DETECTED")
         self.assertEqual(with_support["analysis_outcome"], "EVIDENCE_RECOVERED")
+        self.assertEqual(with_support["retention_status"], "PROMOTED_TO_DETECTED")
+
+    def test_assembled_contig_with_zero_templates_or_unlabeled_stays_review(self):
+        contig_frag = [{"qseqid": "q", "qlen": "350", "assembly_method": "spades"}]
+        zero_templates = classify(
+            "sample",
+            [_panel_locus(length="350")],
+            [_panel_competition()],
+            [_panel_support(templates="0", starts="0")],
+            [],
+            "CONTROL_BELOW_SAMPLE",
+            "shotgun",
+            fragments=contig_frag,
+        )
+        self.assertEqual(zero_templates["evidence_level"], "REVIEW")
+        self.assertEqual(zero_templates["retention_status"], "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE")
+        self.assertIn("INSUFFICIENT_TEMPLATE_SUPPORT", zero_templates["candidates"][0]["retention_reasons"])
+
+        unlabeled = classify(
+            "sample",
+            [_panel_locus(length="350", category="UNLABELED")],
+            [_panel_competition()],
+            [_panel_support(templates="5", starts="4", category="UNLABELED")],
+            [],
+            "CONTROL_BELOW_SAMPLE",
+            "shotgun",
+            fragments=contig_frag,
+        )
+        self.assertEqual(unlabeled["evidence_level"], "REVIEW")
+        self.assertEqual(unlabeled["retention_status"], "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE")
+        self.assertIn("UNLABELED_REQUIRES_REVIEW", unlabeled["candidates"][0]["retention_reasons"])
 
     def test_report_follows_control_status_and_evidence_label(self):
         import subprocess

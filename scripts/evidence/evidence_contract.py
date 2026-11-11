@@ -66,21 +66,29 @@ def labels_for_control(
     control_status: str,
     *,
     has_candidates: bool,
+    has_promotable_candidate: bool = True,
     only_short_builder: bool = False,
     only_unsupported_read_level: bool = False,
 ) -> tuple[str, str]:
     """Return ``(analysis_outcome, evidence_level)`` for one execution.
 
-    A validated positive or negative control may carry ``DETECTED``. Without
-    that state, candidates stay available for review and the execution label
-    is ``REVIEW``. ``CONTROL_NOT_APPLICABLE`` is not a validated control.
-    A sample whose only evidence is a Builder fragment shorter than 200 bp
-    or an unassembled read without multi-template remapping support also
-    stays at ``REVIEW``, including inside a batch.
+    A validated positive or negative control may carry ``DETECTED`` only when
+    at least one candidate satisfies the strong evidence thresholds from
+    ``config/evidence_profiles.json`` (``TARGET_VIRUS``,
+    ``specificity_status in {"TARGET_SPECIFIC", "TARGET_BEST"}``,
+    ``LOCUS_CANDIDATE``, and sufficient remapped template support). Otherwise,
+    candidates remain retained for human review
+    (``CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE``) with execution label
+    ``REVIEW``. ``CONTROL_NOT_APPLICABLE`` is not a validated control.
     """
     if not has_candidates:
         return "NO_EVIDENCE_RECOVERED", "NO_SIGNAL"
-    if only_short_builder or only_unsupported_read_level or control_status not in CONTROL_PASS:
+    if (
+        not has_promotable_candidate
+        or only_short_builder
+        or only_unsupported_read_level
+        or control_status not in CONTROL_PASS
+    ):
         return "CANDIDATES_FOR_REVIEW", "REVIEW"
     return "EVIDENCE_RECOVERED", "DETECTED"
 

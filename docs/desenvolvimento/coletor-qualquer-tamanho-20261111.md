@@ -57,6 +57,25 @@ Artefatos completos locais: `/home/mestradoalex/genein-coletor-auditoria-2026111
 ## Pendências e publicação
 
 - FASTQ <20 pb continua excluída com contagem; eventual aceitação exige decisão científica.
-- Adaptador/instalador Builder 0.4.0 não foi migrado para 3.0.0b1; a importação nova é explícita pelo coletor. Evidence desligado mantém o caminho legado.
+- Adaptador/instalador Builder 0.4.0 foi atualizado para o contrato 3.0.0b1 (`-1/-2/-o`) preservando retrocompatibilidade com 0.4.0, e `sample_steps.sh` repassa `--builder-manifest` ao coletor.
 - O Desktop em main `5418bf966f444cb643a9b5f74a9a4bcbfa7f247f` tem coletor **idêntico byte a byte ao B0** e precisará de port equivalente. Apenas leitura remota, sem mudanças.
-- A atribuição da decisão científica chegou por outro bot; a autorização direta disponível para abrir PR era a do Builder. Nenhum push/PR do Gene-In foi feito nesta execução. Confirmar diretamente o escopo desta mudança científica antes da publicação. Destino proposto: PR de `trabalho/coletor-qualquer-tamanho` para `trabalho/software-builder`, aberto, sem merge/tag.
+- A atribuição da decisão científica chegou por outro bot; a autorização direta disponível para abrir PR era a do Builder. Confirmar diretamente o escopo desta mudança científica antes da publicação. Destino proposto: PR de `trabalho/coletor-qualquer-tamanho` para `trabalho/software-builder`, aberto, sem merge/tag.
+
+## Portão de evidência forte e antes/depois em dados reais de pipeline (Revisão MICRO-001)
+
+`classify_sample.py` passa a ler os limiares diretamente de `config/evidence_profiles.json` (`support.minimum_unique_templates = 3`, `support.minimum_distinct_starts_shotgun = 2`, `locus.minimum_candidate_bp = 50`) e avaliar `candidate_retention_reasons` em **todos** os candidatos (contigs montados, Builder e `read_level`), exigindo `category == "TARGET_VIRUS"` e `specificity_status in {"TARGET_SPECIFIC", "TARGET_BEST"}`. Candidatos que não cumprem os limiares recebem `retention_status = "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE"` e mantêm a execução em `REVIEW`.
+
+| Execução de pipeline (com controle validado `CONTROL_BELOW_SAMPLE`) | Categorias / Especificidade / Suporte | `fa21aa1` (antes) | `8698c92` (intermediário) | Novo portão (`evidence_profiles.json`) |
+|---|---|---|---|---|
+| `alpha2` (7 runs: `81554` SPAdes/metaSPAdes/Velvet, `81555`, `D26_03`, `79f201`, `8e612a`) | `UNLABELED`, `NOT_EVALUATED`, `0` templates | `DETECTED` (7/7) | `DETECTED` (7/7) | `REVIEW` / `CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE` (7/7) |
+| `closure_test` (`b4-eg002-run1`, `b4-eg002-run2` — contig Velvet) | `TARGET_VIRUS`, `TARGET_SPECIFIC`, `0` templates | `DETECTED` (2/2) | `DETECTED` (2/2) | `REVIEW` / `CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE` (2/2) |
+| `ab_release/long` (contig 350 pb + read 150 pb) | `TARGET_VIRUS`, `AMBIGUOUS`/`NOT_EVALUATED`, `1` template / `2` inícios | `DETECTED` | `DETECTED` | `REVIEW` / `CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE` |
+| `ab_release/long_single_pair` (par `read_level` 150 pb) | `TARGET_VIRUS`, `AMBIGUOUS`/`NOT_EVALUATED`, `1` template / `2` inícios | `DETECTED` | `REVIEW` | `REVIEW` / `CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE` |
+| Painel positivo com remapeamento (`TARGET_VIRUS`, `>=50 pb`, `>=3` templates, `>=2` inícios) | `TARGET_VIRUS`, `TARGET_SPECIFIC`/`TARGET_BEST`, `>=3` templates | `DETECTED` | `DETECTED` | `DETECTED` / `PROMOTED_TO_DETECTED` |
+
+### Opções para decisão do Alexsander sobre `UNLABELED` e bancos do usuário sem `labels.tsv`
+
+Por padrão, candidatos `UNLABELED` permanecem retidos em `REVIEW` (`CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE`, motivo `UNLABELED_REQUIRES_REVIEW`). Opções de política:
+1. **Opção A (atual / conservadora)**: manter `UNLABELED` sempre em `REVIEW`, exigindo `labels.tsv` com `TARGET_VIRUS` para promoção a `DETECTED`.
+2. **Opção B (modo banco do usuário dedicado)**: quando o usuário informar explicitamente que o banco customizado contém apenas alvos virais (ex.: flag/perfil `custom_target_only`), tratar ausências de `labels.tsv` como `TARGET_VIRUS` sujeitas aos demais portões (`>=3` templates, `>=2` inícios, `>=50 pb`).
+3. **Opção C (geração automática de `labels.tsv` na indexação do banco)**: exigir/gerar `labels.tsv` no preparo do banco customizado antes da execução.

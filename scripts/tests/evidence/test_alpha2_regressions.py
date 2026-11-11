@@ -50,7 +50,8 @@ class Alpha2RegressionTests(unittest.TestCase):
         }]
         value = classify("sample", [locus()], [competitive()], support, coverage,
                          "CONTROL_BELOW_SAMPLE", "shotgun")
-        self.assertEqual(value["evidence_level"], "DETECTED")
+        self.assertEqual(value["evidence_level"], "REVIEW")
+        self.assertEqual(value["retention_status"], "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE")
         self.assertEqual(value["candidates"][0]["support"]["status"], "NOT_EVALUATED")
         self.assertEqual(value["candidates"][0]["coverage"]["status"], "NOT_EVALUATED")
 

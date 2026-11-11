@@ -70,9 +70,11 @@ SCIENCE_REVISION = "scientific_review_20261005_v1"
 
 
 def _combined_status(statuses):
-    if statuses and all(status == "TARGET_SPECIFIC" for status in statuses):
-        return "TARGET_SPECIFIC"
-    if "NON_TARGET_BEST" in statuses and "TARGET_SPECIFIC" not in statuses:
+    if statuses and all(status in {"TARGET_SPECIFIC", "TARGET_BEST"} for status in statuses):
+        return "TARGET_SPECIFIC" if "TARGET_SPECIFIC" in statuses else "TARGET_BEST"
+    if "NON_TARGET_BEST" in statuses and not any(
+        status in {"TARGET_SPECIFIC", "TARGET_BEST"} for status in statuses
+    ):
         return "NON_TARGET_BEST"
     if any(status in {"AMBIGUOUS", "NON_TARGET_BEST"} for status in statuses):
         return "AMBIGUOUS"
@@ -149,13 +151,9 @@ def reference_coverage(candidates):
 _SHORT_BUILDER_BP = 200
 
 
-def only_short_builder_evidence(
-    candidates: list[dict],
-    fragments: list[dict] | None,
-) -> bool:
-    """True when every candidate query is a Builder sequence shorter than 200 bp."""
-    if not candidates or not fragments:
-        return False
+def _short_builder_query_ids(fragments: list[dict] | None) -> set[str]:
+    if not fragments:
+        return set()
     lengths: dict[str, int] = {}
     builder_only: dict[str, bool] = {}
     for row in fragments:
@@ -170,23 +168,34 @@ def only_short_builder_evidence(
         tokens = {part.strip() for part in str(row.get("assembly_method") or "").lower().split(",") if part.strip()}
         is_builder = "builder" in tokens
         builder_only[query] = is_builder if query not in builder_only else builder_only[query] and is_builder
+    return {
+        query
+        for query, is_builder in builder_only.items()
+        if is_builder and 1 <= lengths.get(query, 0) < _SHORT_BUILDER_BP
+    }
+
+
+def only_short_builder_evidence(
+    candidates: list[dict],
+    fragments: list[dict] | None,
+) -> bool:
+    """True when every candidate query is a Builder sequence shorter than 200 bp."""
+    if not candidates or not fragments:
+        return False
+    short_queries = _short_builder_query_ids(fragments)
     queries = [query for candidate in candidates for query in (candidate.get("query_ids") or [])]
     if not queries:
         return False
-    for query in queries:
-        if query not in lengths or not builder_only.get(query):
-            return False
-        if lengths[query] < 1 or lengths[query] >= _SHORT_BUILDER_BP:
-            return False
-    return True
+    return all(query in short_queries for query in queries)
 
 
 def only_unsupported_read_level_evidence(
     candidates: list[dict],
     fragments: list[dict] | None,
+    minimum_unique_templates: int = 3,
     minimum_distinct_starts: int = 2,
 ) -> bool:
-    """True when every candidate query is read_level and no candidate has >=2 templates and >=minimum_distinct_starts."""
+    """True when every candidate query is read_level and no candidate meets support thresholds."""
     if not candidates or not fragments:
         return False
     read_level_only: dict[str, bool] = {}
@@ -204,11 +213,51 @@ def only_unsupported_read_level_evidence(
         support = candidate.get("support") or {}
         if (
             support.get("status") == "SUPPORT_AVAILABLE"
-            and as_int(support.get("unique_templates")) >= 2
+            and as_int(support.get("unique_templates")) >= minimum_unique_templates
             and as_int(support.get("distinct_starts")) >= minimum_distinct_starts
         ):
             return False
     return True
+
+
+def candidate_retention_reasons(
+    candidate: dict,
+    *,
+    control_status: str,
+    minimum_unique_templates: int,
+    minimum_distinct_starts: int,
+    short_builder_queries: set[str],
+) -> list[str]:
+    """Evaluate strong-evidence gate thresholds from config/evidence_profiles.json.
+
+    Returns an empty list when the candidate can promote the execution to
+    ``DETECTED``; otherwise returns all reasons keeping it in ``REVIEW``
+    (``CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE``). ``UNLABELED`` candidates
+    remain in ``REVIEW`` by default pending database policy decision.
+    """
+    reasons: list[str] = []
+    category = str(candidate.get("category") or "UNLABELED")
+    if category == "UNLABELED":
+        reasons.append("UNLABELED_REQUIRES_REVIEW")
+    elif category != "TARGET_VIRUS":
+        reasons.append("NON_TARGET_CATEGORY")
+    if candidate.get("specificity_status") not in {"TARGET_SPECIFIC", "TARGET_BEST"}:
+        reasons.append("SPECIFICITY_NOT_TARGET_SPECIFIC")
+    if candidate.get("candidate_class") != "LOCUS_CANDIDATE":
+        reasons.append("EXPLORATORY_FRAGMENT_BELOW_MINIMUM_BP")
+    query_ids = candidate.get("query_ids") or []
+    if query_ids and short_builder_queries and all(query in short_builder_queries for query in query_ids):
+        reasons.append("SHORT_BUILDER_FRAGMENT_BELOW_200BP")
+    support = candidate.get("support") or {}
+    if (
+        support.get("status") != "SUPPORT_AVAILABLE"
+        or as_int(support.get("unique_templates")) < minimum_unique_templates
+        or as_int(support.get("distinct_starts")) < minimum_distinct_starts
+    ):
+        reasons.append("INSUFFICIENT_TEMPLATE_SUPPORT")
+    if control_status not in {"CONTROL_BELOW_SAMPLE", "CONTROL_NOT_DETECTED"}:
+        reasons.append("UNVALIDATED_CONTROL")
+    return reasons
 
 
 def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str, str]],
@@ -323,6 +372,10 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
     specificity_status = _combined_status(all_specificity)
 
     minimum_candidate_bp = as_int(locus_cfg["minimum_candidate_bp"])
+    minimum_unique_templates = as_int(support_cfg["minimum_unique_templates"])
+    minimum_distinct_starts_shotgun = as_int(support_cfg["minimum_distinct_starts_shotgun"])
+    required_distinct_starts = minimum_distinct_starts_shotgun if library_mode == "shotgun" else 1
+    short_builder_queries = _short_builder_query_ids(fragments)
     for candidate in evaluated_candidates:
         candidate["candidate_class"] = (
             "EXPLORATORY_FRAGMENT"
@@ -333,6 +386,19 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         candidate["blocking_reasons"] = []
         candidate["availability_status"] = "AVAILABLE_FOR_REVIEW"
         candidate["qualification_status"] = "NOT_EVALUATED"
+        retention_reasons = candidate_retention_reasons(
+            candidate,
+            control_status=control_status,
+            minimum_unique_templates=minimum_unique_templates,
+            minimum_distinct_starts=required_distinct_starts,
+            short_builder_queries=short_builder_queries,
+        )
+        candidate["retention_reasons"] = retention_reasons
+        candidate["retention_status"] = (
+            "PROMOTED_TO_DETECTED"
+            if not retention_reasons
+            else "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE"
+        )
 
     candidates = evaluated_candidates
     aligned_references = reference_coverage(candidates)
@@ -356,13 +422,24 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
     unsupported_read_only = only_unsupported_read_level_evidence(
         candidates,
         fragments,
-        minimum_distinct_starts=as_int(support_cfg.get("minimum_distinct_starts_shotgun"), 2),
+        minimum_unique_templates=minimum_unique_templates,
+        minimum_distinct_starts=required_distinct_starts,
+    )
+    has_promotable_candidate = any(
+        candidate.get("retention_status") == "PROMOTED_TO_DETECTED"
+        for candidate in candidates
     )
     analysis_outcome, evidence_level = labels_for_control(
         control_status,
         has_candidates=bool(candidates),
+        has_promotable_candidate=has_promotable_candidate,
         only_short_builder=short_builder_only,
         only_unsupported_read_level=unsupported_read_only,
+    )
+    retention_status = (
+        "PROMOTED_TO_DETECTED" if evidence_level == "DETECTED"
+        else "CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE" if candidates
+        else "NO_CANDIDATES"
     )
     caveats = [*support_caveats, *coverage_caveats]
     if candidates:
@@ -371,17 +448,21 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         elif short_builder_only:
             caveats.append(
                 "A única evidência é de fragmento curto do Builder, abaixo de 200 pb. "
-                "O rótulo da execução permanece REVIEW."
+                "O rótulo da execução permanece REVIEW (CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE)."
             )
         elif unsupported_read_only:
             caveats.append(
                 "A única evidência vem de leitura não montada sem múltiplos templates independentes confirmados por remapeamento. "
-                "O rótulo da execução permanece REVIEW."
+                "O rótulo da execução permanece REVIEW (CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE)."
             )
         else:
             caveats.append(
-                "Candidatos recuperados para triagem humana. "
-                "O rótulo da execução permanece REVIEW."
+                "Candidatos recuperados para triagem humana abaixo do limiar de evidência forte "
+                "(CANDIDATE_RETAINED_BELOW_STRONG_EVIDENCE). O rótulo da execução permanece REVIEW."
+            )
+        if any(c["category"] == "UNLABELED" for c in candidates):
+            caveats.append(
+                "Há candidato UNLABELED (sem categoria em labels.tsv); mantido em REVIEW por padrão."
             )
         if specificity_status == "NON_TARGET_BEST":
             caveats.append("O melhor alinhamento competitivo é de um não alvo; os candidatos permanecem disponíveis como sinais não confirmados.")
@@ -439,6 +520,7 @@ def classify(sample: str, loci: list[dict[str, str]], competitive: list[dict[str
         "execution_status": "done",
         "analysis_outcome": analysis_outcome,
         "evidence_level": evidence_level,
+        "retention_status": retention_status,
         "shadow_mode": shadow,
         "reported_conclusion": (
             analysis_outcome
