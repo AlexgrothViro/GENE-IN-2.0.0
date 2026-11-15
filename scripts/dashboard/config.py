@@ -245,6 +245,9 @@ def get_config_env_path():
     explicit = str(os.environ.get("GENEIN_CONFIG_FILE") or "").strip()
     if explicit:
         return Path(explicit).expanduser()
+    work_root = str(os.environ.get("GENEIN_WORK_ROOT") or "").strip()
+    if work_root and (Path(work_root).expanduser() / "config/picornavirus.env").is_file():
+        return resolve_config_file(os.environ, Path.home(), REPO_ROOT)
     if CONFIG_ENV_PRIMARY.is_file():
         work = str(os.environ.get("GENEIN_WORK_ROOT") or "").strip()
         expected = Path(work).expanduser() / "config" / "picornavirus.env" if work else None

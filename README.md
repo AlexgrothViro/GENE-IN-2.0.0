@@ -6,6 +6,10 @@
 
 **Painel local · Linux e WSL2 · Proveniência por execução**
 
+**Atualização de engenharia de 03/11/2026:** a main também incorpora o painel e os caminhos com espaços do [PR #9](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pull/9) e o fechamento de configuração, testes e instalação do [PR #10](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pull/10). A versão de software continua **2.0.2**; identifique a revisão pelo commit, pois há várias revisões com esse número. Os testes de software e a instalação têm evidências próprias; o estudo científico continua separado.
+
+Este é o [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Entregas publicadas ficam em [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). O [índice de repositórios e histórico](docs/repositorios-e-historico.md) explica a escolha da distribuição e guarda os nomes anteriores.
+
 [Instalação](docs/guia/instalacao.md) · [Primeiros passos](docs/guia/uso.md) · [Montadores](docs/guia/montadores.md) · [Documentação](docs/README.md) · [English](README.en.md)
 
 </div>

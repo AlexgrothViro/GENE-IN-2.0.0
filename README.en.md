@@ -6,6 +6,10 @@
 
 **Local dashboard · Linux and WSL2 · Execution provenance**
 
+**Engineering update, 3 November 2026:** main also includes the dashboard and paths-with-spaces work from [PR #9](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pull/9), plus configuration, testing and installation improvements from [PR #10](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pull/10). The software version remains **2.0.2**; record the commit to distinguish revisions sharing that version. Software tests and installation have their own evidence; scientific evaluation remains separate.
+
+This is the [repository](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Published packages belong in [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). Previous names and the distribution choice are listed in the [history index](docs/repositorios-e-historico.md).
+
 [Português](README.md) · [Documentation](docs/README.md) · [Installation](docs/guia/instalacao.md) · [Assemblers](docs/guia/montadores.md)
 
 </div>

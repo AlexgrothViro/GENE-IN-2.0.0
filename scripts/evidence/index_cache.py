@@ -51,7 +51,12 @@ def fingerprint(reference: str | Path, builders: list[str]) -> dict:
 
 def matches(manifest: dict, reference: str | Path, builders: list[str]) -> bool:
     expected = fingerprint(reference, builders)
-    return manifest == expected
+    # A shared receipt may also record Bowtie2. BLAST reuse needs its own
+    # builder identity and the same reference, not an identical builder set.
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("builders"), dict):
+        return False
+    required = {name: manifest["builders"].get(name) for name in expected["builders"]}
+    return {**manifest, "builders": required} == expected
 
 
 def main() -> None:
@@ -61,15 +66,14 @@ def main() -> None:
     parser.add_argument("--builder", action="append", required=True)
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()
-    expected = fingerprint(args.reference, args.builder)
     if args.write:
-        write_json_atomic(args.manifest, expected)
+        write_json_atomic(args.manifest, fingerprint(args.reference, args.builder))
         return
     try:
         actual = json.loads(args.manifest.read_text(encoding="utf-8", errors="strict"))
     except (OSError, json.JSONDecodeError):
         raise SystemExit(1)
-    raise SystemExit(0 if actual == expected else 1)
+    raise SystemExit(0 if matches(actual, args.reference, args.builder) else 1)
 
 
 if __name__ == "__main__":

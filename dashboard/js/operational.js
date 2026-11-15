@@ -1,7 +1,7 @@
 import { getJSON, postForm, postJSON } from "./api.js";
 import { jobLabel, elapsed, formatDate, normalizeStatus, runIdentity } from "./adapters.js";
 import { analysisDimensions, badge, button, buttonClass, dataTable, field, h, linkButton, metric, openModal, outcomePanel, pageHeader, panel, panelHead, statusPanel, toast } from "./components.js";
-import { activateJob, persistActiveJob } from "./state.js";
+import { activateJob, persistActiveJob, optionalEvidenceParams, optionalEvidenceIssues, optionalEvidenceWizard, effectiveOptionalEvidence } from "./state.js";
 
 const WIZARD_STEPS = ["Ambiente", "Banco", "Amostra", "Configuração", "Revisão", "Execução"];
 const CUSTOM_DATABASE = "custom";
@@ -18,6 +18,68 @@ function databaseLabel(item) {
 function databaseReady(wizard) {
   if (!wizard.database) return false;
   return wizard.database !== CUSTOM_DATABASE || Boolean(String(wizard.dbQuery || "").trim());
+}
+
+export function optionalEvidenceControls(store) {
+  const result = h("div", { role: "status", "aria-live": "polite" });
+  const root = panel("Verificações adicionais (opcionais)", [h("p", { text: "Selecione arquivos locais previamente preparados. Cada escolha vale para esta execução e será registrada com o resultado." })]);
+  for (const [key, label, fields] of [
+    ["competitionEnabled", "Usar comparação competitiva (decoy)", [["competitionDb", "Prefixo do banco competitivo"], ["competitionLabels", "Tabela de rótulos (TSV)"]]],
+    ["remappingEnabled", "Remapear reads para conferir suporte", [["remappingReference", "Referência do remapeamento (FASTA)"], ["remappingIndex", "Prefixo do índice de remapeamento"]]],
+  ]) {
+    const wizard = store.get().wizard;
+    const inherited = wizard.optionalDefaults?.[key === "competitionEnabled" ? "competition_enabled" : "remapping_enabled"] === true;
+    const selector = h("select", { id: `wizard-${key}` }, [
+      h("option", { value: "", text: `Usar configuração (${inherited ? "ligado" : "desligado"})` }),
+      h("option", { value: "true", text: "Ligado nesta execução" }),
+      h("option", { value: "false", text: "Desligado nesta execução" }),
+    ]);
+    selector.value = wizard[key] == null ? "" : String(wizard[key]);
+    const inputs = h("fieldset", {});
+    const effectiveLabel = h("p", { role: "status" });
+    const controls = [];
+    const refresh = () => {
+      const current = store.get().wizard, effective = effectiveOptionalEvidence(current);
+      inputs.disabled = current[key] !== true;
+      effectiveLabel.textContent = `Valor efetivo: ${effective[key] ? "ligado" : "desligado"}. Origem: ${current[key] == null ? "configuração" : "escolha desta execução"}.`;
+      for (const [name, control] of controls) control.value = effective[name] || "";
+    };
+    selector.addEventListener("change", () => { store.set({ wizard: { [key]: selector.value === "" ? null : selector.value === "true" } }); refresh(); result.replaceChildren(); });
+    root.append(field(label, selector, "Sem alteração, vale a configuração. Para editar os caminhos, escolha Ligado nesta execução."), effectiveLabel);
+    for (const [name, text] of fields) {
+      const input = h("input", { id: `wizard-${name}`, type: "text" });
+      input.addEventListener("input", () => { store.set({ wizard: { [name]: input.value.trim() } }); result.replaceChildren(); });
+      controls.push([name, input]);
+      inputs.append(field(text, input));
+    }
+    if (key === "remappingEnabled") {
+      const mode = h("select", { id: "wizard-library-mode" }, [["unknown", "Não informado"], ["shotgun", "Shotgun"], ["amplicon", "Amplicon"], ["targeted", "Enriquecimento direcionado"]].map(([value, text]) => h("option", { value, text })));
+      controls.push(["libraryMode", mode]);
+      mode.addEventListener("change", () => { store.set({ wizard: { libraryMode: mode.value } }); result.replaceChildren(); });
+      inputs.append(field("Tipo de biblioteca", mode, "Sem essa informação, a interpretação do suporte permanece limitada. O remapeamento deste fluxo exige reads pareadas."));
+    }
+    root.append(inputs);
+    refresh();
+  }
+  root.append(h("p", { text: "Informe os prefixos sem a extensão dos componentes. Caminhos Windows e WSL são aceitos. A conferência verifica estrutura e integridade dos arquivos; não aprova a interpretação biológica." }));
+  const verify = button("Conferir arquivos opcionais", async () => {
+    const selected = optionalEvidenceParams(store.get().wizard);
+    const effective = effectiveOptionalEvidence(store.get().wizard);
+    if (!effective.competitionEnabled && !effective.remappingEnabled) { result.replaceChildren(statusPanel("empty", "Opções efetivamente desligadas", "A seleção atual e a configuração deixam as duas opções desligadas.")); return; }
+    const issues = optionalEvidenceIssues(store.get().wizard);
+    if (issues.length) { result.replaceChildren(statusPanel("blocked", "Complete as opções", issues.join("; "))); return; }
+    verify.disabled = true;
+    try {
+      await postJSON("/api/evidence/options/validate", selected);
+      if (JSON.stringify(selected) !== JSON.stringify(optionalEvidenceParams(store.get().wizard))) return;
+      result.replaceChildren(statusPanel("success", "Arquivos opcionais conferidos", "Estrutura e integridade conferidas para estas seleções. Os arquivos serão conferidos novamente ao iniciar a execução."));
+    } catch (error) {
+      if (JSON.stringify(selected) === JSON.stringify(optionalEvidenceParams(store.get().wizard))) result.replaceChildren(statusPanel("error", "Opções não conferidas", error.payload?.error || error.message));
+    }
+    finally { verify.disabled = false; }
+  }, "secondary");
+  root.append(verify, result);
+  return root;
 }
 
 function databaseSummary(wizard) {
@@ -187,6 +249,7 @@ export function sampleImportCard(store, { onImported, framed = true } = {}) {
 export async function renderNewAnalysis(store, rerender) {
   const state = store.get();
   const wizard = state.wizard;
+  const optional = effectiveOptionalEvidence(wizard);
   const root = h("div", {}, [pageHeader("Operação guiada", "Nova análise", "Ambiente → banco → amostra → configuração → revisão → execução.")]);
   root.append(wizardNav(wizard, (step) => { store.set({ wizard: { step, visited: { [wizard.step]: true } } }); rerender(); }));
   const card = h("section", { class: "gi-panel" });
@@ -194,12 +257,12 @@ export async function renderNewAnalysis(store, rerender) {
   if (!wizard.loaded) {
     card.append(statusPanel("loading", "Verificando pré-requisitos", "Carregando ambiente, bancos e amostras locais."));
     try {
-      const [environment, databases, samples, targets, config] = await Promise.all([
+      const [environment, databases, samples, targets, config, optional] = await Promise.all([
         getJSON("/api/preflight"), getJSON("/api/dbs"), getJSON("/api/samples"), getJSON("/api/targets"),
-        getJSON("/api/config/env"),
+        getJSON("/api/config/env"), getJSON("/api/evidence/options"),
       ]);
       const dbs = databases.dbs?.length ? databases.dbs : (targets.targets || targets || []);
-      store.set({ wizard: { loaded: true, environment, databases: dbs, samples: samples.samples || [], savedConfig: config.config || {} }, context: { environment: environment.ok ? "Pronto" : "Com pendências" } });
+      store.set({ wizard: { loaded: true, environment, databases: dbs, samples: samples.samples || [], savedConfig: config.config || {}, optionalDefaults: optional.effective || {} }, context: { environment: environment.ok ? "Pronto" : "Com pendências" } });
       return renderNewAnalysis(store, rerender);
     } catch (error) {
       store.set({ wizard: { loaded: true, loadError: error.message }, context: { environment: "Indisponível" } });
@@ -246,7 +309,7 @@ export async function renderNewAnalysis(store, rerender) {
     });
     card.append(field("Banco de referência", select, "A seleção delimita a busca por homologia; não altera limiares científicos."));
     card.append(field("Outro vírus / banco customizado — query NCBI", query, "Preencha para qualquer vírus fora da lista. Aceita qualquer query NCBI válida; obrigatório se escolher Outro vírus."));
-    card.append(h("p", { text: "Query é a expressão de busca no NCBI: [Organism] indica o organismo; OR combina alternativas; AND exige ambas as condições; refseq[filter] limita às referências RefSeq. Evidence V2 é a camada de relatórios e rastreabilidade das sequências candidatas." }));
+    card.append(h("p", { text: "Query é a expressão de busca no NCBI: [Organism] indica o organismo; OR combina alternativas; AND exige ambas as condições; refseq[filter] limita às referências RefSeq. A análise inclui relatórios e rastreabilidade das sequências candidatas." }));
     card.append(h("p", { text: "Bancos não acompanham o pacote. Preparar baixa referências do NCBI e cria índices locais; requer internet, espaço e tempo. Selecionar um banco não o prepara automaticamente nesta tela." }));
     const dbStatus = h("p");
     const refreshStatus = () => {
@@ -283,7 +346,7 @@ export async function renderNewAnalysis(store, rerender) {
     expected.addEventListener("change", () => store.set({ wizard: { expectedTarget: expected.value.trim() } }));
     expected.required = role.value === "positive";
     role.addEventListener("change", () => { expected.required = role.value === "positive"; });
-    card.append(field("Papel da amostra", role), field("Lote (opcional)", batch, "Identifica a execução. A avaliação conjunta de controles exige executar o manifesto de lote na Área avançada."), field("Alvo esperado (obrigatório para controle positivo)", expected));
+    card.append(field("Papel da amostra", role), field("Lote (opcional)", batch, "Identifica a execução. A avaliação conjunta de controles usa o manifesto em Ferramentas → Configuração e lotes."), field("Alvo esperado (obrigatório para controle positivo)", expected));
     if (!(wizard.samples || []).length) card.append(statusPanel("empty", "Nenhuma amostra importada ainda", "Use o upload, um caminho local ou a amostra DEMO abaixo."));
     card.append(sampleImportCard(store, {
       framed: false,
@@ -336,6 +399,7 @@ export async function renderNewAnalysis(store, rerender) {
     adapterR2.setAttribute("pattern", "[ACGTNacgtn]*");
     details.append(field("Adaptador R1 (opcional)", adapterR1, "Cole Adapter do SampleSheet: adaptador 3′ que pode aparecer quando o fragmento é menor que a leitura (read-through). Use A/C/G/T/N. Vazio usa a configuração salva ou busca automática de adaptadores."), field("Adaptador R2 (opcional)", adapterR2, "Cole AdapterRead2 do SampleSheet; confirme a sequência da biblioteca. Vazio usa a configuração salva ou busca automática de adaptadores."));
     card.append(details);
+    card.append(optionalEvidenceControls(store));
   }
   if (wizard.step === 4) {
     card.append(panelHead("5. Revisão"));
@@ -347,6 +411,13 @@ export async function renderNewAnalysis(store, rerender) {
       ["Papel da amostra", ROLE_LABELS[wizard.role || "sample"] || wizard.role], ["Lote", wizard.batchId || "Não informado"],
       ["Adaptador R1", wizard.qcAdapterR1 || "Configuração salva ou busca automática"],
       ["Adaptador R2", wizard.qcAdapterR2 || "Configuração salva ou busca automática"],
+      ["Comparação competitiva (decoy)", `${optional.competitionEnabled ? "Ligada" : "Desligada"} (${wizard.competitionEnabled == null ? "configuração" : "esta execução"})`],
+      ["Banco competitivo", optional.competitionEnabled ? optional.competitionDb || "Não informado" : "Não utilizado"],
+      ["Rótulos competitivos", optional.competitionEnabled ? optional.competitionLabels || "Não informado" : "Não utilizados"],
+      ["Remapeamento", `${optional.remappingEnabled ? "Ligado" : "Desligado"} (${wizard.remappingEnabled == null ? "configuração" : "esta execução"})`],
+      ["Referência do remapeamento", optional.remappingEnabled ? optional.remappingReference || "Não informada" : "Não utilizada"],
+      ["Índice do remapeamento", optional.remappingEnabled ? optional.remappingIndex || "Não informado" : "Não utilizado"],
+      ["Biblioteca do remapeamento", optional.remappingEnabled ? optional.libraryMode : "Não utilizada"],
     ];
     card.append(dataTable([{ key: "label", label: "Item" }, { key: "value", label: "Seleção" }], rows.map(([label, value]) => ({ label, value })), "Revisão da análise"));
     if (wizard.hostMode === "none") card.append(statusPanel("warning", "Filtro de hospedeiro desligado", "Leituras e contigs do hospedeiro ou de outros organismos podem permanecer. Um contig longo não estabelece origem viral. Compare os comprimentos com as referências e revise os alinhamentos; use um índice apropriado se desejar filtrar o hospedeiro."));
@@ -359,6 +430,7 @@ export async function renderNewAnalysis(store, rerender) {
       event.currentTarget,
     ), "secondary"));
     const missing = [];
+    missing.push(...optionalEvidenceIssues(wizard));
     if (!wizard.environment?.ok) missing.push("resolver o ambiente");
     if (!databaseReady(wizard)) missing.push(wizard.database === CUSTOM_DATABASE ? "informar a query NCBI do banco customizado" : "selecionar o banco");
     if (!wizard.sample) missing.push("selecionar a amostra");
@@ -368,6 +440,7 @@ export async function renderNewAnalysis(store, rerender) {
   if (wizard.step === 5) {
     card.append(panelHead("6. Execução"));
     const missing = [];
+    missing.push(...optionalEvidenceIssues(wizard));
     if (!wizard.environment?.ok) missing.push("ambiente pendente");
     if (!databaseReady(wizard)) missing.push(wizard.database === CUSTOM_DATABASE ? "query NCBI do banco customizado" : "banco não selecionado");
     if (!wizard.sample) missing.push("amostra não selecionada");
@@ -376,6 +449,7 @@ export async function renderNewAnalysis(store, rerender) {
       try {
         execute.disabled = true;
         const params = { sample: wizard.sample, db: wizard.database, assembler: wizard.assembler, kmer: wizard.kmer, host_filter_mode: wizard.hostMode, analysis_profile: wizard.assembler === "consensus" ? "assembly-consensus" : "default" };
+        Object.assign(params, optionalEvidenceParams(wizard));
         params.role = wizard.role || "sample";
         if (wizard.label) params.label = wizard.label;
         if (wizard.batchId) params.batch_id = wizard.batchId;
@@ -420,7 +494,7 @@ export async function renderTrack(store, rerender, requestedJobId = "") {
     if (job.evidence_v2_status || job.experimental_warning || job.experimental_analysis_outcome) {
       root.append(statusPanel(
         job.experimental_warning ? "not_evaluable" : "done",
-        `Evidence V2: ${job.evidence_v2_status || "não informado"}`,
+        `Relatórios: ${job.evidence_v2_status || "não informado"}`,
         job.experimental_warning || `analysis_outcome: ${job.experimental_analysis_outcome || "ainda não disponível"}.`,
       ));
     }
@@ -493,6 +567,7 @@ async function rerunOfficial(store, run) {
 function reviewRerun(store, run) {
   const p = run.params || {};
   store.set({ wizard: { loaded: false, step: 3, visited: {}, sample: p.sample || run.sample,
+    ...optionalEvidenceWizard(p),
     database: p.db || "", dbQuery: p.db_query || "", assembler: p.assembler || store.get().wizard.assembler,
     kmer: p.kmer || store.get().wizard.kmer, hostMode: p.host_filter_mode || "none",
     hostName: p.host_name || "", hostIndexPrefix: p.host_index_prefix || "",
@@ -555,10 +630,10 @@ export async function renderResults(store, selectedRunId = "") {
         ]));
       }
     } catch (error) {
-      root.append(statusPanel("not_evaluable", "Evidence V2 não avaliável", error.payload?.error || error.message));
+      root.append(statusPanel("not_evaluable", "Resultados indisponíveis para interpretação", error.payload?.error || error.message));
     }
   } else {
-    root.append(statusPanel("empty", "Resultado operacional 1.1", "Este snapshot não contém artefatos Evidence V2."));
+    root.append(statusPanel("empty", "Resultado de versão anterior", "Este registro não contém o conjunto atual de relatórios de evidência."));
   }
   root.append(h("section", { class: "gi-metrics", "aria-label": "Identificação da execução" }, [
     metric("Execução", run.id), metric("Amostra", run.sample), metric(["failed", "cancelled"].includes(run.status) ? "Interrompida" : "Finalizada", formatDate(run.finished)),
@@ -589,7 +664,7 @@ export async function renderHistory(store) {
         return Object.keys(p).length ? `Banco: ${p.db || "não registrado"}; montagem: ${p.assembler === "consensus" ? "MULTI" : p.assembler || "não registrada"}; hospedeiro: ${p.host_filter_mode || "não registrado"}; adaptadores R1/R2: ${p.qc_adapter_r1 || "não informado"} / ${p.qc_adapter_r2 || "não informado"}` : "Não registrada nesta execução antiga";
       } },
       { key: "started", label: "Início", render: (run) => formatDate(run.started) }, { key: "finished", label: "Fim", render: (run) => formatDate(run.finished) },
-      { key: "evidence", label: "Camada", render: (run) => run.evidence ? badge(run.valid ? "Evidence V2 — relatórios" : "Evidence V2 — indisponível", run.valid ? "done" : "not_evaluable") : "Pipeline" },
+      { key: "evidence", label: "Resultados", render: (run) => run.evidence ? badge(run.valid ? "Relatórios disponíveis" : "Relatórios em conferência ou indisponíveis", run.valid ? "done" : "not_evaluable") : "Pipeline" },
       { key: "actions", label: "Ações", render: (run) => {
         const actions = h("div", { class: "gi-btnrow" });
         if (["failed", "cancelled"].includes(run.status) && run.sample) actions.append(button("Revisar e reexecutar", () => reviewRerun(store, run), "secondary"));

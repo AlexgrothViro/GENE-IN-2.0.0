@@ -1,0 +1,85 @@
+{
+  "os": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "initial_packages": [
+    {
+      "name": "pip",
+      "version": "24.0"
+    }
+  ],
+  "installed_packages": [
+    {
+      "name": "attrs",
+      "version": "26.1.0"
+    },
+    {
+      "name": "genein",
+      "version": "2.0.2",
+      "editable_project_location": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_ENGENHARIA_20261102/instalacao independente com espacos ol8nlnw3/Gene-In-2.0.2-fechamento-ensaio"
+    },
+    {
+      "name": "jsonschema",
+      "version": "4.26.0"
+    },
+    {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1"
+    },
+    {
+      "name": "pip",
+      "version": "24.0"
+    },
+    {
+      "name": "referencing",
+      "version": "0.37.0"
+    },
+    {
+      "name": "rpds-py",
+      "version": "2026.9.1"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    }
+  ],
+  "package_commit": "a0d70f67d881c13cdf6bf03de7586f7f351bd9a0",
+  "package_hashes": {
+    "Gene-In-2.0.2-fechamento-ensaio.zip": "034ee5d734c2dd0bf863867763b38146bf45c740725446192c3a1dfa6f16b257",
+    "Gene-In-2.0.2-fechamento-ensaio.tar.gz": "3d2268c156c54302c38563e176839be68a0421aa05d9337467a3150e102d4f09"
+  },
+  "host_tool_versions": {
+    "blastn": "blastn: 2.12.0+",
+    "bowtie2": "/usr/bin/bowtie2-align-s version 2.5.2",
+    "samtools": "samtools 1.19.2",
+    "fastp": "fastp 0.23.4"
+  },
+  "host_tools_preexisting": true,
+  "inherits_site_packages": false,
+  "application_installation_passed": true,
+  "complete_processing_executed": false,
+  "item_e_complete": false,
+  "dashboard_routes": [
+    {
+      "name": "dashboard /",
+      "returncode": 0,
+      "bytes": 2822
+    },
+    {
+      "name": "dashboard /api/evidence/options",
+      "returncode": 0,
+      "bytes": 435
+    },
+    {
+      "name": "dashboard /js/state.js",
+      "returncode": 0,
+      "bytes": 4540
+    }
+  ],
+  "managed_python_guard": {
+    "guard_passed": true,
+    "expected_returncode": 2,
+    "actual_returncode": 2,
+    "externally_managed_marker_present": true,
+    "system_pip_called": false
+  }
+}

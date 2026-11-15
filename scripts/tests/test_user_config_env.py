@@ -181,6 +181,8 @@ def test_save_copies_an_existing_source_config_without_rewriting_it(tmp_path, mo
 def test_dashboard_job_keeps_the_user_config_when_the_work_root_becomes_per_run(tmp_path, monkeypatch):
     work = tmp_path / "work"
     work.mkdir()
+    (work / "config").mkdir()
+    (work / "config/picornavirus.env").write_text("THREADS=4\n", encoding="utf-8")
     monkeypatch.setenv("GENEIN_WORK_ROOT", str(work))
     monkeypatch.delenv("GENEIN_CONFIG_FILE", raising=False)
     from scripts.dashboard.jobs import build_command

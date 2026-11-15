@@ -6,18 +6,15 @@ import { sampleImportCard } from "./operational.js";
 
 export function advancedNav(current = "advanced") {
   const links = [
-    ["advanced", "Visão geral"], ["analytics", "Explorador analítico"], ["compare", "Comparar execuções"],
-    ["research", "P&D e mapeamento direto"], ["contigs", "Comparar contigs"], ["settings", "Configuração técnica"],
+    ["advanced", "Ferramentas"], ["analytics", "Explorar resultados"], ["compare", "Comparar execuções"],
+    ["research", "Consultar mapeamentos"], ["contigs", "Comparar contigs"], ["settings", "Configuração"],
   ];
-  return h("nav", { class: "gi-advanced__nav", "aria-label": "Navegação da área avançada" }, links.map(([route, label]) => h("a", { href: `#/${route}`, "aria-current": current === route ? "page" : null, text: label })));
+  return h("nav", { class: "gi-advanced__nav", "aria-label": "Ferramentas do Gene-In" }, links.map(([route, label]) => h("a", { href: `#/${route}`, "aria-current": current === route ? "page" : null, text: label })));
 }
-
-const ADVANCED_NOTICE = "Área técnica: configurações operacionais e módulos experimentais. Modo sombra significa que avaliações experimentais não substituem o resultado oficial.";
 
 export function advancedShell(header, current) {
   const body = h("div", { class: "gi-advanced__body stack" });
-  const zone = h("section", { class: "gi-advanced", "aria-label": "Área avançada" }, [
-    h("div", { class: "gi-advanced__band" }, [badge("Experimental", "shadow"), h("span", { text: ADVANCED_NOTICE })]),
+  const zone = h("section", { class: "gi-advanced", "aria-label": "Ferramentas de análise" }, [
     advancedNav(current),
     body,
   ]);
@@ -26,58 +23,91 @@ export function advancedShell(header, current) {
 
 function moduleRoute(title, description, href) {
   return h("a", { class: "gi-route", href }, [
-    h("span", { class: "gi-route__key", text: href.replace(/^#/, "") }),
     h("span", { class: "gi-route__title", text: title }),
     h("p", { text: description }),
   ]);
 }
 
-export function renderAdvanced(store) {
+export async function renderAdvanced(store) {
   const { root, body } = advancedShell(
-    pageHeader("Área avançada", "Ferramentas de análise", "Módulos complementares, comparação de contigs e configuração técnica.", true),
+    pageHeader("Gene-In", "Ferramentas de análise", "Execute análises, explore resultados e compare arquivos identificados."),
     "advanced",
   );
   body.append(
-    statusPanel("success", "Módulos disponíveis", "As ferramentas usam os mesmos controles de integridade e rastreabilidade."),
-    h("nav", { class: "gi-routes gi-routes--5", "aria-label": "Módulos da área avançada" }, [
-      moduleRoute("Evidence V2", "Artefatos validados, cobertura e suporte.", "#/analytics"),
-      moduleRoute("Comparação de execuções", "Duas a quatro runs, com compatibilidade explícita.", "#/compare"),
-      moduleRoute("Mapeamento direto", "Métricas de alinhamento e cobertura.", "#/research"),
+    h("p", { text: "As conferências dos arquivos são controles de integridade e rastreabilidade. A interpretação dos resultados exige revisão humana." }),
+    panel("Iniciar ou acompanhar uma análise", [
+      h("p", { text: "O assistente reúne entradas, configuração e revisão antes da execução. Os resultados ficam disponíveis no histórico." }),
+      h("div", { class: "gi-btnrow" }, [linkButton("Nova análise", "#/new"), linkButton("Histórico", "#/history", "secondary")]),
+    ]),
+    h("nav", { class: "gi-routes gi-routes--5", "aria-label": "Funções do programa" }, [
+      moduleRoute("Explorar resultados", "Relatórios, arquivos, cobertura e suporte.", "#/analytics"),
+      moduleRoute("Comparação de execuções", "Duas a quatro execuções, com compatibilidade explícita.", "#/compare"),
+      moduleRoute("Consultar mapeamentos", "Consulta e download de resultados já produzidos.", "#/research"),
       moduleRoute("Comparação de contigs", "Homologia local sem remontagem.", "#/contigs"),
-      moduleRoute("Configuração técnica", "Ambiente, Evidence V2 e importação de amostras.", "#/settings"),
+      moduleRoute("Configuração e lotes", "Ambiente, amostras e execução de manifestos.", "#/settings"),
     ]),
   );
-  const tools = panel("Execuções técnicas", [h("p", { text: "Montagem isolada e análise complementar permanecem fora da jornada operacional principal." })]);
-  const sample = h("input", { id: "technical-sample", type: "text", placeholder: "sample-id", "data-kind": "id" });
-  const start = async (action) => {
-    try {
-      const response = await postJSON("/api/run", { action, params: { sample: sample.value.trim(), assembler: "spades", method: "blast" } });
-      activateJob(store, response.job_id, "Execução técnica iniciada");
-    } catch (error) { toast(error.payload?.error || error.payload || error.message, "error"); }
-  };
-  tools.append(field("Amostra", sample), h("div", { class: "gi-btnrow" }, [button("Montagem isolada", () => start("assembly_only"), "secondary"), button("Análise complementar", () => start("advanced_analysis"), "secondary")]));
-  body.append(tools);
+  try {
+    const [sampleData, configData, environment] = await Promise.all([getJSON("/api/samples"), getJSON("/api/config/env"), getJSON("/api/preflight")]);
+    const config = configData.config || {};
+    const present = new Set((environment.tools || []).filter((tool) => tool.present).map((tool) => tool.name));
+    const tools = panel("Montagem isolada", [h("p", { text: "Monte uma amostra importada com o montador e o k-mer selecionados. Esta ação produz contigs; não executa a análise completa." })]);
+    const sample = h("select", { id: "technical-sample" }, [h("option", { value: "", text: "Selecione a amostra" })]);
+    (sampleData.samples || []).forEach((item) => {
+      const id = typeof item === "string" ? item : item.name || item.id || item.sample;
+      if (id) sample.append(h("option", { value: id, text: id }));
+    });
+    sample.value = store.get().wizard?.sample || "";
+    const assembler = h("select", { id: "technical-assembler" }, [h("option", { value: "", text: "Selecione o montador" })]);
+    for (const [value, executable] of [["velvet", "velveth"], ["spades", "spades.py"], ["metaspades", "metaspades.py"]]) {
+      const option = h("option", { value, text: present.has(executable) ? value : `${value} — não instalado` });
+      option.disabled = !present.has(executable);
+      assembler.append(option);
+    }
+    assembler.value = ["velvet", "spades", "metaspades"].includes(config.ASSEMBLER) ? config.ASSEMBLER : "";
+    const kmer = h("input", { id: "technical-kmer", type: "number", min: "1", value: config.VELVET_K || "31" });
+    const threads = h("input", { id: "technical-threads", type: "number", min: "1", value: config.THREADS || "4" });
+    const start = async () => {
+      if (!sample.value) { toast("Selecione uma amostra importada."); return; }
+      if (!/^[1-9][0-9]*$/.test(kmer.value)) { toast("Informe um k-mer inteiro positivo."); return; }
+      if (!/^[1-9][0-9]*$/.test(threads.value)) { toast("Informe um número inteiro positivo de threads."); return; }
+      if (!assembler.value || assembler.selectedOptions[0]?.disabled) { toast("Selecione um montador instalado."); return; }
+      const params = { sample: sample.value, kmer: kmer.value, assembler: assembler.value, threads: threads.value };
+      try {
+        const response = await postJSON("/api/run", { action: "assembly_only", params });
+        activateJob(store, response.job_id, "Execução iniciada");
+      } catch (error) { toast(error.payload?.error || error.payload || error.message, "error"); }
+    };
+    tools.append(field("Amostra", sample), field("Montador", assembler), field("K-mer (Velvet)", kmer), field("Threads (SPAdes/metaSPAdes)", threads),
+      h("p", { text: "As entradas são procuradas em data/host_removed, data/cleaned e data/raw, nessa ordem. Os parâmetros adicionais salvos do montador também são utilizados." }),
+      button("Montagem isolada", start, "secondary"));
+    if (!(sampleData.samples || []).length) tools.append(linkButton("Importar amostra", "#/settings", "secondary"));
+    body.append(tools);
+  } catch (error) { body.append(statusPanel("unavailable", "Não foi possível carregar as opções de execução", error.payload?.error || error.message)); }
+  body.append(statusPanel("unavailable", "Análise complementar fora da interface", "O comando existente depende de arquivos em pastas anteriores e de metadados das referências. A integração com resultados identificados por execução ainda precisa ser concluída e verificada antes de disponibilizar este lançamento no dashboard."));
   return root;
 }
 
 export async function renderResearch() {
-  const { root, body } = advancedShell(pageHeader("Área avançada", "Mapeamento direto", "Execuções com artefatos verificáveis de alinhamento e cobertura.", true), "research");
+  const { root, body } = advancedShell(pageHeader("Ferramentas", "Consultar mapeamentos", "Consulta de resultados de mapeamento já produzidos, com identidade e arquivos verificáveis."), "research");
+  body.append(statusPanel("empty", "Consulta de resultados existentes", "A geração de novos mapeamentos não faz parte deste fluxo do painel. Resultados disponíveis mantêm sua origem, método e limites de interpretação."));
   try {
     const payload = await getJSON("/api/experimental/direct-map/runs");
-    if (!payload.runs?.length) { body.append(statusPanel("empty", "Nenhuma execução", payload.hint || "Ainda não há execuções de mapeamento direto.")); return root; }
+    if (!payload.runs?.length) { body.append(statusPanel("empty", "Nenhum mapeamento disponível", "Não há resultados arquivados na pasta de mapeamentos configurada para esta instalação.")); return root; }
     payload.runs.forEach((run) => {
       const card = h("article", { class: "gi-panel" }, [panelHead(run.run_id), h("p", {}, [badge(run.contract_state, run.contract_state === "current" ? "done" : "invalid"), document.createTextNode(` · ${run.sample_id || "identidade não reinterpretada"}`)]), h("p", { text: `Concluída: ${formatDate(run.completed_at)} · Pipeline: ${run.pipeline_version || "não informado"}` })]);
+      if (run.note) card.append(h("p", { text: run.note }));
       const actions = h("div", { class: "gi-btnrow" });
       (run.artifacts || []).forEach((type) => actions.append(linkButton(type, `/api/experimental/direct-map/artifact?run=${encodeURIComponent(run.run_id)}&type=${encodeURIComponent(type)}`, "secondary")));
       card.append(actions);
       body.append(card);
     });
-  } catch (error) { body.append(statusPanel("error", "P&D indisponível", error.payload?.error || error.message)); }
+  } catch (error) { body.append(statusPanel("error", "Consulta de mapeamentos indisponível", error.payload?.error || error.message)); }
   return root;
 }
 
 export async function renderContigs(store) {
-  const { root, body } = advancedShell(pageHeader("Área avançada", "Comparação de contigs", "Compara uma fonte imutável contra referência sem remontagem.", true), "contigs");
+  const { root, body } = advancedShell(pageHeader("Ferramentas", "Comparação de contigs", "Compara uma fonte imutável contra referência sem remontagem."), "contigs");
   try {
     const [sourcesPayload, comparisonsPayload, targetsPayload] = await Promise.all([
       getJSON("/api/experimental/contig-sources"), getJSON("/api/experimental/contig-comparisons"), getJSON("/api/targets"),
@@ -120,7 +150,7 @@ export async function renderContigs(store) {
       const task = h("select", { name: "blast_task", id: "contig-task" }, [h("option", { value: "blastn", text: "blastn" }), h("option", { value: "blastn-short", text: "blastn-short" })]);
       form.append(field("Fonte de contigs", sourceSelect), field("Amostra", sample), sourceType, field("Banco", db), field("Outro vírus / query NCBI", dbQuery, "Obrigatório se o banco for customizado."), field("Tarefa BLAST", task), h("button", { class: buttonClass(), type: "submit", text: "Executar comparação" }));
       body.append(form);
-    } else body.append(statusPanel("empty", "Nenhuma fonte de contigs", "Execute uma montagem ou importe uma fonte local na configuração técnica."));
+    } else body.append(statusPanel("empty", "Nenhuma fonte de contigs", "Execute uma montagem ou importe uma fonte local pelo formulário abaixo."));
     const importForm = h("form", { class: "gi-panel", onsubmit: async (event) => {
       event.preventDefault();
       try { await postForm("/api/experimental/contig-sources/import", new FormData(importForm)); toast("Fonte de contigs importada."); location.reload(); }
@@ -225,7 +255,7 @@ function configEditor(store, values) {
 }
 
 export async function renderSettings(store) {
-  const { root, body } = advancedShell(pageHeader("Área avançada", "Configuração técnica", "Preflight, identidade da política Evidence V2 e configuração operacional.", true), "settings");
+  const { root, body } = advancedShell(pageHeader("Gene-In", "Configuração e lotes", "Ambiente, amostras, política de análise e configuração operacional."), "settings");
   try {
     const [environment, evidence, config, targets, databases] = await Promise.all([
       getJSON("/api/config/environment"), getJSON("/api/evidence/config"), getJSON("/api/config/env"),
@@ -234,8 +264,8 @@ export async function renderSettings(store) {
     body.append(environment.ok ? statusPanel("success", "Ambiente pronto", environment.preflight?.summary || "Ferramentas obrigatórias disponíveis.") : statusPanel("blocked", "Ambiente com pendências", environment.preflight?.summary || "Revise as dependências."));
     const activeProfile = metric("Perfil", evidence.profile_id || "Análise");
     activeProfile.append(badge("Ativo", "done"));
-    body.append(h("section", { class: "gi-metrics", "aria-label": "Política Evidence V2" }, [
-      metric("Perfil Evidence V2", evidence.profile_id), metric("Versão", evidence.profile_version), activeProfile,
+    body.append(h("section", { class: "gi-metrics", "aria-label": "Política de análise" }, [
+      metric("Perfil de análise", evidence.profile_id), metric("Versão do perfil", evidence.profile_version), activeProfile,
     ]));
     const values = config.config || {};
     const rows = Object.entries(values).map(([key, value]) => ({ key, value }));
@@ -283,32 +313,61 @@ export async function renderSettings(store) {
       }),
     );
     body.append(dbBuild);
-    const evidenceRun = panel("Executar Evidence V2 individual", [h("p", { text: "Cria uma execução individual com artefatos rastreáveis." })]);
-    const sample = h("input", { id: "evidence-sample", type: "text", "data-kind": "id" });
-    const db = h("input", { id: "evidence-db", type: "text" });
-    evidenceRun.append(field("Amostra", sample), field("Banco", db), button("Executar análise", async () => {
-      try {
-        const response = await postJSON("/api/evidence/run", { mode: "individual", params: { sample: sample.value.trim(), db: db.value.trim(), assembler: "spades", host_filter_mode: "none" } });
-        activateJob(store, response.job_id, "Evidence V2 iniciada");
-      } catch (error) { toast(error.payload?.error || error.payload || error.message, "error"); }
-    }));
+    const evidenceRun = panel("Análise individual", [
+      h("p", { text: "O assistente reúne a amostra, o banco e todas as escolhas da execução antes de iniciar. Os relatórios fazem parte da análise." }),
+      linkButton("Abrir Nova análise", "#/new"),
+    ]);
     body.append(evidenceRun);
     const manifests = await getJSON("/api/evidence/manifests");
-    const batch = panel("Evidence V2 em lote", [h("p", { text: "Importe um manifesto TSV validável ou execute um manifesto já promovido." })]);
+    const batch = panel("Análise em lote", [h("p", { text: "O manifesto identifica as amostras e os controles. Confira o banco e o filtro desta execução antes de iniciar." })]);
     const manifestSelect = h("select", { id: "evidence-manifest" });
     (manifests.manifests || []).forEach((manifest) => manifestSelect.append(h("option", { value: manifest.manifest_id, text: `${manifest.manifest_id} · ${manifest.row_count || 0} linhas` })));
     const batchDb = h("input", { id: "evidence-batch-db", type: "text" });
+    batchDb.value = values.DB || "";
+    const batchQuery = h("input", { id: "batch-db-query", type: "text" });
+    const hostMode = h("select", { id: "batch-host-mode" }, [
+      h("option", { value: "none", text: "Sem filtro" }),
+      h("option", { value: "sus_scrofa", text: "Sus scrofa" }),
+      h("option", { value: "custom", text: "Outro hospedeiro" }),
+    ]);
+    const hostName = h("input", { id: "batch-host-name", type: "text", value: values.HOST_NAME || "" });
+    const hostIndex = h("input", { id: "batch-host-index", type: "text", value: values.HOST_INDEX_PREFIX || "" });
+    hostMode.value = String(values.HOST_FILTER_ENABLED).toLowerCase() === "true"
+      ? (String(values.HOST_NAME).toLowerCase() === "sus scrofa" ? "sus_scrofa" : "custom") : "none";
     const manifestText = h("textarea", { id: "evidence-manifest-text", placeholder: "batch_id\tsample_id\trole\tlibrary_mode\tumi_mode\tr1\tr2\texpected_target" });
+    const manifestExport = linkButton("Exportar TSV", "#", "secondary");
+    const updateExport = () => {
+      manifestExport.hidden = !manifestSelect.value;
+      manifestExport.href = `/api/evidence/manifest/export?id=${encodeURIComponent(manifestSelect.value)}`;
+    };
+    manifestSelect.addEventListener("change", updateExport);
+    updateExport();
     batch.append(field("Manifesto existente", manifestSelect), field("Banco", batchDb), h("div", { class: "gi-btnrow" }, [
       button("Executar lote", async () => {
         try {
-          const response = await postJSON("/api/evidence/run", { mode: "batch", params: { manifest_id: manifestSelect.value, db: batchDb.value.trim(), host_filter_mode: "none" } });
-          activateJob(store, response.job_id, "Lote Evidence V2 iniciado");
+          if (!manifestSelect.value || !(batchDb.value.trim() || batchQuery.value.trim())) { toast("Selecione um manifesto e informe o banco ou a query."); return; }
+          const params = { manifest_id: manifestSelect.value, db: batchDb.value.trim(), host_filter_mode: hostMode.value };
+          if (batchQuery.value.trim()) { params.db = "custom"; params.db_query = batchQuery.value.trim(); }
+          if (hostMode.value !== "none") {
+            if (!hostIndex.value.trim()) { toast("Informe o prefixo do índice do hospedeiro."); return; }
+            params.host_index_prefix = hostIndex.value.trim();
+            params.host_name = hostMode.value === "sus_scrofa" ? "Sus scrofa" : hostName.value.trim();
+            if (!params.host_name) { toast("Informe o nome do hospedeiro."); return; }
+          }
+          const response = await postJSON("/api/evidence/run", { mode: "batch", params });
+          activateJob(store, response.job_id, "Lote iniciado");
         } catch (error) { toast(error.payload?.error || error.payload || error.message, "error"); }
       }),
-      manifestSelect.value ? linkButton("Exportar TSV", `/api/evidence/manifest/export?id=${encodeURIComponent(manifestSelect.value)}`, "secondary") : null,
-    ]), field("Importar manifesto TSV", manifestText), button("Validar e importar manifesto", async () => {
-      try { const result = await postJSON("/api/evidence/manifests/import", { content: manifestText.value }); toast(`Manifesto importado: ${result.manifest_id}`); }
+      manifestExport,
+    ]), field("Query do banco customizado (quando aplicável)", batchQuery), field("Filtro do lote", hostMode),
+      field("Nome do hospedeiro", hostName), field("Prefixo do índice do hospedeiro", hostIndex),
+      field("Importar manifesto TSV", manifestText), button("Validar e importar manifesto", async () => {
+      try {
+        const result = await postJSON("/api/evidence/manifests/import", { content: manifestText.value });
+        const option = h("option", { value: result.manifest_id, text: result.manifest_id });
+        manifestSelect.append(option); manifestSelect.value = result.manifest_id; updateExport();
+        toast(`Manifesto importado: ${result.manifest_id}`);
+      }
       catch (error) { toast(error.payload?.error || error.payload || error.message, "error"); }
     }, "secondary"));
     body.append(batch);

@@ -4,11 +4,10 @@ import { evidenceLabel } from "./adapters.js";
 export const h = (tag, props = {}, children = []) => createElement(document, tag, props, children);
 export const text = (value) => document.createTextNode(value == null ? "" : String(value));
 
-export function pageHeader(eyebrow, title, description, experimental = false) {
+export function pageHeader(eyebrow, title, description) {
   return h("header", { class: "gi-pagehead" }, [
     h("div", { class: "gi-pagehead__over" }, [
       h("p", { class: "gi-label", text: eyebrow }),
-      experimental ? badge("EXPERIMENTAL", "experimental") : null,
     ]),
     h("h1", { text: title }),
     h("p", { text: description }),
