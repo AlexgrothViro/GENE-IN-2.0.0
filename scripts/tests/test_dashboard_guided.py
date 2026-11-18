@@ -27,13 +27,14 @@ class DashboardGuidedContractTests(unittest.TestCase):
         for element in ("<header", "<nav", "<main"):
             self.assertIn(element, self.html)
 
-    def test_operational_navigation_precedes_separate_advanced_entry(self):
+    def test_operational_navigation_precedes_tools_entry(self):
         labels = ["Início", "Nova análise", "Acompanhar", "Resultados", "Histórico"]
         positions = [self.html.index(f">{label}</a>") for label in labels]
         self.assertEqual(positions, sorted(positions))
-        self.assertGreater(self.html.index(">Área avançada</a>"), positions[-1])
+        self.assertGreater(self.html.index(">Ferramentas</a>"), positions[-1])
         self.assertNotIn("P&amp;D", self.html)
-        self.assertIn("P&D", self.advanced)
+        self.assertIn("Consultar mapeamentos", self.advanced)
+        self.assertIn("Configuração e lotes", self.advanced)
         self.assertIn('advanced-entry advanced-entry--mobile', self.html)
         self.assertIn('advanced-entry advanced-entry--desktop', self.html)
 

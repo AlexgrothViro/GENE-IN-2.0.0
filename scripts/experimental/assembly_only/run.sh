@@ -78,12 +78,14 @@ esac
 # ---------------------------------------------------------------------------
 pick_reads() {
   for d in "data/host_removed" "data/cleaned" "data/raw"; do
-    local r1="${REPO_ROOT}/${d}/${SAMPLE_NAME}_R1.fastq.gz"
-    local r2="${REPO_ROOT}/${d}/${SAMPLE_NAME}_R2.fastq.gz"
-    if [[ -s "$r1" && -s "$r2" ]]; then
-      echo "$r1|$r2"
-      return 0
-    fi
+    for suffix in .fastq.gz .fastq .fq.gz .fq; do
+      local r1="${REPO_ROOT}/${d}/${SAMPLE_NAME}_R1${suffix}"
+      local r2="${REPO_ROOT}/${d}/${SAMPLE_NAME}_R2${suffix}"
+      if [[ -s "$r1" && -s "$r2" ]]; then
+        echo "$r1|$r2"
+        return 0
+      fi
+    done
   done
   for d in "data/host_removed" "data/cleaned" "data/raw"; do
     local single="${REPO_ROOT}/${d}/${SAMPLE_NAME}.fastq.gz"

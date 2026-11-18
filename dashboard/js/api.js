@@ -16,8 +16,44 @@ async function request(url, options = {}) {
   return payload;
 }
 
-export function getJSON(url) {
-  return request(url, { method: "GET", headers: { Accept: "application/json" } });
+export function getJSON(url, options = {}) {
+  return request(url, { ...options, method: "GET", headers: { Accept: "application/json" } });
+}
+
+export class ValidationPendingError extends Error {
+  constructor() {
+    super("A conferência dos arquivos continua em andamento. Você pode consultar novamente.");
+    this.name = "ValidationPendingError";
+  }
+}
+
+function assertActive(signal) {
+  if (signal?.aborted) throw new DOMException("Consulta interrompida", "AbortError");
+}
+
+function validationDelay(milliseconds, signal) {
+  assertActive(signal);
+  return new Promise((resolve, reject) => {
+    const cleanup = () => signal?.removeEventListener("abort", stop);
+    const stop = () => { clearTimeout(timer); cleanup(); reject(new DOMException("Consulta interrompida", "AbortError")); };
+    const timer = setTimeout(() => { cleanup(); resolve(); }, milliseconds);
+    signal?.addEventListener("abort", stop, { once: true });
+  });
+}
+
+export async function waitForValidation(load, {
+  signal, onPending, isPending = (value) => value?.validation?.status === "VALIDATION_PENDING",
+  maxAttempts = 30, intervalMs = 500,
+} = {}) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    assertActive(signal);
+    const result = await load(signal);
+    assertActive(signal);
+    if (!isPending(result)) return result;
+    onPending?.(result);
+    if (attempt + 1 < maxAttempts) await validationDelay(intervalMs, signal);
+  }
+  throw new ValidationPendingError();
 }
 
 export function postJSON(url, body) {

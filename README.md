@@ -6,6 +6,10 @@
 
 **Painel local · Linux e WSL2 · Proveniência por execução**
 
+**Atualização de engenharia de 03/11/2026:** a main também incorpora o painel e os caminhos com espaços do [PR #9](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pull/9) e o fechamento de configuração, testes e instalação do [PR #10](https://github.com/AlexgrothViro/GENE-IN-2.0.0/pull/10). A versão de software continua **2.0.2**; identifique a revisão pelo commit, pois há várias revisões com esse número. Os testes de software e a instalação têm evidências próprias; o estudo científico continua separado.
+
+Este é o [repositório](https://github.com/AlexgrothViro/GENE-IN-2.0.0). Entregas publicadas ficam em [Releases](https://github.com/AlexgrothViro/GENE-IN-2.0.0/releases). O [índice de repositórios e histórico](docs/repositorios-e-historico.md) explica a escolha da distribuição e guarda os nomes anteriores.
+
 [Instalação](docs/guia/instalacao.md) · [Primeiros passos](docs/guia/uso.md) · [Montadores](docs/guia/montadores.md) · [Documentação](docs/README.md) · [English](README.en.md)
 
 </div>
@@ -69,6 +73,8 @@ O pacote não inclui bancos biológicos nem dados de amostras. Consulte o [guia 
 | **Gene-In Builder** | Opção adicional. Não pode ser instalada sem acesso concedido ao repositório privado |
 
 O Builder é selecionável no painel e na CLI. Ele não substitui os componentes do MULTI. Consulte [instalação, seleção e limitações do Builder](docs/guia/montadores.md).
+
+O coletor de Evidence inclui reads >100 pb inteiras pela rota longa e registra exclusões <20 pb. A importação explícita de resultados do Builder 3.0 beta é separada do adaptador 0.4.0: veja [comprimentos, balanço e importação](docs/guia/coletor-tamanhos.md).
 
 ## Comandos úteis
 

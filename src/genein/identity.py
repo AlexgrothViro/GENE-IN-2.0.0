@@ -49,7 +49,8 @@ def source_commit(root: Path | None = None) -> str:
     release = root / "RELEASE.json"
     if release.is_file():
         try:
-            recorded = json.loads(release.read_text(encoding="utf-8")).get("source_commit")
+            payload = json.loads(release.read_text(encoding="utf-8"))
+            recorded = payload.get("source_commit") if isinstance(payload, dict) else None
         except (OSError, json.JSONDecodeError):
             recorded = None
         if isinstance(recorded, str):
@@ -69,7 +70,8 @@ def software_version(root: Path | None = None) -> str:
     release = root / "RELEASE.json"
     if release.is_file():
         try:
-            value = json.loads(release.read_text(encoding="utf-8")).get("software_version")
+            payload = json.loads(release.read_text(encoding="utf-8"))
+            value = payload.get("software_version") if isinstance(payload, dict) else None
         except (OSError, json.JSONDecodeError):
             value = None
         if isinstance(value, str) and value.strip():

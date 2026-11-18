@@ -1,5 +1,26 @@
 # Histórico de entregas
 
+## Não publicado — coletor por comprimento (11/11/2026)
+
+- FASTQ >100 pb deixam de ser ignoradas pelo coletor: sequências inteiras seguem a rota longa já existente, sem mudar a rota 20–100 pb, perfis, níveis ou critérios de suporte.
+- Manifesto preserva IDs de read/par, origens e restrições; resumo/laudo mostram balanço por rota e descartes. FASTQ <20 pb continuam excluídas, agora com contagem explícita; FASTA <20 pb mantém o comportamento legado não validado.
+- Importação explícita de resultados concluídos do Builder 3.0.0b1, inclusive `ESPECIFICIDADE_NAO_VALIDADA`; adaptador/instalador 0.4.0 não são atualizados. Sem alegação de validação biológica ponta a ponta.
+- Plano e comparação B0 em [registro científico](docs/desenvolvimento/coletor-qualquer-tamanho-20261111.md).
+
+## 2026-11-03 — fechamento de engenharia e identidade dos pacotes
+
+- PR #10 incorporado à main: herança das opções do painel, recusa de configurações incompatíveis, conferência de IDs, cobertura restaurada e evidências de instalação/E2E de software. Resultados científicos não são reclassificados.
+- Integração selecionada de melhorias de distribuição das candidatas: `git archive` preenche `SOURCE_COMMIT`; o empacotador inclui o mesmo commit em `RELEASE.json` e preserva a fonte original.
+- Identificação rejeita marcadores não expandidos e tokens inválidos; metadados JSON não objetos conservam o fallback para a versão em `pyproject.toml`, sem exceção inesperada.
+- Índice de repositórios e READMEs atualizados. Software 2.0.2 e contrato Evidence preservados; Builder continua separado.
+
+## 2026-11-02 — painel, opções por execução e caminhos com espaços
+
+- Comparação competitiva/decoy e remapeamento ficam disponíveis como opções independentes, inicialmente desligadas, na análise individual. O painel confere os arquivos e registra as escolhas; o [manual](docs/decoy-e-remapeamento.md) descreve campos e limites.
+- Ferramentas do painel reunidas por função, inspeção pendente atualizada automaticamente e comparação distinguindo cobertura não medida de zero medido. Montagem individual preserva formato de entrada e relatório próprio.
+- Preparo de índices aceita espaços também no nome do prefixo BLAST, conservando o nome interno dos componentes e um alias para o caminho escolhido. Cache compartilhado permite verificar cada indexador sem reconstrução desnecessária.
+- Integração selecionada diretamente da main, sem Builder. Algoritmos, limiares, versão de software 2.0.2 e contrato Evidence permanecem preservados. Os novos testes reais verificam somente criação, inspeção e integridade de índices artificiais; não demonstram validação biológica integral.
+
 ## 2026-10-27 — correções de primeira execução (QA)
 
 - O diagnóstico de ambiente não anuncia sucesso quando `blastdbcmd` falha, aborta ou o manifesto JSON é inválido/corrompido; encerra com mensagem PT/EN e código diferente de zero.

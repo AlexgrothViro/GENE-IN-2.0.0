@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -29,19 +30,24 @@ def verify(prefix: Path, manifest_path: Path | None = None, *, check_hashes: boo
     if not isinstance(manifest, dict) or manifest.get("schema_version") != "1.0" or not isinstance(files, dict) or not files:
         raise ValueError("manifesto BLAST inválido ou sem arquivos/hashes")
     parent = prefix.parent
+    index_basename = prefix.name
     alias = Path(str(prefix) + ".nal")
     if alias.exists():
         generation = manifest.get("generation_id", "")
         if not isinstance(generation, str) or not generation or Path(generation).name != generation or generation in {".", ".."}:
             raise ValueError("geração BLAST inválida no manifesto")
-        parent = prefix.parent / f".{prefix.name}.generations" / generation
+        storage_name = hashlib.sha256(prefix.name.encode("utf-8")).hexdigest() if "index_basename" in manifest else prefix.name
+        parent = prefix.parent / f".{storage_name}.generations" / generation
+        index_basename = manifest.get("index_basename", prefix.name)
+        if not isinstance(index_basename, str) or not index_basename or Path(index_basename).name != index_basename or index_basename in {".", ".."}:
+            raise ValueError("nome físico de índice BLAST inválido no manifesto")
         lines = [line.split(None, 1)[1] for line in alias.read_text().splitlines()
                  if line.strip().startswith("DBLIST ")]
         targets = shlex.split(lines[0]) if len(lines) == 1 else []
-        if len(targets) != 1 or (prefix.parent / targets[0]).resolve() != (parent / prefix.name).resolve():
+        if len(targets) != 1 or (prefix.parent / targets[0]).resolve() != (parent / index_basename).resolve():
             raise ValueError("alias BLAST diverge da geração registrada no manifesto")
     for name, details in files.items():
-        if not isinstance(name, str) or Path(name).name != name or not name.startswith(prefix.name + "."):
+        if not isinstance(name, str) or Path(name).name != name or not name.startswith(index_basename + "."):
             raise ValueError("nome de índice BLAST inválido no manifesto")
         if not isinstance(details, dict) or not isinstance(details.get("size"), int) or details["size"] <= 0:
             raise ValueError(f"tamanho não registrado no manifesto: {name}")

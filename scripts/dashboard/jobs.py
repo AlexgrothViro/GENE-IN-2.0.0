@@ -37,6 +37,7 @@ from run_state import (
 )
 from analysis_profiles import load_profiles, resolve_profile
 from common import fsync_directory, sha256_file
+from .evidence_options import optional_evidence_inputs
 from contig_comparison import (
     finalize_contig_comparison_cancellation, list_comparisons, resolve_source,
     safe_id, safe_name,
@@ -45,7 +46,7 @@ from dashboard.config import (
     LOG_DIR, RUNS_DIR, REPO_ROOT, iso_now, _DB_ALIAS, host_env_from_params,
     runtime_environment,
     load_config_env, validate_config_updates, save_config_env,
-    get_repo_root, get_runs_dir, user_config_env_path,
+    get_repo_root, get_runs_dir, user_config_env_path, get_config_env_path,
 )
 from genein.paths import resolve_blast_db
 
@@ -556,6 +557,12 @@ def snapshot_run_artifacts(metadata):
             (find_advanced_path(metadata, "refs.fa"), "advanced_refs.fa"),
             (find_advanced_path(metadata, "hits_summary.tsv"), "advanced_summary.tsv"),
         ]
+        if metadata.get("action") == "assembly_only":
+            targets = [
+                (find_assembly_contigs_path(sample), "assembly_contigs.fa"),
+                (get_repo_root() / "results/assemblies" / sample / "assembly_only_summary.md", "report.md"),
+                (find_log_path(metadata), "run.log"),
+            ]
         if metadata.get("work_root"):
             work = Path(metadata["work_root"])
             targets = [
@@ -817,6 +824,8 @@ def build_command(action, params):
         cmd = ["make", "report", f"SAMPLE={sample}"]
 
     elif action == "evidence_pipeline":
+        optional_env, _ = optional_evidence_inputs(params, root=get_repo_root())
+        env.update(optional_env)
         sample = validate_sample_id(params["sample"])
         run_id = validate_run_id(params.get("run_id") or "dashboard-run-00000000")
         config = str(params.get("config") or "config/evidence_profiles.json").strip()
@@ -841,7 +850,7 @@ def build_command(action, params):
         if params.get("expected_target"):
             env["EVIDENCE_EXPECTED_TARGET"] = str(params["expected_target"])
         if "GENEIN_CONFIG_FILE" not in os.environ:
-            env["GENEIN_CONFIG_FILE"] = str(user_config_env_path())
+            env["GENEIN_CONFIG_FILE"] = str(get_config_env_path())
         # The per-run directory below is only the output root. The database is
         # resolved before that swap. DB came from the panel, so BLAST_DB in
         # picornavirus.env (the example ships blastdb/custom) is ignored, the
@@ -925,6 +934,10 @@ def build_command(action, params):
 
     elif action == "advanced_analysis":
         sample = validate_sample_id(params["sample"])
+        method = str(params.get("method") or "auto").strip().lower()
+        if method not in {"auto", "iqtree", "iqtree2"}:
+            raise ValueError("Método da análise complementar inválido. Use auto, iqtree ou iqtree2.")
+        params = {**params, "method": method}
         cmd = ["bash", "scripts/experimental/advanced_analysis/run.sh", "--sample", sample]
         for key, option in (
             ("kmer", "--kmer"),
@@ -942,6 +955,11 @@ def build_command(action, params):
         assembler = (params.get("assembler") or "velvet").strip().lower()
         if assembler not in {"velvet", "spades", "metaspades", "builder"}:
             raise ValueError("assembler invalido")
+        if params.get("threads") not in (None, ""):
+            threads = str(params["threads"]).strip()
+            if not re.fullmatch(r"[1-9][0-9]*", threads):
+                raise ValueError("Threads deve ser um inteiro positivo.")
+            env["THREADS"] = threads
         cmd = [
             "bash", "scripts/experimental/assembly_only/run.sh",
             "--sample", sample, "--assembler", assembler,

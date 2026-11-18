@@ -1,0 +1,495 @@
+{
+  "schema_version": "1.0",
+  "status": "PASSED",
+  "scope": "artificial software fixture only",
+  "scientific_validation": false,
+  "started_at": "2026-11-02T23:54:36.521790+00:00",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:45:40) [GCC 14.3.0]",
+  "source": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado",
+  "seed": 20261102,
+  "commands": [
+    {
+      "label": "primary-makeblastdb",
+      "argv": [
+        "makeblastdb",
+        "-in",
+        "-",
+        "-title",
+        "software fixture",
+        "-dbtype",
+        "nucl",
+        "-parse_seqids",
+        "-out",
+        "/tmp/genein-e2e-build-mo_cnblx/database"
+      ],
+      "cwd": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado",
+      "environment": {},
+      "log": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/primary-makeblastdb.log",
+      "stdin": {
+        "path": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/primary reference.fa",
+        "sha256": "5cf402bb1c58f079f2f9e340c685a1206f9ae228d2494dd7b049ffa3eb1ae477"
+      },
+      "returncode": 0
+    },
+    {
+      "label": "competition-makeblastdb",
+      "argv": [
+        "makeblastdb",
+        "-in",
+        "-",
+        "-title",
+        "software fixture",
+        "-dbtype",
+        "nucl",
+        "-parse_seqids",
+        "-out",
+        "/tmp/genein-e2e-build-f854cjte/database"
+      ],
+      "cwd": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado",
+      "environment": {},
+      "log": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/competition-makeblastdb.log",
+      "stdin": {
+        "path": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/optional panel.fa",
+        "sha256": "987066f0fd81ca11c0157e7c3349a0f4df7de1da377b51997597902323489c8b"
+      },
+      "returncode": 0
+    },
+    {
+      "label": "mapping-build",
+      "argv": [
+        "bowtie2-build",
+        "--threads",
+        "1",
+        "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/optional panel.fa",
+        "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index"
+      ],
+      "cwd": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado",
+      "environment": {},
+      "log": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/mapping-build.log",
+      "returncode": 0
+    },
+    {
+      "label": "software-c0-r0",
+      "argv": [
+        "bash",
+        "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado/scripts/pipeline/run.sh",
+        "--sample",
+        "software-c0-r0",
+        "--analysis-profile",
+        "default",
+        "--assembler",
+        "velvet",
+        "--threads",
+        "1",
+        "--evidence-v2"
+      ],
+      "cwd": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado",
+      "environment": {
+        "GENEIN_WORK_ROOT": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r0",
+        "GENEIN_CONFIG_FILE": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/empty configuration.env",
+        "BLAST_DB": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/primary bank",
+        "HOST_FILTER_ENABLED": "false",
+        "EVIDENCE_V2": "true",
+        "EVIDENCE_ROOT": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r0/evidence",
+        "EVIDENCE_RUN_ID": "software-c0-r0",
+        "SAMPLE_R1": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R1.fastq",
+        "SAMPLE_R2": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R2.fastq",
+        "EVIDENCE_COMPETITION_ENABLED": "false",
+        "EVIDENCE_REMAPPING_ENABLED": "false",
+        "EVIDENCE_COMPOSITE_DB": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/competition bank",
+        "EVIDENCE_SUBJECT_LABELS": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/subject labels.tsv",
+        "EVIDENCE_PANEL_FASTA": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/optional panel.fa",
+        "EVIDENCE_PANEL_INDEX": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index",
+        "SEARCH_PROFILES": "A"
+      },
+      "log": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/software-c0-r0.log",
+      "returncode": 0
+    },
+    {
+      "label": "software-c0-r1",
+      "argv": [
+        "bash",
+        "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado/scripts/pipeline/run.sh",
+        "--sample",
+        "software-c0-r1",
+        "--analysis-profile",
+        "default",
+        "--assembler",
+        "velvet",
+        "--threads",
+        "1",
+        "--evidence-v2"
+      ],
+      "cwd": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado",
+      "environment": {
+        "GENEIN_WORK_ROOT": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r1",
+        "GENEIN_CONFIG_FILE": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/empty configuration.env",
+        "BLAST_DB": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/primary bank",
+        "HOST_FILTER_ENABLED": "false",
+        "EVIDENCE_V2": "true",
+        "EVIDENCE_ROOT": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r1/evidence",
+        "EVIDENCE_RUN_ID": "software-c0-r1",
+        "SAMPLE_R1": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R1.fastq",
+        "SAMPLE_R2": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R2.fastq",
+        "EVIDENCE_COMPETITION_ENABLED": "false",
+        "EVIDENCE_REMAPPING_ENABLED": "true",
+        "EVIDENCE_COMPOSITE_DB": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/competition bank",
+        "EVIDENCE_SUBJECT_LABELS": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/subject labels.tsv",
+        "EVIDENCE_PANEL_FASTA": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/optional panel.fa",
+        "EVIDENCE_PANEL_INDEX": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index",
+        "SEARCH_PROFILES": "A"
+      },
+      "log": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/software-c0-r1.log",
+      "returncode": 0
+    },
+    {
+      "label": "software-c1-r0",
+      "argv": [
+        "bash",
+        "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado/scripts/pipeline/run.sh",
+        "--sample",
+        "software-c1-r0",
+        "--analysis-profile",
+        "default",
+        "--assembler",
+        "velvet",
+        "--threads",
+        "1",
+        "--evidence-v2"
+      ],
+      "cwd": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado",
+      "environment": {
+        "GENEIN_WORK_ROOT": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r0",
+        "GENEIN_CONFIG_FILE": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/empty configuration.env",
+        "BLAST_DB": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/primary bank",
+        "HOST_FILTER_ENABLED": "false",
+        "EVIDENCE_V2": "true",
+        "EVIDENCE_ROOT": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r0/evidence",
+        "EVIDENCE_RUN_ID": "software-c1-r0",
+        "SAMPLE_R1": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R1.fastq",
+        "SAMPLE_R2": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R2.fastq",
+        "EVIDENCE_COMPETITION_ENABLED": "true",
+        "EVIDENCE_REMAPPING_ENABLED": "false",
+        "EVIDENCE_COMPOSITE_DB": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/competition bank",
+        "EVIDENCE_SUBJECT_LABELS": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/subject labels.tsv",
+        "EVIDENCE_PANEL_FASTA": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/optional panel.fa",
+        "EVIDENCE_PANEL_INDEX": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index",
+        "SEARCH_PROFILES": "A,B"
+      },
+      "log": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/software-c1-r0.log",
+      "returncode": 0
+    },
+    {
+      "label": "software-c1-r1",
+      "argv": [
+        "bash",
+        "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado/scripts/pipeline/run.sh",
+        "--sample",
+        "software-c1-r1",
+        "--analysis-profile",
+        "default",
+        "--assembler",
+        "velvet",
+        "--threads",
+        "1",
+        "--evidence-v2"
+      ],
+      "cwd": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/package installation with spaces dc1fr0f0/Gene-In-2.0.2-PR10-e2e-isolado",
+      "environment": {
+        "GENEIN_WORK_ROOT": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r1",
+        "GENEIN_CONFIG_FILE": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/empty configuration.env",
+        "BLAST_DB": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/primary bank",
+        "HOST_FILTER_ENABLED": "false",
+        "EVIDENCE_V2": "true",
+        "EVIDENCE_ROOT": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r1/evidence",
+        "EVIDENCE_RUN_ID": "software-c1-r1",
+        "SAMPLE_R1": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R1.fastq",
+        "SAMPLE_R2": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R2.fastq",
+        "EVIDENCE_COMPETITION_ENABLED": "true",
+        "EVIDENCE_REMAPPING_ENABLED": "true",
+        "EVIDENCE_COMPOSITE_DB": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/competition bank",
+        "EVIDENCE_SUBJECT_LABELS": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/subject labels.tsv",
+        "EVIDENCE_PANEL_FASTA": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/optional panel.fa",
+        "EVIDENCE_PANEL_INDEX": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index",
+        "SEARCH_PROFILES": "A,B"
+      },
+      "log": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/software-c1-r1.log",
+      "returncode": 0
+    }
+  ],
+  "cases": [
+    {
+      "status": "PASSED",
+      "run_id": "software-c0-r0",
+      "competition": false,
+      "remapping": false,
+      "profiles": "A",
+      "receipt": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r0/evidence/runs/software-c0-r0/SUCCESS.json",
+      "receipt_sha256": "cdb5ac452eb2e90729aab546797c8d6dfa18b6fc76e581eac2c60f89e8a31bab",
+      "artifact_count": 17,
+      "resolved_config": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r0/tmp/software-c0-r0.resolved_config.json",
+      "search_profile": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r0/results/blast/software-c0-r0_search_profile.json"
+    },
+    {
+      "status": "PASSED",
+      "run_id": "software-c0-r1",
+      "competition": false,
+      "remapping": true,
+      "profiles": "A",
+      "receipt": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r1/evidence/runs/software-c0-r1/SUCCESS.json",
+      "receipt_sha256": "f748fd5957c07f0e8a448d6d601f8d3de031ece04038960d32d4f516c5c65dd3",
+      "artifact_count": 21,
+      "resolved_config": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r1/tmp/software-c0-r1.resolved_config.json",
+      "search_profile": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c0-r1/results/blast/software-c0-r1_search_profile.json"
+    },
+    {
+      "status": "PASSED",
+      "run_id": "software-c1-r0",
+      "competition": true,
+      "remapping": false,
+      "profiles": "A+B",
+      "receipt": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r0/evidence/runs/software-c1-r0/SUCCESS.json",
+      "receipt_sha256": "b1f9141bc15a92b84905085f070a4a9cd46edde37e49582aa3975d85aad2d003",
+      "artifact_count": 19,
+      "resolved_config": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r0/tmp/software-c1-r0.resolved_config.json",
+      "search_profile": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r0/results/blast/software-c1-r0_search_profile.json"
+    },
+    {
+      "status": "PASSED",
+      "run_id": "software-c1-r1",
+      "competition": true,
+      "remapping": true,
+      "profiles": "A+B",
+      "receipt": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r1/evidence/runs/software-c1-r1/SUCCESS.json",
+      "receipt_sha256": "409a6d6ad8a5423522cb1685f871886a735c6e61638e6423b20e20b50ffcec9b",
+      "artifact_count": 23,
+      "resolved_config": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r1/tmp/software-c1-r1.resolved_config.json",
+      "search_profile": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/case software-c1-r1/results/blast/software-c1-r1_search_profile.json"
+    }
+  ],
+  "work": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh",
+  "runtime_environment": {
+    "PATH": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin:/usr/bin:/bin",
+    "GENEIN_ENV_DIR": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env",
+    "PYTHONNOUSERSITE": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "installed_genein": "2.0.2",
+  "source_commit": "6f7639f6f1c11f0505a5a91ae0ba8be8093de5f0",
+  "frozen_config_sha256": {
+    "config/analysis_profiles.json": "8d7fe00ca9bd79a592c7b80078a242eb5905f4d8be330226b205248f9353a974",
+    "config/evidence_activation.json": "34419dfec57a285e60766e79df15bd4c5aeab34e4ffa7b5fe5ff0d9f1912586b",
+    "config/evidence_profiles.json": "1d9c10c77f0665cab20c53ef36142a0c962c761c57bbd474113aebb956fecdfc",
+    "config/experimental/direct_map_v1.json": "1471106747426f7b13f1307cc654b6ffce7d86ad1ba38f83e3f37a609f938d1c",
+    "config/experimental/validation/optimization_grid_v1.json": "010ea67004dc4c60656957e0bd1a857a54f8d0c694911407587962e1761298b3",
+    "config/experimental/validation/pipeline_round2_parameter_sets.json": "2843da3641006f41f1dbd4e51e5ac63f81b29f5c99ba33cd50b32fb28f6055ec",
+    "config/experimental/validation/pipeline_round3_parameter_sets.json": "d1bd33001d499a9627a3515f821b993f2de5817e47164f93998828e1d052abe9",
+    "config/experimental/validation/pipeline_round4_parameter_sets.json": "4c1b7a17cf9314a6816256a85b26557c95b92f4c8502e74d72568f507781910b",
+    "config/experimental/validation/sample_panel_development.json": "8c7f94587e16900a27cc57a1a5d52b07b55c276c0188e5c4e9cd6c3a00597fb5",
+    "config/experimental/validation/sample_panel_pipeline.json": "e18486aa3d95291550d0d71db20911871b2e56bb2f58f0727ed43034f84dc25a",
+    "config/experimental/validation/sample_panel_validation_template.json": "a3df025b122f23eb153824790a9aba9d707f2574530ad67e65a0f95e4a116f92",
+    "config/experimental/validation/schemas/experiment_result_v1.json": "48d9127833c9b9cbda861283407cb9064428f3e8764fda46f37e98b6fdbdc9a6",
+    "config/experimental/validation/validation_criteria_template.json": "07d9573925147a436ed74611929c1dbf43e76480d77127b683a0fa5733d4b34f",
+    "config/picornavirus.env.example": "a6700e90efd67aa7c609495cf12db8a8a657d733f18d7af592380b1ada8b2c29",
+    "config/targets.json": "1d34fb12d4ea678dc2b10eecfa988ae801e289d5d46966ac32f08a85dbf69cab"
+  },
+  "tools": {
+    "python3": {
+      "version": "Python 3.11.15",
+      "executable": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/python3.11",
+      "sha256": "7ddf05b46c62fc1597c37c5089185bba49efd497d14bf8efac7dd586a79839b5"
+    },
+    "fastp": {
+      "version": "fastp 1.3.6",
+      "executable": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/fastp",
+      "sha256": "f26c4ed6d972561dacf3d5d5666cb0b5275070d9d1610448bac21aa3007019b3"
+    },
+    "blastn": {
+      "version": "blastn: 2.17.0+",
+      "executable": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/blastn",
+      "sha256": "0b88d4a00cb7fa579c203653151175b24c83d27fe240d420abe7b5261a3083d1"
+    },
+    "makeblastdb": {
+      "version": "makeblastdb: 2.17.0+",
+      "executable": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/makeblastdb",
+      "sha256": "407bf59ec36ee6444104a90f28eab282e374a0dfe4c7ffee89a65d82dc51c4bf"
+    },
+    "bowtie2": {
+      "version": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/bowtie2-align-s version 2.5.5",
+      "executable": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/bowtie2",
+      "sha256": "a643ecb606404bd651ac9cba11d5ff4b1a79f5e1c5262d37665365a013ca5575"
+    },
+    "bowtie2-build": {
+      "version": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/bowtie2-build-s version 2.5.5",
+      "executable": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/bowtie2-build",
+      "sha256": "f93c68eb2910e6d59a204ea7786fa0707d8f711bfc3d8204ff99277e5910b94c"
+    },
+    "samtools": {
+      "version": "samtools 1.24",
+      "executable": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/samtools",
+      "sha256": "f61d73a724ee924ece9d1e9f74541b95c6a211282905ed4875bb17ff610095e2"
+    },
+    "velveth": {
+      "version": "velveth - simple hashing program",
+      "executable": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/velveth",
+      "sha256": "36ea76541bd9b85da8651a105887ff0d33f8c4e0614b2e8c20f853c5378f8754"
+    },
+    "velvetg": {
+      "version": "UNKNOWN",
+      "executable": "/tmp/genein-pr10-package-clean-vjmjuo_q/bundle/env/bin/velvetg",
+      "sha256": "40de9429334584420d3f2086daa9cc7fa6d581b71209b11528d3e56077fc0444"
+    }
+  },
+  "inputs": {
+    "primary": {
+      "path": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/primary reference.fa",
+      "sha256": "5cf402bb1c58f079f2f9e340c685a1206f9ae228d2494dd7b049ffa3eb1ae477"
+    },
+    "panel": {
+      "path": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/optional panel.fa",
+      "sha256": "987066f0fd81ca11c0157e7c3349a0f4df7de1da377b51997597902323489c8b"
+    },
+    "labels": {
+      "path": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/subject labels.tsv",
+      "sha256": "e985428d90488e2a8fecce6eac57a0d536d2e8da21097c5447cd025e8a104bed"
+    },
+    "r1": {
+      "path": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R1.fastq",
+      "sha256": "71f5b7c0b7d889f3e96feb10a7b28d4217b27acc849a9f7ef85575b49adf4af1"
+    },
+    "r2": {
+      "path": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/input R2.fastq",
+      "sha256": "2853596dac0b60edb47de08020ab85690d33f65b00d4df13ad8bf474989379cf"
+    }
+  },
+  "pairs_by_length": {
+    "20": 79,
+    "25": 79,
+    "30": 79,
+    "40": 79,
+    "50": 79,
+    "65": 79,
+    "80": 79,
+    "100": 79
+  },
+  "database_manifests": {
+    "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/primary bank": {
+      "created_at": "2026-11-02T23:54:37.400648+00:00",
+      "generation_id": "20261102T235437.400573Z-600244-1785c8ff",
+      "index_basename": "database",
+      "logical_prefix": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/primary bank",
+      "produced_files": {
+        "database.ndb": {
+          "sha256": "563d259b52d2be574eff3d89b3dcf79cd27542169d4fd9a25a8093e0a8e6135e",
+          "size": 32768
+        },
+        "database.nhr": {
+          "sha256": "db1656156f3be7431fc7edfbd4f0d763c045fff4b873ad10a19a61da89260c85",
+          "size": 52
+        },
+        "database.nin": {
+          "sha256": "0de8007eeed39a04b463860a33a647f486e577cecd2ff4fb21ed66252da9652e",
+          "size": 112
+        },
+        "database.njs": {
+          "sha256": "6b0267c5e259748fec277ffb8a5fa614e97b09df1e77757d4f79861a3158815d",
+          "size": 498
+        },
+        "database.nog": {
+          "sha256": "b31ad5df85471fcfc39c04f43c7ff3cf90f86afe7e9d1b6e554cf442ce107cc4",
+          "size": 36
+        },
+        "database.nos": {
+          "sha256": "18e6a89ef51ee56a17c388a54eb6b3adc39085dbb484f25908dbf109820c9de8",
+          "size": 30
+        },
+        "database.not": {
+          "sha256": "e2099cbf3445ac30a98dcc86f0b899eac91fd0a23cf2825f48bd01daadee347a",
+          "size": 20
+        },
+        "database.nsq": {
+          "sha256": "21cf7fc69be39824f3bfbcc0198fa35cad55e7fe0044514271f3291cabd570d2",
+          "size": 162
+        },
+        "database.ntf": {
+          "sha256": "67982e4d7b1490b09cce06e7c29175c6bd011cd542cfacb1a1c310084a50821a",
+          "size": 16384
+        },
+        "database.nto": {
+          "sha256": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+          "size": 8
+        }
+      },
+      "schema_version": "1.0",
+      "source_fasta": {
+        "path": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/primary reference.fa",
+        "sha256": "5cf402bb1c58f079f2f9e340c685a1206f9ae228d2494dd7b049ffa3eb1ae477",
+        "size": 656
+      }
+    },
+    "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/competition bank": {
+      "created_at": "2026-11-02T23:54:38.412778+00:00",
+      "generation_id": "20261102T235438.412689Z-600244-8a08b2c9",
+      "index_basename": "database",
+      "logical_prefix": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/competition bank",
+      "produced_files": {
+        "database.ndb": {
+          "sha256": "2813c8a74912c8757897057286b54dcb7a885d89cd1963e2121e7062c53e01c1",
+          "size": 32768
+        },
+        "database.nhr": {
+          "sha256": "d96875006688c3d110a086e007991927f3351b8186460aaaaa38fb09d6499d1e",
+          "size": 103
+        },
+        "database.nin": {
+          "sha256": "894af96e47e3a14d5530f2909a306ee5aead0b1a52e34cde4cb5d95a9333a703",
+          "size": 124
+        },
+        "database.njs": {
+          "sha256": "a8a099faf2c7b45d9c803c4c26ba1a9a48e490fc0adf6be6f54d496059b98b8a",
+          "size": 499
+        },
+        "database.nog": {
+          "sha256": "5e4534b0b0caf02033b0bdf90c7117419265f99587230b0c5ab47567bd32d94e",
+          "size": 40
+        },
+        "database.nos": {
+          "sha256": "14eecfad08bf78c676af29d4412e1d74b9c96d80da13d2e127422dd8b994d6c3",
+          "size": 51
+        },
+        "database.not": {
+          "sha256": "7b0a91667ad8d58a00256b3e213b31e2ba8604b9db04b58e6fe5c8f1e693acfc",
+          "size": 32
+        },
+        "database.nsq": {
+          "sha256": "282d44e772a2e554ef88bb7a8d43eab46b5e13ded7a72903ce73caeca6794690",
+          "size": 323
+        },
+        "database.ntf": {
+          "sha256": "67982e4d7b1490b09cce06e7c29175c6bd011cd542cfacb1a1c310084a50821a",
+          "size": 16384
+        },
+        "database.nto": {
+          "sha256": "0db201e8371010e5cd3b719cf6c131cea86e18ef7c5bdd394e23b352b8e54f9e",
+          "size": 12
+        }
+      },
+      "schema_version": "1.0",
+      "source_fasta": {
+        "path": "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/optional panel.fa",
+        "sha256": "987066f0fd81ca11c0157e7c3349a0f4df7de1da377b51997597902323489c8b",
+        "size": 1311
+      }
+    }
+  },
+  "mapping_index_sha256": {
+    "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index.1.bt2": "ad7b37b00f65df72d4b25f334888b94fdcf53ea301a335e17fec19a5fe828024",
+    "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index.2.bt2": "5c13596769decdffaf8fd1ec33f5b8d3ba47bbe5960df2be30d1f6a517bcc9fd",
+    "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index.3.bt2": "2851004d0aaf5bb9f5c8ce810b6a6cbd5c5b7428e78fdac5f3ac156e0f5bbbcd",
+    "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index.4.bt2": "57c8fcd68b015ad500f2c8403acce018dd7de3be7e475ed1bbf79c9f010e5213",
+    "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index.rev.1.bt2": "52c1a457e9041b79a5cd7f9d6b098c3b2120aafad6ca7d67e826a33de1fef1ac",
+    "/mnt/c/Users/Admin/Desktop/Nova pasta/FECHAMENTO_E2E_PR10_20261102/ISOLADO/E2E_INSTALACAO_LIMPA/genein-e2e/work with spaces drhtr3eh/banks with spaces/mapping index.rev.2.bt2": "7710e68507916669efba351025b5e1d29d70784dfc1e647ac50b426adfd4299b"
+  },
+  "finished_at": "2026-11-02T23:57:58.613243+00:00"
+}

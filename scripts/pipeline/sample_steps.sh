@@ -68,6 +68,7 @@ python3 "${SCRIPT_DIR}/resolve_config.py" pipeline \
   "${RESOLVE_CONFIG_INCOMING_ARGS[@]}" "${RESOLVE_CONFIG_SOURCED_ARGS[@]}" "${RESOLVE_CONFIG_CLI_ARGS[@]}" \
   --out "$RESOLVED_CONFIG_JSON"
 eval "$(python3 "${SCRIPT_DIR}/resolve_config.py" emit-shell --in "$RESOLVED_CONFIG_JSON")"
+
 # A identidade de DB só muda por ambiente/CLI (nunca pelo config file
 # sozinho); quando isso ocorre, REF_FASTA/BOWTIE2_INDEX de um DB anterior
 # ficam obsoletos e não devem sobreviver para os targets do Makefile.
@@ -261,6 +262,11 @@ if [[ -n "$EVIDENCE_COMPOSITE_DB" ]]; then
   if ! python3 "$SCRIPTS_ROOT/evidence/verify_blast_database_manifest.py" "$EVIDENCE_COMPOSITE_DB"; then
     record_database_preflight_failure "Banco composto não corresponde ao manifesto; reconstrua o banco."
   fi
+  if ! COMPETITIVE_LABEL_PREFLIGHT="$(python3 "$SCRIPTS_ROOT/evidence/check_competitive_labels.py" \
+      --database "$EVIDENCE_COMPOSITE_DB" --labels "$EVIDENCE_SUBJECT_LABELS" 2>&1)"; then
+    record_database_preflight_failure "$COMPETITIVE_LABEL_PREFLIGHT"
+  fi
+  printf '%s\n' "$COMPETITIVE_LABEL_PREFLIGHT"
 fi
 export PIPELINE_ETAPA="QC_PREFLIGHT"
 if [[ $AUTO_INSTALL -eq 1 ]]; then
@@ -748,13 +754,21 @@ case "${EVIDENCE_V2,,}" in
     CANDIDATE_QUERIES="${WORK_ROOT}/results/short_fragments/${SAMPLE_NAME}_candidate_queries.fa"
     CANDIDATE_MANIFEST="${WORK_ROOT}/results/short_fragments/${SAMPLE_NAME}_candidate_queries.json"
     CANDIDATE_SUPPLEMENT="${WORK_ROOT}/results/short_fragments/${SAMPLE_NAME}_candidate_supplement.fa"
-    COLLECT_ARGS=(--contigs "$ASSEMBLY_CONTIGS" --out "$CANDIDATE_QUERIES" --manifest "$CANDIDATE_MANIFEST" --supplement-out "$CANDIDATE_SUPPLEMENT")
-    [[ -z "$SF_COLLECT_FASTA" ]] || COLLECT_ARGS+=(--short-fasta "$SF_COLLECT_FASTA")
-    if [[ "$INPUT_MODE" == "READS" ]]; then
-      COLLECT_ARGS+=("${SHORT_READ_INPUTS[@]}")
+    BUILDER_RAW_MANIFEST="${WORK_ROOT}/data/assemblies/${SAMPLE_NAME}_builder/builder_raw/manifesto_execucao.json"
+    if [[ "${ASSEMBLER_USED:-}" == "builder" && -s "$BUILDER_RAW_MANIFEST" ]] && grep -q '"3.0.0b1"' "$BUILDER_RAW_MANIFEST" 2>/dev/null; then
+      COLLECT_ARGS=(--builder-manifest "$BUILDER_RAW_MANIFEST" --out "$CANDIDATE_QUERIES" --manifest "$CANDIDATE_MANIFEST" --supplement-out "$CANDIDATE_SUPPLEMENT")
+    else
+      COLLECT_ARGS=(--contigs "$ASSEMBLY_CONTIGS" --out "$CANDIDATE_QUERIES" --manifest "$CANDIDATE_MANIFEST" --supplement-out "$CANDIDATE_SUPPLEMENT")
+      [[ -z "$SF_COLLECT_FASTA" ]] || COLLECT_ARGS+=(--short-fasta "$SF_COLLECT_FASTA")
+      if [[ "$INPUT_MODE" == "READS" ]]; then
+        COLLECT_ARGS+=("${SHORT_READ_INPUTS[@]}")
+      fi
+      [[ -z "$RESCUE_QUERY_FASTA" ]] || COLLECT_ARGS+=(--rescue-fasta "$RESCUE_QUERY_FASTA" --rescue-candidates "$RESCUE_QUERY_BLAST")
     fi
-    [[ -z "$RESCUE_QUERY_FASTA" ]] || COLLECT_ARGS+=(--rescue-fasta "$RESCUE_QUERY_FASTA" --rescue-candidates "$RESCUE_QUERY_BLAST")
-    python3 "$SCRIPT_DIR/collect_candidate_queries.py" "${COLLECT_ARGS[@]}"
+    COLLECTION_SUMMARY="${WORK_ROOT}/results/short_fragments/${SAMPLE_NAME}_collection_summary.md"
+    python3 "$SCRIPT_DIR/collect_candidate_queries.py" "${COLLECT_ARGS[@]}" --summary "$COLLECTION_SUMMARY"
+    printf '\n' >> "$REPORT"
+    while IFS= read -r line; do printf '%s\n' "$line"; done < "$COLLECTION_SUMMARY" >> "$REPORT"
     EVIDENCE_ARGS=(
       --sample "$SAMPLE_NAME" --queries "$CANDIDATE_QUERIES" --query-manifest "$CANDIDATE_MANIFEST"
       --profiles "$EVIDENCE_PROFILES" --evidence-root "$EVIDENCE_ROOT"

@@ -342,7 +342,8 @@ def test_public_and_private_sample_boundaries_share_config_and_stages(tmp_path):
     steps = (ROOT / "scripts/pipeline/sample_steps.sh").read_text()
     (pipeline / "sample_steps.sh").write_text(steps[:steps.index('if [[ $SKIP_ASSEMBLY')] +
                                               '\ncat "$RESOLVED_CONFIG_JSON"\n')
-    env = dict(os.environ, THREADS="8", ASSEMBLER="spades", ANALYSIS_PROFILES_CONFIG=str(ROOT / "config/analysis_profiles.json"))
+    env = dict(os.environ, THREADS="8", ASSEMBLER="spades", ANALYSIS_PROFILES_CONFIG=str(ROOT / "config/analysis_profiles.json"),
+               GENEIN_CONFIG_FILE=str(repo / "config/picornavirus.env"))
     values = []
     for entry in ("run.sh", "run_sample.sh"):
         result = subprocess.run(["bash", pipeline / entry, "--sample", "sample-a", "--threads", "2"],
