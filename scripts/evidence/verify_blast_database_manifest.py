@@ -16,11 +16,15 @@ except ImportError:
     from common import sha256_file
 
 
-def verify(prefix: Path, manifest_path: Path | None = None, *, check_hashes: bool = True) -> int:
+def verify(prefix: Path, manifest_path: Path | None = None, *, check_hashes: bool = True,
+           expected_sha256: str = "") -> int:
     prefix = prefix.resolve()
     manifest_path = manifest_path or Path(str(prefix) + ".db-manifest.json")
+    raw = manifest_path.read_bytes()
+    if expected_sha256 and hashlib.sha256(raw).hexdigest() != expected_sha256:
+        raise ValueError("A geração do banco BLAST mudou desde a seleção. Revise o banco e inicie novamente.")
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest = json.loads(raw.decode("utf-8"))
     except ValueError as exc:
         raise ValueError(
             f"manifesto do banco BLAST ilegível ou corrompido (JSON inválido) em {manifest_path} / "
@@ -64,11 +68,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("prefix", type=Path)
     parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--expected-sha256", default="")
     parser.add_argument("--sizes-only", action="store_true",
                         help="Check manifest structure and file sizes without hashing (quick diagnostic).")
     args = parser.parse_args()
     try:
-        count = verify(args.prefix, args.manifest, check_hashes=not args.sizes_only)
+        count = verify(args.prefix, args.manifest, check_hashes=not args.sizes_only,
+                       expected_sha256=args.expected_sha256)
     except (OSError, ValueError, TypeError) as exc:
         print(f"[FATAL] Integridade do banco BLAST: {exc}", file=sys.stderr)
         return 2

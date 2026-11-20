@@ -70,70 +70,16 @@ class DashboardSecurityTests(unittest.TestCase):
         self.assertEqual(environment["DB"], "ptv")
         self.assertEqual(environment["HOST_FILTER_ENABLED"], "false")
 
-    def test_pipeline_propagates_custom_database_provenance(self):
-        command, environment = dashboard.build_command(
-            "pipeline",
-            {
-                "sample": "zikaer",
-                "assembler": "velvet",
-                "db": "custom",
-                "db_query": "Orthoflavivirus zikaense",
-                "ncbi_db": "nucleotide",
-            },
-        )
-        self.assertEqual(command[1:3], ["--sample", "zikaer"])
-        self.assertEqual(environment["DB"], "custom")
-        self.assertEqual(
-            environment["DB_QUERY"], "Orthoflavivirus zikaense"
-        )
-        self.assertEqual(environment["NCBI_DB"], "nucleotide")
-
-    def test_pipeline_recovers_custom_query_from_database_metadata(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            repo_root = Path(tmp)
-            (repo_root / "config").mkdir()
-            (repo_root / "config/analysis_profiles.json").write_bytes(
-                (ROOT / "config/analysis_profiles.json").read_bytes())
-            metadata_dir = repo_root / "db" / "custom"
-            metadata_dir.mkdir(parents=True)
-            (metadata_dir / "metadata.json").write_text(
-                json.dumps(
-                    {
-                        "db": "custom",
-                        "db_query": "Orthoflavivirus zikaense",
-                        "ncbi_db": "nucleotide",
-                    }
-                ),
-                encoding="utf-8",
-            )
-            with patch.dict(
-                dashboard.build_command.__globals__,
-                {"REPO_ROOT": repo_root},
-            ):
-                _, environment = dashboard.build_command(
-                    "pipeline",
-                    {
-                        "sample": "zikaer",
-                        "assembler": "velvet",
-                        "db": "custom",
-                    },
-                )
-        self.assertEqual(environment["DB_QUERY"], "Orthoflavivirus zikaense")
-        self.assertEqual(environment["NCBI_DB"], "nucleotide")
-
-    def test_custom_database_without_query_or_metadata_fails_closed(self):
-        # O banco customizado nunca deve ser resolvido implicitamente a partir de
-        # estado local nao versionado: sem query explicita e sem db/custom/metadata.json
-        # a construcao do comando falha fechada.
+    def test_custom_database_without_prepared_index_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch.dict(
                 dashboard.build_command.__globals__,
                 {"REPO_ROOT": Path(tmp)},
-            ):
-                with self.assertRaisesRegex(ValueError, "exige uma query NCBI"):
+            ), patch.dict(os.environ, {"BLAST_DB": str(Path(tmp) / "blastdb/custom")}):
+                with self.assertRaisesRegex(ValueError, "consulta do índice customizado não pôde ser confirmada"):
                     dashboard.build_command(
                         "pipeline",
-                        {"sample": "safe", "assembler": "spades", "db": "custom"},
+                        {"sample": "safe", "assembler": "spades", "db": "custom", "db_query": "fixture-A"},
                     )
 
     def test_unknown_host_selection_is_an_explicit_safe_opt_out(self):
@@ -145,10 +91,9 @@ class DashboardSecurityTests(unittest.TestCase):
         _, environment = dashboard.build_command(
             "pipeline",
             {
-                "sample": "zika-unknown-host",
+                "sample": "fixture-unknown-host",
                 "assembler": "spades",
-                "db": "custom",
-                "db_query": "Orthoflavivirus zikaense",
+                "db": "fixture-bank",
                 "host_filter_mode": "none",
             },
         )
@@ -162,8 +107,7 @@ class DashboardSecurityTests(unittest.TestCase):
             {
                 "sample": "safe",
                 "assembler": "spades",
-                "db": "custom",
-                "db_query": "Orthoflavivirus zikaense",
+                "db": "fixture-bank",
                 "host_filter_mode": "sus_scrofa",
             },
         )
@@ -183,8 +127,7 @@ class DashboardSecurityTests(unittest.TestCase):
                 {
                     "sample": "safe",
                     "assembler": "spades",
-                    "db": "custom",
-                    "db_query": "Orthoflavivirus zikaense",
+                    "db": "fixture-bank",
                     "host_filter_mode": "custom",
                 },
             )
@@ -299,8 +242,7 @@ class DashboardSecurityTests(unittest.TestCase):
             {
                 "sample": "safe",
                 "assembler": "metaspades",
-                "db": "custom",
-                "db_query": "Orthoflavivirus zikaense",
+                "db": "fixture-bank",
                 "run_id": "run-safe-0001",
                 "analysis_profile": "default",
             },
@@ -331,8 +273,7 @@ class DashboardSecurityTests(unittest.TestCase):
                 "evidence_batch",
                 {
                     "manifest_id": "batch-safe",
-                    "target": "custom",
-                    "db_query": "Orthoflavivirus zikaense",
+                    "target": "fixture-bank",
                     "run_id": "batch-run-0001",
                 },
             )
