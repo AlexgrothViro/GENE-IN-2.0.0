@@ -19,6 +19,7 @@ esac
 # quando o banco também é informado. O config.env não substitui esses valores.
 INCOMING_DB="${DB:-}"
 INCOMING_DB_QUERY="${DB_QUERY:-}"
+INCOMING_NCBI_DB="${NCBI_DB:-}"
 INCOMING_REF_FASTA="${REF_FASTA:-}"
 INCOMING_BLAST_DB="${BLAST_DB:-}"
 INCOMING_BOWTIE2_INDEX="${BOWTIE2_INDEX:-}"
@@ -232,7 +233,7 @@ case "$CMD" in
 esac
 
 DB="${DB:-custom}"
-NCBI_DB="${NCBI_DB:-nucleotide}"
+NCBI_DB="${INCOMING_NCBI_DB:-${NCBI_DB:-nucleotide}}"
 
 # Alias resolution moved to top of the script
 
@@ -305,10 +306,11 @@ if [[ "$LOCAL_REFERENCE" -eq 0 && "$DB" == "custom" ]]; then
   METADATA_FILE="${METADATA_DIR}/metadata.json"
 
   cache_valid=1
-  if [[ -s "${REPO_ROOT}/data/ref/custom.fa" && -f "$METADATA_FILE" ]] && \
-      blast_database_complete && bowtie2_index_complete "${REPO_ROOT}/bowtie2/custom"; then
+  if [[ -s "$REF_FASTA" && -f "$METADATA_FILE" ]] && \
+      blast_database_complete && bowtie2_index_complete "$BOWTIE2_INDEX"; then
 
-    if METADATA_FILE="$METADATA_FILE" TARGET_QUERY="$DB_QUERY" TARGET_NCBI_DB="${NCBI_DB:-nucleotide}" python3 -c '
+    if METADATA_FILE="$METADATA_FILE" GENERATION_MANIFEST="$BLAST_GENERATION_MANIFEST" \
+      TARGET_QUERY="$DB_QUERY" TARGET_NCBI_DB="$NCBI_DB" python3 -c '
 import json, os, sys
 try:
     with open(os.environ["METADATA_FILE"], "r", encoding="utf-8") as f:
@@ -318,6 +320,13 @@ try:
     if data.get("db_query") != os.environ.get("TARGET_QUERY"):
         sys.exit(1)
     if data.get("ncbi_db") != os.environ.get("TARGET_NCBI_DB"):
+        sys.exit(1)
+    with open(os.environ["GENERATION_MANIFEST"], "r", encoding="utf-8") as f:
+        generation = json.load(f)
+    if generation.get("query_source") != {
+        "query": os.environ["TARGET_QUERY"].strip(),
+        "ncbi_db": os.environ["TARGET_NCBI_DB"].strip(),
+    }:
         sys.exit(1)
     sys.exit(0)
 except Exception:
@@ -364,6 +373,9 @@ fi
 
 blast_missing=0
 blast_database_complete || blast_missing=1
+if [[ "$REFRESH_CUSTOM" -eq 1 ]]; then
+  blast_missing=1
+fi
 if [[ $blast_missing -eq 0 ]] && ! python3 "$INDEX_CACHE_HELPER" \
     --manifest "$INDEX_MANIFEST" --reference "$REF_FASTA" --builder makeblastdb; then
   blast_missing=1
@@ -412,10 +424,14 @@ if [[ $blast_missing -eq 1 ]]; then
   BLAST_INDEX_MANIFEST_TMP="${BLAST_BUILD_DIR}/index-cache.json"
   python3 "$INDEX_CACHE_HELPER" --write --manifest "$BLAST_INDEX_MANIFEST_TMP" \
     --reference "$REF_FASTA" --builder makeblastdb
+  BLAST_QUERY_SOURCE=()
+  if [[ "$LOCAL_REFERENCE" -eq 0 && "$DB" == "custom" && -n "$DB_QUERY" ]]; then
+    BLAST_QUERY_SOURCE=(--source-query="$DB_QUERY" --source-ncbi-db="$NCBI_DB")
+  fi
   python3 "$BLAST_PROMOTION_HELPER" --build-dir "$BLAST_BUILD_DIR" \
     --build-name database \
     --destination "$BLAST_DB" --reference "$REF_FASTA" --manifest "$BLAST_GENERATION_MANIFEST" \
-    --index-manifest-source "$BLAST_INDEX_MANIFEST_TMP"
+    --index-manifest-source "$BLAST_INDEX_MANIFEST_TMP" "${BLAST_QUERY_SOURCE[@]}"
   BLAST_BUILD_DIR=""
   [[ -z "$NORMALIZED_FASTA" ]] || rm -f "$NORMALIZED_FASTA"
 else

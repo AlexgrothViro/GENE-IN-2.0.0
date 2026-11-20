@@ -17,6 +17,7 @@ import threading
 import time
 import uuid
 import zipfile
+from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
 from subprocess import PIPE, STDOUT, Popen, run
@@ -37,6 +38,7 @@ from run_state import (
 )
 from analysis_profiles import load_profiles, resolve_profile
 from common import fsync_directory, sha256_file
+from .custom_database import custom_blast_prefix, custom_database_env
 from .evidence_options import optional_evidence_inputs
 from contig_comparison import (
     finalize_contig_comparison_cancellation, list_comparisons, resolve_source,
@@ -703,30 +705,9 @@ def resolve_dashboard_fastq_path(value):
     return staged
 
 
-def custom_database_env(params):
-    query = str(params.get("db_query") or params.get("query") or "").strip()
-    ncbi_db = str(params.get("ncbi_db") or "").strip()
-
-    if not query:
-        metadata_path = REPO_ROOT / "db" / "custom" / "metadata.json"
-        try:
-            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-        except (OSError, ValueError, json.JSONDecodeError):
-            metadata = {}
-        if metadata.get("db") == "custom":
-            query = str(metadata.get("db_query") or "").strip()
-            if not ncbi_db:
-                ncbi_db = str(metadata.get("ncbi_db") or "").strip()
-
-    if not query:
-        raise ValueError(
-            "Banco customizado exige uma query NCBI ou metadados de um banco previamente preparado"
-        )
-
-    result = {"DB_QUERY": query}
-    if ncbi_db:
-        result["NCBI_DB"] = ncbi_db
-    return result
+def selected_database(params):
+    db = str(params.get("db") or params.get("target") or "").strip().lower()
+    return _DB_ALIAS.get(db, db)
 
 
 def assembly_command_args(params):
@@ -746,18 +727,18 @@ def assembly_command_args(params):
     return ["--assembler", selected, "--analysis-profile", profile]
 
 
-def build_command(action, params):
+def build_command(action, params, *, custom_database_prefix=None):
     cmd = []
     env = {}
 
-    db = (params.get("db") or params.get("target") or "").strip().lower()
     if action in {"pipeline", "evidence_pipeline", "evidence_batch"}:
-        if not db:
+        alias_db = selected_database(params)
+        if not alias_db:
             raise ValueError("A seleção do banco de referência é obrigatória e deve ser feita explicitamente.")
-        alias_db = _DB_ALIAS.get(db, db)
         env["DB"] = alias_db
         if alias_db == "custom":
-            env.update(custom_database_env(params))
+            prefix = custom_database_prefix if custom_database_prefix is not None else custom_blast_prefix(REPO_ROOT)
+            env.update(custom_database_env(params, prefix, REPO_ROOT))
 
         host_mode = str(params.get("host_filter_mode") or "none").strip().lower()
         if host_mode == "none":
@@ -903,6 +884,7 @@ def build_command(action, params):
         if (not db_name or db_name == "custom") and query:
             env["DB"] = "custom"
             env["DB_QUERY"] = query
+            env["BLAST_DB"] = str(custom_blast_prefix(REPO_ROOT))
             if params.get("ncbi_db"):
                 env["NCBI_DB"] = str(params["ncbi_db"]).strip()
             return ["bash", "scripts/ops/db_manager.sh", "setup"], env
@@ -1006,6 +988,11 @@ def build_command(action, params):
 
 
 def run_job(job_id, action, params):
+    with ExitStack() as leases:
+        _run_job(job_id, action, params, leases)
+
+
+def _run_job(job_id, action, params, leases):
     output_buf = []
     log_file = LOG_DIR / f"ux_{job_id}.log"
     if not claim_job_for_execution(job_id, "", str(log_file)):
@@ -1042,7 +1029,23 @@ def run_job(job_id, action, params):
             env[k] = str(v)
 
     try:
-        cmd, extra_env = build_command(action, params)
+        custom_prefix = None
+        if action in {"pipeline", "evidence_pipeline", "evidence_batch"} and selected_database(params) == "custom":
+            from promote_blast_database import promotion_lock
+
+            custom_prefix = custom_blast_prefix(REPO_ROOT)
+            try:
+                leases.enter_context(promotion_lock(custom_prefix, shared=True, nonblocking=True))
+            except BlockingIOError as error:
+                raise ValueError("O índice customizado está em atualização. Aguarde a preparação do banco e tente novamente.") from error
+            except OSError as error:
+                raise ValueError("Não foi possível reservar o índice customizado para a análise.") from error
+        cmd, extra_env = (build_command(action, params) if custom_prefix is None
+                          else build_command(action, params, custom_database_prefix=custom_prefix))
+        with jobs_lock:
+            admitted_manifest = jobs[job_id].get("database_manifest_sha256")
+        if admitted_manifest and extra_env.get("GENEIN_EXPECTED_BLAST_MANIFEST_SHA256") != admitted_manifest:
+            raise ValueError("A geração do banco customizado mudou depois da seleção. Revise o banco e inicie novamente.")
         env.update(extra_env)
         if extra_env.get("GENEIN_WORK_ROOT"):
             Path(extra_env["GENEIN_WORK_ROOT"]).mkdir(parents=True, exist_ok=False)

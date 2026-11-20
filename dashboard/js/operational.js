@@ -537,7 +537,9 @@ export async function renderTrack(store, rerender, requestedJobId = "") {
       const selected = store.get().pendingDatabase || store.get().wizard.database;
       store.set({ wizard: { loaded: false, database: selected, step: 1 }, context: { database: selected || "Preparado" } });
       root.append(statusPanel("success", "Banco preparado", "Volte ao assistente para conferir o banco e continuar a análise."), linkButton("Continuar nova análise", "#/new"));
-    } else if (["done", "partial"].includes(status)) root.append(h("div", { class: "gi-btnrow" }, linkButton("Abrir resultados", "#/results")));
+    } else if (["done", "partial"].includes(status) && (job.run || ["evidence_pipeline", "evidence_batch"].includes(job.action))) {
+      root.append(h("div", { class: "gi-btnrow" }, linkButton("Abrir resultados", `#/results?run=${encodeURIComponent(active.id)}`)));
+    }
   } catch (error) {
     if (error.status === 404) {
       persistActiveJob(null);
@@ -581,8 +583,16 @@ export async function renderResults(store, selectedRunId = "") {
   const root = h("div", { class: "stack" }, [pageHeader("Operação", "Resultados", "Conclusões e artefatos da análise com sua rastreabilidade técnica.")]);
   const history = await getJSON("/api/history").catch(() => ({ runs: [] }));
   const completed = (history.runs || []).map(runIdentity).filter((run) => ["done", "partial", "failed", "cancelled", "not_evaluable"].includes(run.status) || run.evidence);
-  if (!completed.length) { root.append(statusPanel("empty", "Nenhum resultado concluído", "Execuções em andamento ou falhas permanecem disponíveis em Acompanhar e Histórico.")); return root; }
-  const run = completed.find((item) => item.id === selectedRunId) || completed[0];
+  const run = selectedRunId ? completed.find((item) => item.id === selectedRunId) : completed[0];
+  if (!run) {
+    if (selectedRunId) {
+      store.set({ context: { sample: "—", job: "Indisponível", database: "—" } });
+      root.append(statusPanel("unavailable", "Execução não encontrada", "O histórico não contém um resultado para o identificador solicitado."), linkButton("Abrir histórico", "#/history", "secondary"));
+    } else {
+      root.append(statusPanel("empty", "Nenhum resultado concluído", "Execuções em andamento ou falhas permanecem disponíveis em Acompanhar e Histórico."));
+    }
+    return root;
+  }
   const select = h("select", { id: "results-run" });
   completed.forEach((item) => select.append(h("option", { value: item.id, text: `${item.sample} · ${item.id}` })));
   select.value = run.id;

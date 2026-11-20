@@ -889,8 +889,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
         job_id = uuid.uuid4().hex
         params = dict(params)
+        database_manifest_sha256 = None
         if action in {"pipeline", "evidence_pipeline", "evidence_batch"}:
             _, proposed_env = build_command(action, params)
+            database_manifest_sha256 = proposed_env.get("GENEIN_EXPECTED_BLAST_MANIFEST_SHA256")
+            if database_manifest_sha256 is not None:
+                params.update(db_query=proposed_env["DB_QUERY"], ncbi_db=proposed_env["NCBI_DB"])
             if proposed_env.get("HOST_FILTER_ENABLED") == "true":
                 checked = validate_host_index(proposed_env.get("HOST_INDEX_PREFIX"))
                 if not checked["valid"]:
@@ -944,6 +948,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 "sample": sample, "manifest_id": params.get("manifest_id"),
                 "output": [], "returncode": None,
             }
+            if database_manifest_sha256 is not None:
+                jobs[job_id]["database_manifest_sha256"] = database_manifest_sha256
         if action in {"evidence_pipeline", "evidence_batch"}:
             try:
                 initialize_evidence_dashboard_state(action, params)

@@ -63,11 +63,12 @@ def restore_bytes(path: Path, previous: bytes | None) -> None:
 
 
 @contextmanager
-def promotion_lock(destination: Path):
+def promotion_lock(destination: Path, *, shared: bool = False, nonblocking: bool = False):
     lock_path = destination.parent / f".{destination.name}.promotion.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with lock_path.open("a+", encoding="utf-8") as handle:
-        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        mode = fcntl.LOCK_SH if shared else fcntl.LOCK_EX
+        fcntl.flock(handle.fileno(), mode | (fcntl.LOCK_NB if nonblocking else 0))
         try:
             yield
         finally:
@@ -81,7 +82,8 @@ def alias_points_to(alias_path: Path, expected_alias: bytes) -> bool:
 
 def promote(build_dir: Path, destination: Path, reference: Path,
             blastdbcmd: str, alias_tool: str, manifest_path: Path,
-            index_manifest_source: Path | None = None, *, build_name: str | None = None) -> dict:
+            index_manifest_source: Path | None = None, *, build_name: str | None = None,
+            query_source: dict[str, str] | None = None) -> dict:
     build_dir = build_dir.resolve()
     destination = destination.resolve()
     reference = reference.resolve()
@@ -118,6 +120,8 @@ def promote(build_dir: Path, destination: Path, reference: Path,
     }
     if build_name is not None:
         generation_manifest["index_basename"] = index_basename
+    if query_source is not None:
+        generation_manifest["query_source"] = query_source
     write_json_atomic(build_dir / "generation_manifest.json", generation_manifest)
     if os.name != "nt":
         for path in build_dir.iterdir():
@@ -192,13 +196,19 @@ def main() -> None:
     parser.add_argument("--reference", required=True, type=Path)
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--index-manifest-source", type=Path)
+    parser.add_argument("--source-query", default="")
+    parser.add_argument("--source-ncbi-db", default="")
     parser.add_argument("--blastdbcmd", default="blastdbcmd")
     parser.add_argument("--alias-tool", default="blastdb_aliastool")
     args = parser.parse_args()
+    query, collection = args.source_query.strip(), args.source_ncbi_db.strip()
+    if bool(query) != bool(collection):
+        parser.error("A consulta de origem e a coleção NCBI devem ser informadas juntas.")
     result = promote(
         args.build_dir, args.destination, args.reference, args.blastdbcmd,
         args.alias_tool, args.manifest, args.index_manifest_source,
         build_name=args.build_name,
+        query_source={"query": query, "ncbi_db": collection} if query else None,
     )
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
 

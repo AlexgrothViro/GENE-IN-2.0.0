@@ -274,7 +274,7 @@ make -C "$REPO_ROOT" setup_dirs
 DATABASE_MANIFEST="${BLAST_DB}.db-manifest.json"
 if validate_blast_database "$BLAST_DB" && [[ -s "$DATABASE_MANIFEST" ]]; then
   echo "[INFO] Banco BLAST encontrado em ${BLAST_DB}; conferindo integridade do manifesto."
-elif [[ -n "${GENEIN_WORK_ROOT:-}" ]]; then
+elif [[ -n "${GENEIN_WORK_ROOT:-}" || -n "${GENEIN_EXPECTED_BLAST_MANIFEST_SHA256:-}" ]]; then
   record_database_preflight_failure "Execução isolada exige banco BLAST pronto e manifesto: ${DATABASE_MANIFEST}. Prepare o banco antes de executar genein run."
 else
   DB_TARGET="db-blast"
@@ -289,7 +289,11 @@ fi
 if ! validate_blast_database "$BLAST_DB"; then
   record_database_preflight_failure "Banco BLAST ausente, incompleto ou ilegível no prefixo ${BLAST_DB} — a preparação não produziu um banco consultável por blastdbcmd."
 fi
-if ! python3 "$SCRIPTS_ROOT/evidence/verify_blast_database_manifest.py" "$BLAST_DB" --manifest "$DATABASE_MANIFEST"; then
+DATABASE_MANIFEST_CHECK=()
+if [[ -n "${GENEIN_EXPECTED_BLAST_MANIFEST_SHA256:-}" ]]; then
+  DATABASE_MANIFEST_CHECK=(--expected-sha256 "$GENEIN_EXPECTED_BLAST_MANIFEST_SHA256")
+fi
+if ! python3 "$SCRIPTS_ROOT/evidence/verify_blast_database_manifest.py" "$BLAST_DB" --manifest "$DATABASE_MANIFEST" "${DATABASE_MANIFEST_CHECK[@]}"; then
   record_database_preflight_failure "Banco BLAST não corresponde ao manifesto; reconstrua o banco antes de analisar."
 fi
 

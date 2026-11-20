@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { elapsed, evidenceLabel, formatDate, jobLabel, normalizeStatus, runIdentity } from "../js/adapters.js";
 import { createElement, replaceContent, setText } from "../js/dom.js";
 import { analysisDimensions, outcomePanel } from "../js/components.js";
+import { renderResults, renderTrack } from "../js/operational.js";
 import { parseRoute, routeHref, startRouter } from "../js/router.js";
 import { ACTIVE_JOB_STORAGE_KEY, createStore, loadActiveJob, persistActiveJob } from "../js/state.js";
 import { postForm } from "../js/api.js";
@@ -56,6 +57,38 @@ function fakeDocument() {
     createTextNode(value) { return { nodeType: 3, textContent: String(value) }; },
   };
 }
+
+test("tracking opens the matching result and an unknown ID does not substitute another run", async (t) => {
+  const previous = globalThis.document;
+  globalThis.document = fakeDocument();
+  t.after(() => { globalThis.document = previous; });
+  const newest = "fixture-newest", tracked = "fixture-tracked", missing = "fixture-missing";
+  const store = createStore({ activeJob: { id: tracked, status: "done" } });
+  t.mock.method(globalThis, "fetch", async (url) => {
+    if (url === "/api/history") return Response.json({ runs: [
+      { run_id: newest, sample: "Amostra recente", status: "done" },
+      { run_id: tracked, sample: "Amostra acompanhada", status: "done" },
+    ] });
+    assert.equal(url, "/api/job/" + tracked);
+    return Response.json({ id: tracked, action: "evidence_batch", status: "done" });
+  });
+  const elements = (node) => [node, ...(node.children || []).flatMap(elements)];
+  const selected = (node) => elements(node).find(item => item.getAttribute?.("id") === "results-run")?.value;
+
+  const tracking = await renderTrack(store, () => {}, tracked);
+  const href = elements(tracking).find(item => item.textContent === "Abrir resultados")?.getAttribute("href");
+  assert.equal(href, "#/results?run=" + tracked);
+  const linkedRun = new URLSearchParams(href.split("?")[1]).get("run");
+  assert.equal(selected(await renderResults(store, linkedRun)), tracked);
+  assert.equal(selected(await renderResults(store)), newest);
+
+  const unavailable = elements(await renderResults(store, missing));
+  const captions = unavailable.map(item => item.textContent);
+  assert.ok(captions.includes("Execução não encontrada"));
+  assert.ok(!captions.some(text => text?.includes("Amostra recente") || text?.includes("Amostra acompanhada")));
+  assert.ok(unavailable.some(item => item.getAttribute?.("href") === "#/history"));
+  assert.equal(store.get().context.sample, "—");
+});
 
 test("recovery labels never turn a candidate into confirmed viral detection", () => {
   assert.equal(evidenceLabel("DETECTED"), "Candidatos para revisão");
