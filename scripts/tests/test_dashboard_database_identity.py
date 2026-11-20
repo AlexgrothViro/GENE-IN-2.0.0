@@ -42,7 +42,8 @@ def prepared_database(tmp_path, monkeypatch):
         "source_fasta": {"path": "fixture-reference", "size": 10, "sha256": "a" * 64},
         "produced_files": {component.name: {"size": component.stat().st_size, "sha256": hashlib.sha256(component.read_bytes()).hexdigest()}},
     })
-    monkeypatch.setattr(jobs.get_evidence_service(), "manifest_export", lambda _identifier: tmp_path / "fixture.tsv")
+    monkeypatch.setattr(jobs.get_evidence_service(), "manifest_export",
+                        lambda _identifier, *, run_id=None: tmp_path / "fixture.tsv")
     return prefix, alias, manifest
 
 
